@@ -1,0 +1,1217 @@
+{
+  "accountsFailed": {
+    "message": "No se pudieron cargar las cuentas: $1"
+  },
+  "actionLabel": {
+    "message": "Mail Cleaner"
+  },
+  "actionTitle": {
+    "message": "Abrir AI Mail Cleaner"
+  },
+  "add": {
+    "message": "Añadir"
+  },
+  "advanced": {
+    "message": "Avanzado"
+  },
+  "allLocal": {
+    "message": "Todo se queda en tu ordenador."
+  },
+  "allScored": {
+    "message": "Todos los correos visibles están evaluados."
+  },
+  "allScoredBtn": {
+    "message": "Todo evaluado"
+  },
+  "allSendersTrusted": {
+    "message": "Todos los remitentes ya son de confianza"
+  },
+  "apiKey": {
+    "message": "Clave de API"
+  },
+  "apply": {
+    "message": "Aplicar"
+  },
+  "approx": {
+    "message": "aprox. $1"
+  },
+  "avgTitle": {
+    "message": "Probabilidad media de spam ($1 evaluados)"
+  },
+  "baseUrl": {
+    "message": "URL base de la API"
+  },
+  "batchHint": {
+    "message": "(IA/local)"
+  },
+  "batchSize": {
+    "message": "Correos por solicitud"
+  },
+  "cancel": {
+    "message": "Cancelar"
+  },
+  "cancelEsc": {
+    "message": "Cancelar (Esc)"
+  },
+  "cfHiddenWarn_one": {
+    "message": "$1 correo está oculto ahora (filtro/búsqueda)"
+  },
+  "cfHiddenWarn_other": {
+    "message": "$1 correos están ocultos ahora (filtro/búsqueda)"
+  },
+  "cfLowPart": {
+    "message": "$1 probablemente no spam"
+  },
+  "cfMostly": {
+    "message": "Sobre todo: $1"
+  },
+  "cfSpamPart": {
+    "message": "$1 con ≥ 80 % de spam"
+  },
+  "cfTrashTitle_one": {
+    "message": "¿Mover $1 correo a la papelera?"
+  },
+  "cfTrashTitle_other": {
+    "message": "¿Mover $1 correos a la papelera?"
+  },
+  "cfTrustedWarn_one": {
+    "message": "Atención: $1 correo de remitentes de confianza"
+  },
+  "cfTrustedWarn_other": {
+    "message": "Atención: $1 correos de remitentes de confianza"
+  },
+  "cfUndoHint": {
+    "message": "Van a la papelera: puedes recuperarlos justo después con «Deshacer»."
+  },
+  "cfUnscoredPart": {
+    "message": "$1 sin evaluar"
+  },
+  "cfUnsurePart": {
+    "message": "$1 dudosos"
+  },
+  "chipAll": {
+    "message": "Todos"
+  },
+  "chipSpam": {
+    "message": "Spam ≥ 80 %"
+  },
+  "chipUnscored": {
+    "message": "Sin evaluar"
+  },
+  "chipUnsure": {
+    "message": "Dudosos"
+  },
+  "chooseModel": {
+    "message": "Elegir modelo…"
+  },
+  "chooseModelBtn": {
+    "message": "Elegir modelo"
+  },
+  "chooseModelPh": {
+    "message": "Elige un modelo …"
+  },
+  "chooseModelTitle": {
+    "message": "Elegir modelo"
+  },
+  "clearGroupFilter": {
+    "message": "Quitar filtro de grupo"
+  },
+  "clearSel": {
+    "message": "Quitar selección"
+  },
+  "clearSelTitle": {
+    "message": "Quitar selección (Esc)"
+  },
+  "close": {
+    "message": "Cerrar"
+  },
+  "closeEsc": {
+    "message": "Cerrar (Esc)"
+  },
+  "colDate": {
+    "message": "Fecha"
+  },
+  "colDomain": {
+    "message": "Dominio"
+  },
+  "colFrom": {
+    "message": "Remitente"
+  },
+  "colSize": {
+    "message": "Tamaño"
+  },
+  "colSpam": {
+    "message": "Spam"
+  },
+  "colSubject": {
+    "message": "Asunto"
+  },
+  "collapse": {
+    "message": "Contraer"
+  },
+  "concurrency": {
+    "message": "Solicitudes en paralelo"
+  },
+  "connectionOk": {
+    "message": "Conexión correcta – $1: $2"
+  },
+  "costForFolder": {
+    "message": "$1 para esta carpeta ($2)"
+  },
+  "costLabel": {
+    "message": "Coste: $1"
+  },
+  "costNone": {
+    "message": "ninguno"
+  },
+  "costUnknown": {
+    "message": "Coste: desconocido; los precios aparecen en «Elegir modelo»"
+  },
+  "create": {
+    "message": "Crear"
+  },
+  "createFailed": {
+    "message": "No se pudo crear la carpeta: $1"
+  },
+  "createKey": {
+    "message": "Crear clave"
+  },
+  "creatingFolder": {
+    "message": "Creando «$1» …"
+  },
+  "ctxK": {
+    "message": "$1k de contexto"
+  },
+  "ctxMoveN_one": {
+    "message": "Mover $1 correo…"
+  },
+  "ctxMoveN_other": {
+    "message": "Mover $1 correos…"
+  },
+  "ctxNotSpamN_one": {
+    "message": "Marcar $1 correo como «no es spam»"
+  },
+  "ctxNotSpamN_other": {
+    "message": "Marcar $1 correos como «no es spam»"
+  },
+  "ctxSelectAllFrom": {
+    "message": "Seleccionar todo de $1"
+  },
+  "ctxTrashN_one": {
+    "message": "Mover $1 correo a la papelera"
+  },
+  "ctxTrashN_other": {
+    "message": "Mover $1 correos a la papelera"
+  },
+  "ctxTrustDomain": {
+    "message": "Confiar en el dominio ($1)"
+  },
+  "ctxTrustSender": {
+    "message": "Confiar en el remitente ($1)"
+  },
+  "ctxUntrust": {
+    "message": "Dejar de confiar en $1"
+  },
+  "currentFolder": {
+    "message": "Carpeta actual"
+  },
+  "customUrl": {
+    "message": "URL propia (en «Avanzado»)"
+  },
+  "deleteFailed": {
+    "message": "No se pudo eliminar: $1"
+  },
+  "detectNewsletters": {
+    "message": "Reconocer boletines"
+  },
+  "detectNewslettersHint": {
+    "message": "Revisa los correos visibles en busca de información para darse de baja (cabecera List-Unsubscribe o un aviso en el texto) y muestra la etiqueta «Boletín». Solo se lee de tu servidor de correo; no se envía nada."
+  },
+  "dismiss": {
+    "message": "Cerrar aviso"
+  },
+  "domain": {
+    "message": "Dominio"
+  },
+  "durH": {
+    "message": "$1 h"
+  },
+  "durHM": {
+    "message": "$1 h $2 min"
+  },
+  "durHardware": {
+    "message": "Duración: depende de tu hardware"
+  },
+  "durMin": {
+    "message": "$1 min"
+  },
+  "durUnder1": {
+    "message": "menos de 1 min"
+  },
+  "durationLabel": {
+    "message": "Duración: $1"
+  },
+  "emptyFolderHint": {
+    "message": "Aquí no hay nada que limpiar."
+  },
+  "emptyFolderTitle": {
+    "message": "La carpeta está vacía"
+  },
+  "emptyNoMatchHint": {
+    "message": "Nada coincide con la búsqueda, el grupo o el filtro de spam."
+  },
+  "emptyNoMatchTitle": {
+    "message": "Sin resultados"
+  },
+  "enterApiKey": {
+    "message": "Introduce una clave de API."
+  },
+  "enterFolderName": {
+    "message": "Introduce un nombre de carpeta."
+  },
+  "errAuth": {
+    "message": "La clave de API fue rechazada (no válida o sin saldo)."
+  },
+  "errBadJson": {
+    "message": "La respuesta no era un JSON válido."
+  },
+  "errNoBaseUrl": {
+    "message": "No hay ninguna URL base de API configurada."
+  },
+  "errNoConn": {
+    "message": "Sin conexión con $1."
+  },
+  "errNoScore": {
+    "message": "No hay puntuación en la respuesta."
+  },
+  "errNoUsableJson": {
+    "message": "El modelo no devolvió un JSON utilizable; elige otro modelo."
+  },
+  "errNotDecision": {
+    "message": "Respuesta inesperada: ¿es realmente un modelo de decisión?"
+  },
+  "errNotFound": {
+    "message": "El proveedor no encontró el modelo «$1»."
+  },
+  "errOllama403": {
+    "message": "Ollama rechaza la solicitud (403). Inicia Ollama con OLLAMA_ORIGINS=moz-extension://* y vuelve a intentarlo."
+  },
+  "errOllamaDown": {
+    "message": "Ollama no está disponible: ¿se está ejecutando «ollama serve»?"
+  },
+  "errOllamaOriginsShort": {
+    "message": "Ollama bloquea Thunderbird: inícialo con OLLAMA_ORIGINS=moz-extension://*."
+  },
+  "errParse": {
+    "message": "El modelo no da respuestas utilizables; elige otro modelo."
+  },
+  "errRate": {
+    "message": "El proveedor está limitando las solicitudes."
+  },
+  "errScan": {
+    "message": "Error de análisis: $1"
+  },
+  "etaLeft": {
+    "message": "quedan aprox. $1"
+  },
+  "etaSoon": {
+    "message": "casi listo"
+  },
+  "excerptChars": {
+    "message": "Extracto de texto (caracteres)"
+  },
+  "expand": {
+    "message": "Expandir"
+  },
+  "extDescription": {
+    "message": "Probabilidad de spam para cada correo: modelo de decisión, proveedor de IA u Ollama local. Detecta boletines, filtra y limpia."
+  },
+  "extName": {
+    "message": "AI Mail Cleaner"
+  },
+  "failed": {
+    "message": "Error: $1"
+  },
+  "folderCreated": {
+    "message": "«$1» creada."
+  },
+  "folderCreatedSelected": {
+    "message": "«$1» creada y elegida como destino."
+  },
+  "folderTitle": {
+    "message": "Carpeta: $1"
+  },
+  "folders": {
+    "message": "Carpetas"
+  },
+  "folders_one": {
+    "message": "$1 carpeta"
+  },
+  "folders_other": {
+    "message": "$1 carpetas"
+  },
+  "formatted": {
+    "message": "Con formato"
+  },
+  "free": {
+    "message": "Gratis"
+  },
+  "freeLower": {
+    "message": "gratis"
+  },
+  "freeModelNote": {
+    "message": "(modelo gratuito, ~20 correos/min)"
+  },
+  "freeOnly": {
+    "message": "Solo gratuitos"
+  },
+  "fromCache": {
+    "message": "$1 puntuaciones de la memoria."
+  },
+  "groups": {
+    "message": "Grupos"
+  },
+  "hasAttachment": {
+    "message": "Tiene adjunto"
+  },
+  "help": {
+    "message": "Ayuda"
+  },
+  "helpBrowse": {
+    "message": "Pasar de correo en la vista previa"
+  },
+  "helpDelete": {
+    "message": "Mover a la papelera (con deshacer)"
+  },
+  "helpEsc": {
+    "message": "Cerrar diálogo · quitar selección"
+  },
+  "helpHelp": {
+    "message": "Esta ayuda"
+  },
+  "helpHint": {
+    "message": "Haz clic derecho en un correo para ver un menú con todas las acciones. Los correos eliminados van a la papelera y se pueden recuperar justo después con «Deshacer»."
+  },
+  "helpNotSpam": {
+    "message": "En la vista previa: no es spam y siguiente"
+  },
+  "helpPreview": {
+    "message": "Abrir / cerrar la vista previa"
+  },
+  "helpSearch": {
+    "message": "Buscar"
+  },
+  "helpSelect": {
+    "message": "Elegir correo (Mayús amplía el rango)"
+  },
+  "helpTitle": {
+    "message": "Atajos de teclado y ayuda (?)"
+  },
+  "helpToggle": {
+    "message": "Seleccionar / deseleccionar correo"
+  },
+  "helpUnsub": {
+    "message": "Darse de baja del boletín"
+  },
+  "hiddenKeepVisible": {
+    "message": "$1 ocultos: conservar solo los visibles"
+  },
+  "imagesBlocked_one": {
+    "message": "$1 imagen bloqueada"
+  },
+  "imagesBlocked_other": {
+    "message": "$1 imágenes bloqueadas"
+  },
+  "imgBlocked": {
+    "message": "Imagen bloqueada"
+  },
+  "imgBlockedAlt": {
+    "message": "Imagen bloqueada: $1"
+  },
+  "includeSubTitle": {
+    "message": "Incluir subcarpetas al cargar y analizar"
+  },
+  "keyDel": {
+    "message": "Supr"
+  },
+  "keyEnter": {
+    "message": "Intro"
+  },
+  "keyInheritedPh": {
+    "message": "•••••••••••• (de «$1»)"
+  },
+  "keyInheritedState": {
+    "message": "✓ se reutiliza la clave de «$1»"
+  },
+  "keySavedPh": {
+    "message": "•••••••••••• (guardada)"
+  },
+  "keySavedState": {
+    "message": "✓ guardada: solo local, ofuscada"
+  },
+  "keySpace": {
+    "message": "Espacio"
+  },
+  "keyWillBeRemoved": {
+    "message": "se eliminará al guardar"
+  },
+  "keysBrowse": {
+    "message": "pasar"
+  },
+  "keysClose": {
+    "message": "cerrar"
+  },
+  "keysNotSpam": {
+    "message": "no es spam"
+  },
+  "keysTrash": {
+    "message": "papelera"
+  },
+  "linkDisabled": {
+    "message": "Enlace desactivado: $1"
+  },
+  "linkLeadsTo": {
+    "message": "⚠ lleva a $1"
+  },
+  "linksDisabled": {
+    "message": "enlaces desactivados"
+  },
+  "loadError": {
+    "message": "Error al cargar: $1"
+  },
+  "loadFailedBanner": {
+    "message": "No se pudieron cargar los correos: $1"
+  },
+  "loadLimit": {
+    "message": "Máx. correos a cargar"
+  },
+  "loaded": {
+    "message": "$1 cargados."
+  },
+  "loadedTruncated": {
+    "message": "$1 cargados (límite de $2)."
+  },
+  "loading": {
+    "message": "Cargando …"
+  },
+  "loadingHeaders": {
+    "message": "Cargando cabeceras …"
+  },
+  "loadingHeadersSub": {
+    "message": "Cargando cabeceras (incl. $1) …"
+  },
+  "loadingN": {
+    "message": "Cargando $1 …"
+  },
+  "loadingShort": {
+    "message": "cargando …"
+  },
+  "localFree": {
+    "message": "Local · gratis"
+  },
+  "mailContent": {
+    "message": "Contenido del correo"
+  },
+  "mailsFromFolders": {
+    "message": "$1 de $2"
+  },
+  "mails_one": {
+    "message": "$1 correo"
+  },
+  "mails_other": {
+    "message": "$1 correos"
+  },
+  "markedNotSpam": {
+    "message": "Marcado como «no es spam»"
+  },
+  "markedNotSpamN_one": {
+    "message": "$1 correo marcado como «no es spam»"
+  },
+  "markedNotSpamN_other": {
+    "message": "$1 correos marcados como «no es spam»"
+  },
+  "model": {
+    "message": "Modelo"
+  },
+  "modelApplied": {
+    "message": "Modelo aplicado: no olvides guardar."
+  },
+  "modelChipTitle": {
+    "message": "Cambiar el modelo de spam"
+  },
+  "models": {
+    "message": "Modelos"
+  },
+  "move": {
+    "message": "Mover"
+  },
+  "moveAccountHint": {
+    "message": "«$1»: la nueva carpeta se crearía aquí."
+  },
+  "moveEllipsis": {
+    "message": "Mover…"
+  },
+  "moveFailed": {
+    "message": "No se pudo mover: $1"
+  },
+  "movePickTarget": {
+    "message": "Elige un destino o crea una carpeta nueva."
+  },
+  "moveSelTitle": {
+    "message": "Mover la selección"
+  },
+  "moveSub_one": {
+    "message": "Mover $1 correo a la carpeta elegida."
+  },
+  "moveSub_other": {
+    "message": "Mover $1 correos a la carpeta elegida."
+  },
+  "moveTarget": {
+    "message": "Destino: $1"
+  },
+  "moveTo": {
+    "message": "Mover a …"
+  },
+  "moveToTrash": {
+    "message": "Mover a la papelera"
+  },
+  "nScored": {
+    "message": "$1 evaluados"
+  },
+  "nSpam": {
+    "message": "$1 spam"
+  },
+  "newSubfolder": {
+    "message": "Nueva subcarpeta …"
+  },
+  "newSubfolderAria": {
+    "message": "Nombre de la nueva subcarpeta"
+  },
+  "newsletterTag": {
+    "message": "Boletín"
+  },
+  "nextMail": {
+    "message": "Correo siguiente"
+  },
+  "nextTitle": {
+    "message": "Siguiente (→)"
+  },
+  "noAccounts": {
+    "message": "No se encontraron cuentas ni carpetas."
+  },
+  "noDisplayableText": {
+    "message": "Este correo no tiene texto que mostrar."
+  },
+  "noDomain": {
+    "message": "(sin dominio)"
+  },
+  "noFolderHint": {
+    "message": "Elige una carpeta a la izquierda."
+  },
+  "noFolderTitle": {
+    "message": "Ninguna carpeta elegida"
+  },
+  "noFolders": {
+    "message": "No hay carpetas."
+  },
+  "noModel": {
+    "message": "sin modelo"
+  },
+  "noSubject": {
+    "message": "(sin asunto)"
+  },
+  "notScored": {
+    "message": "Sin evaluar: $1"
+  },
+  "notScoredYet": {
+    "message": "Aún sin evaluar"
+  },
+  "notSpam": {
+    "message": "No es spam"
+  },
+  "notSpamTitle": {
+    "message": "Marcar como «no es spam» y seguir (N)"
+  },
+  "obGetKey": {
+    "message": "Obtener una clave gratis"
+  },
+  "obText": {
+    "message": "Conecta un modelo y cada correo recibirá una probabilidad de spam de 0 a 100 %. Lo más rápido: una clave gratuita de OpenRouter, o todo en local con Ollama."
+  },
+  "obTitle": {
+    "message": "Configurar la detección de spam"
+  },
+  "only50": {
+    "message": "Solo los 50 más recientes"
+  },
+  "open": {
+    "message": "Abrir"
+  },
+  "openFailed": {
+    "message": "No se pudo abrir el correo: $1"
+  },
+  "openInTb": {
+    "message": "Abrir en Thunderbird"
+  },
+  "openSubjectTitle": {
+    "message": "$1 – abrir en Thunderbird"
+  },
+  "optOpen": {
+    "message": "Abrir ajustes"
+  },
+  "optText": {
+    "message": "Todos los ajustes (modelo de spam, proveedor, remitentes de confianza) están en el propio limpiador, en el icono del engranaje arriba a la derecha."
+  },
+  "optionalParen": {
+    "message": "(opcional)"
+  },
+  "pctSpam": {
+    "message": "$1 de spam"
+  },
+  "perMTok": {
+    "message": "$1 / 1 M de tokens"
+  },
+  "perMTokShort": {
+    "message": "/ 1 M de tokens"
+  },
+  "perThousandMails": {
+    "message": "$1 por cada 1000 correos"
+  },
+  "pickLocationFirst": {
+    "message": "Elige primero una ubicación."
+  },
+  "pickModelFirst": {
+    "message": "Elige un modelo (y una URL base si hace falta)."
+  },
+  "pickSubfolderForAccount": {
+    "message": "Elige una subcarpeta para esta cuenta."
+  },
+  "pillFreeRate": {
+    "message": "~20 correos/min"
+  },
+  "pillLocal": {
+    "message": "Local"
+  },
+  "pillPaid": {
+    "message": "De pago"
+  },
+  "pkLoadFailed": {
+    "message": "No se pudo cargar la lista de modelos: $1"
+  },
+  "pkNeedKey": {
+    "message": "El proveedor requiere una clave de API válida; introdúcela primero en los ajustes."
+  },
+  "pkNoHits": {
+    "message": "No hay resultados para esta búsqueda."
+  },
+  "pkNoModels": {
+    "message": "El proveedor no devolvió modelos. También puedes escribir el nombre del modelo directamente."
+  },
+  "pkNoOllamaModels": {
+    "message": "Aún no hay modelos instalados. Descarga uno pequeño y bueno:"
+  },
+  "pkOllamaDown": {
+    "message": "Ollama no está disponible. ¿Se está ejecutando? Inícialo en una terminal:"
+  },
+  "pkOllamaOrigins": {
+    "message": "Ollama bloquea las solicitudes de Thunderbird. Inicia Ollama así:"
+  },
+  "presetLmStudio": {
+    "message": "LM Studio (local)"
+  },
+  "prevMail": {
+    "message": "Correo anterior"
+  },
+  "prevTitle": {
+    "message": "Anterior (←)"
+  },
+  "preview": {
+    "message": "Vista previa"
+  },
+  "previewSpace": {
+    "message": "Vista previa (Espacio)"
+  },
+  "previewUnavailable": {
+    "message": "Vista previa no disponible: $1"
+  },
+  "priceUnknown": {
+    "message": "precio desconocido"
+  },
+  "privacy": {
+    "message": "Privacidad"
+  },
+  "privacyBody": {
+    "message": "Se envía a $1: remitente y asunto, además de hasta $2 caracteres del texto del correo. El extracto mejora mucho la detección."
+  },
+  "privacyNoBody": {
+    "message": "Se envía a $1: remitente y asunto."
+  },
+  "provDecisionDesc": {
+    "message": "Clasificador no generativo (p. ej. Jev, Span-01) mediante la API Decisions de OpenRouter. Rápido, barato y con probabilidad calibrada: sin LLM."
+  },
+  "provDecisionLabel": {
+    "message": "Modelo de decisión"
+  },
+  "provDecisionSub": {
+    "message": "recomendado · OpenRouter"
+  },
+  "provDecisionTitle": {
+    "message": "Modelo de decisión"
+  },
+  "provOllamaDesc": {
+    "message": "Se ejecuta por completo en tu ordenador: sin clave, sin coste y ningún correo sale de tu equipo. Requiere Ollama (ollama.com)."
+  },
+  "provOllamaLabel": {
+    "message": "Ollama (local)"
+  },
+  "provOllamaSub": {
+    "message": "Ollama · sin conexión"
+  },
+  "provOllamaTitle": {
+    "message": "Local"
+  },
+  "provOpenaiDesc": {
+    "message": "Cualquier proveedor con API compatible con OpenAI (OpenRouter, OpenAI, Groq, Mistral …) o local (LM Studio). Usa un modelo de lenguaje (LLM)."
+  },
+  "provOpenaiLabel": {
+    "message": "Compatible con OpenAI"
+  },
+  "provOpenaiSub": {
+    "message": "Compatible con OpenAI"
+  },
+  "provOpenaiTitle": {
+    "message": "Proveedor de IA"
+  },
+  "providerLabel": {
+    "message": "Proveedor"
+  },
+  "pvTrustTitle": {
+    "message": "Confiar siempre en esta dirección (nunca spam)"
+  },
+  "pvTrustedTitle": {
+    "message": "La dirección es de confianza: dejar de confiar"
+  },
+  "rangeFmt": {
+    "message": "$1–$2 %"
+  },
+  "rangeFrom": {
+    "message": "% de spam desde"
+  },
+  "rangeTitle": {
+    "message": "Elige tu propio rango de spam"
+  },
+  "rangeTo": {
+    "message": "% de spam hasta"
+  },
+  "ready": {
+    "message": "Listo."
+  },
+  "reload": {
+    "message": "Recargar"
+  },
+  "reloadList": {
+    "message": "Recargar la lista"
+  },
+  "remove": {
+    "message": "quitar"
+  },
+  "removeX": {
+    "message": "Quitar «$1»"
+  },
+  "resetFilters": {
+    "message": "Restablecer filtros"
+  },
+  "retry": {
+    "message": "Reintentar"
+  },
+  "runsLocally": {
+    "message": "se ejecuta en local"
+  },
+  "save": {
+    "message": "Guardar"
+  },
+  "scan": {
+    "message": "Analizar"
+  },
+  "scanAllN": {
+    "message": "Analizar los $1"
+  },
+  "scanBtnTitle": {
+    "message": "Evaluar los correos visibles sin evaluar"
+  },
+  "scanDone": {
+    "message": "Análisis terminado: $1 evaluados"
+  },
+  "scanFailedPart": {
+    "message": ", $1 fallidos"
+  },
+  "scanN_one": {
+    "message": "Analizar $1 correo"
+  },
+  "scanN_other": {
+    "message": "Analizar $1 correos"
+  },
+  "scanStopped": {
+    "message": "Análisis detenido: $1 evaluados"
+  },
+  "scanTitle_one": {
+    "message": "¿Analizar $1 correo?"
+  },
+  "scanTitle_other": {
+    "message": "¿Analizar $1 correos?"
+  },
+  "scanningBody": {
+    "message": "Analizando (incl. extracto de texto) …"
+  },
+  "scanningHead": {
+    "message": "Analizando (remitente y asunto) …"
+  },
+  "scoring": {
+    "message": "Evaluando …"
+  },
+  "search": {
+    "message": "Buscar"
+  },
+  "searchModel": {
+    "message": "Buscar modelos …"
+  },
+  "searchPlaceholder": {
+    "message": "Remitente, dominio, asunto …"
+  },
+  "searchTitle": {
+    "message": "Buscar (tecla /)"
+  },
+  "select": {
+    "message": "Seleccionar"
+  },
+  "selectAllCount": {
+    "message": "Seleccionar los $1"
+  },
+  "selectAllVisible": {
+    "message": "Seleccionar todos los visibles"
+  },
+  "selectedModel": {
+    "message": "Elegido: $1"
+  },
+  "selectedSuffix": {
+    "message": "seleccionados"
+  },
+  "sendExcerpt": {
+    "message": "Enviar un extracto del texto al modelo"
+  },
+  "sender": {
+    "message": "Remitente"
+  },
+  "sendersTrusted_one": {
+    "message": "$1 remitente de confianza"
+  },
+  "sendersTrusted_other": {
+    "message": "$1 remitentes de confianza"
+  },
+  "sentToNoBody": {
+    "message": "Se envía a $1: remitente y asunto."
+  },
+  "sentToWithBody": {
+    "message": "Se envía a $1: remitente, asunto y hasta $2 caracteres de texto."
+  },
+  "settings": {
+    "message": "Ajustes"
+  },
+  "settingsSaved": {
+    "message": "Ajustes guardados"
+  },
+  "settingsSub": {
+    "message": "¿Cómo deben evaluarse tus correos?"
+  },
+  "setup": {
+    "message": "Configurar"
+  },
+  "setupTitle": {
+    "message": "Configurar un modelo de spam"
+  },
+  "shortcuts": {
+    "message": "Atajos de teclado"
+  },
+  "shortcutsSub": {
+    "message": "Limpia más rápido, sin ratón."
+  },
+  "sidebarHide": {
+    "message": "Ocultar barra lateral"
+  },
+  "sidebarShow": {
+    "message": "Mostrar barra lateral"
+  },
+  "sidebarToggle": {
+    "message": "Mostrar/ocultar barra lateral"
+  },
+  "sortBy": {
+    "message": "Ordenar por"
+  },
+  "sortCtx": {
+    "message": "Mayor contexto"
+  },
+  "sortName": {
+    "message": "Nombre"
+  },
+  "sortPrice": {
+    "message": "Más baratos primero"
+  },
+  "sortRec": {
+    "message": "Recomendados"
+  },
+  "sortSize": {
+    "message": "Más pequeños primero"
+  },
+  "spamFilter": {
+    "message": "Filtro de spam"
+  },
+  "spamProbTitle": {
+    "message": "Probabilidad de spam $1"
+  },
+  "statusMoving_one": {
+    "message": "Moviendo $1 correo …"
+  },
+  "statusMoving_other": {
+    "message": "Moviendo $1 correos …"
+  },
+  "statusTrashed_one": {
+    "message": "$1 correo movido a la papelera."
+  },
+  "statusTrashed_other": {
+    "message": "$1 correos movidos a la papelera."
+  },
+  "statusTrashing_one": {
+    "message": "Moviendo $1 correo a la papelera …"
+  },
+  "statusTrashing_other": {
+    "message": "Moviendo $1 correos a la papelera …"
+  },
+  "staysLocal": {
+    "message": "Se queda en tu ordenador."
+  },
+  "stop": {
+    "message": "Detener"
+  },
+  "stopTitle": {
+    "message": "Cancelar el análisis"
+  },
+  "stopping": {
+    "message": "Deteniendo el análisis …"
+  },
+  "subfolders": {
+    "message": "Subcarpetas"
+  },
+  "subfolders_one": {
+    "message": "$1 subcarpeta"
+  },
+  "subfolders_other": {
+    "message": "$1 subcarpetas"
+  },
+  "tableAria": {
+    "message": "Correos: flechas para navegar, x para seleccionar, Intro para la vista previa"
+  },
+  "targetFolder": {
+    "message": "Carpeta de destino"
+  },
+  "testConnection": {
+    "message": "Probar conexión"
+  },
+  "testReply": {
+    "message": "$1 %"
+  },
+  "testReplySample": {
+    "message": "$1 % (correo de prueba)"
+  },
+  "testing": {
+    "message": "Probando …"
+  },
+  "text": {
+    "message": "Texto"
+  },
+  "textOnlyNote": {
+    "message": "Solo texto: no se carga nada"
+  },
+  "thTitle": {
+    "message": "Clic: ordenar · Arrastrar: mover · Arrastrar el borde: ancho"
+  },
+  "toLabel": {
+    "message": "Para"
+  },
+  "toastInTrash_one": {
+    "message": "$1 correo en la papelera"
+  },
+  "toastInTrash_other": {
+    "message": "$1 correos en la papelera"
+  },
+  "toastMoved_one": {
+    "message": "$1 correo movido a «$2»"
+  },
+  "toastMoved_other": {
+    "message": "$1 correos movidos a «$2»"
+  },
+  "toastRestored_one": {
+    "message": "$1 correo recuperado"
+  },
+  "toastRestored_other": {
+    "message": "$1 correos recuperados"
+  },
+  "toastSelectedAllFrom": {
+    "message": "Todos los de $1 seleccionados"
+  },
+  "toastSelectedFrom_one": {
+    "message": "$1 correo de $2 seleccionado"
+  },
+  "toastSelectedFrom_other": {
+    "message": "$1 correos de $2 seleccionados"
+  },
+  "toastSelected_one": {
+    "message": "$1 correo seleccionado"
+  },
+  "toastSelected_other": {
+    "message": "$1 correos seleccionados"
+  },
+  "trackersRemoved_one": {
+    "message": "$1 rastreador eliminado"
+  },
+  "trackersRemoved_other": {
+    "message": "$1 rastreadores eliminados"
+  },
+  "trash": {
+    "message": "Papelera"
+  },
+  "trashAllCount": {
+    "message": "Mover los $1 a la papelera"
+  },
+  "trashDel": {
+    "message": "Mover a la papelera (Supr)"
+  },
+  "trashInstead": {
+    "message": "Mejor a la papelera"
+  },
+  "trashNextTitle": {
+    "message": "Mover a la papelera y seguir (Supr)"
+  },
+  "trashSelTitle": {
+    "message": "Mover la selección a la papelera (Supr)"
+  },
+  "trashSpamN_one": {
+    "message": "Mover $1 correo spam a la papelera"
+  },
+  "trashSpamN_other": {
+    "message": "Mover $1 correos spam a la papelera"
+  },
+  "trust": {
+    "message": "Confiar"
+  },
+  "trustSelTitle": {
+    "message": "Confiar en los remitentes de la selección"
+  },
+  "trusted": {
+    "message": "De confianza"
+  },
+  "trustedBadge": {
+    "message": "Fiable"
+  },
+  "trustedBadgeTitle": {
+    "message": "Remitente de confianza: nunca es spam"
+  },
+  "trustedHint": {
+    "message": "– nunca se consideran spam"
+  },
+  "trustedSenders": {
+    "message": "Remitentes de confianza"
+  },
+  "trustedToast": {
+    "message": "«$1» es de confianza: nunca spam"
+  },
+  "undo": {
+    "message": "Deshacer"
+  },
+  "undoMissing_one": {
+    "message": "$1 correo no se pudo recuperar automáticamente: está en la papelera."
+  },
+  "undoMissing_other": {
+    "message": "$1 correos no se pudieron recuperar automáticamente: están en la papelera."
+  },
+  "unknown": {
+    "message": "(desconocido)"
+  },
+  "unscoredLeft_one": {
+    "message": "$1 correo quedó sin evaluar."
+  },
+  "unscoredLeft_other": {
+    "message": "$1 correos quedaron sin evaluar."
+  },
+  "unscoredLower": {
+    "message": "sin evaluar"
+  },
+  "unsubAnyway": {
+    "message": "Darse de baja igualmente"
+  },
+  "unsubDraftFailed": {
+    "message": "No se pudo abrir el borrador: $1"
+  },
+  "unsubDraftOpened": {
+    "message": "Borrador de baja abierto: revísalo y pulsa Enviar."
+  },
+  "unsubFromBody": {
+    "message": "(encontrado en el texto del correo)"
+  },
+  "unsubOpenedWeb": {
+    "message": "Página de baja abierta en el navegador ($1)"
+  },
+  "unsubSpamBody": {
+    "message": "Este correo parece spam ($1). En el spam, los enlaces de baja a menudo solo confirman que tu dirección está activa. Es más seguro moverlo a la papelera."
+  },
+  "unsubSpamTitle": {
+    "message": "¿Darse de baja de un probable spam?"
+  },
+  "unsubTipBoth": {
+    "message": "Boletín: haz clic para darte de baja (página web en $1 o por correo)"
+  },
+  "unsubTipMail": {
+    "message": "Boletín: haz clic para abrir un correo de baja a $1"
+  },
+  "unsubTipNone": {
+    "message": "Boletín: no se encontró forma de darse de baja"
+  },
+  "unsubTipUrl": {
+    "message": "Boletín: haz clic para darte de baja en $1"
+  },
+  "unsubViaMail": {
+    "message": "Escribir un correo de baja a $1"
+  },
+  "unsubViaWeb": {
+    "message": "Darse de baja en la página web ($1)"
+  },
+  "unsubscribe": {
+    "message": "Darse de baja"
+  },
+  "unsubscribeEllipsis": {
+    "message": "Darse de baja…"
+  },
+  "untrustedToast": {
+    "message": "«$1» ya no es de confianza"
+  },
+  "wlActiveTitle": {
+    "message": "«$1» es de confianza: dejar de confiar"
+  },
+  "wlEmpty": {
+    "message": "Nadie todavía: añade p. ej. tu propio dominio o contactos importantes."
+  },
+  "wlPlaceholder": {
+    "message": "Añadir dirección o dominio …"
+  },
+  "wlTrustAddr": {
+    "message": "Confiar en la dirección «$1» (nunca spam)"
+  },
+  "wlTrustDomain": {
+    "message": "Confiar en el dominio «$1» (nunca spam)"
+  },
+  "xOfY": {
+    "message": "$1 de $2"
+  },
+  "yesterday": {
+    "message": "Ayer"
+  }
+}

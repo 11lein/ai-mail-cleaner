@@ -1,0 +1,236 @@
+/* ------------------------------------------------------------------ */
+/* Design-Tokens (hell / dunkel)                                        */
+/* ------------------------------------------------------------------ */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --surface: #f7f7f9;
+  --surface-2: #eff0f3;
+  --raised: #ffffff;
+  --border: #e7e8ec;
+  --border-strong: #d6d8de;
+  --text: #15171c;
+  --text-2: #3c414e;
+  --muted: #61677a;      /* ≥ 5:1 auf Weiß und auf --surface */
+  --faint: #a4a9b5;      /* nur für Deko (Icons, Linien) – nie für Text */
+  --accent: #5b5cf0;
+  --accent-2: #8b5cf6;
+  --accent-ink: #ffffff;
+  --accent-text: #4338ca;  /* Akzent als Text auf getöntem Grund (≥ 4,5:1) */
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, transparent);
+  --ok: #16a34a;
+  --danger: #e5484d;
+  --danger-text: #c62a2f; /* ≥ 4,5:1 auf getöntem Grund */
+  --danger-soft: color-mix(in srgb, var(--danger) 10%, transparent);
+  --warn: #b45309;
+  --warn-soft: color-mix(in srgb, #f59e0b 16%, transparent);
+  --row-hover: #f5f5f8;
+  --selected: color-mix(in srgb, var(--accent) 8%, var(--bg));
+  --ring: color-mix(in srgb, var(--accent) 40%, transparent);
+  --shadow-sm: 0 1px 2px rgba(16, 18, 24, 0.06);
+  --shadow: 0 1px 2px rgba(16, 18, 24, 0.05), 0 8px 24px -6px rgba(16, 18, 24, 0.12);
+  --shadow-lg: 0 2px 6px rgba(16, 18, 24, 0.06), 0 28px 70px -18px rgba(16, 18, 24, 0.38);
+  --radius-sm: 7px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0e1014;
+    --surface: #131519;
+    --surface-2: #1b1e24;
+    --raised: #171a1f;
+    --border: #23262d;
+    --border-strong: #30343d;
+    --text: #e9ebf0;
+    --text-2: #c3c7d1;
+    --muted: #9399a7;
+    --faint: #7a8090;
+    --accent: #7c7dff;
+    --accent-2: #a78bfa;
+    --accent-ink: #0b0c12;
+    --accent-text: #b4b5ff;
+    --ok: #34d399;
+    --danger: #ff6369;
+    --danger-text: #ff8a8f;
+    --warn: #fbbf24;
+    --warn-soft: color-mix(in srgb, #f59e0b 18%, transparent);
+    --row-hover: #1c1f26;
+    --selected: color-mix(in srgb, var(--accent) 20%, var(--bg));
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -6px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.4), 0 28px 70px -18px rgba(0, 0, 0, 0.85);
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Basis                                                               */
+/* ------------------------------------------------------------------ */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text",
+    "Segoe UI", system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+
+button, input, select, textarea { font: inherit; color: inherit; }
+
+* { scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+::selection { background: color-mix(in srgb, var(--accent) 24%, transparent); }
+
+code {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 5px;
+  font-size: 0.88em;
+}
+
+kbd {
+  font: 500 10.5px/1 ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  padding: 3px 5px;
+  border-radius: 5px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  background: var(--raised);
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------------ */
+/* Buttons                                                             */
+/* ------------------------------------------------------------------ */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid var(--border-strong);
+  background: var(--raised);
+  color: var(--text);
+  border-radius: 9px;
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s, border-color 0.15s, color 0.15s, box-shadow 0.15s,
+    opacity 0.15s, transform 0.08s;
+}
+button:hover:not(:disabled) { background: var(--surface-2); }
+button:active:not(:disabled) { transform: translateY(0.5px); }
+button:disabled { opacity: 0.42; cursor: default; box-shadow: none; }
+button:focus-visible { outline: none; box-shadow: 0 0 0 3px var(--ring); }
+
+button.primary {
+  background-color: var(--accent);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0));
+  color: var(--accent-ink);
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(16, 18, 24, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+button.primary:hover:not(:disabled) {
+  background-color: color-mix(in srgb, var(--accent) 88%, #000);
+}
+
+/* getönter Gefahr-Button (z. B. Papierkorb) – wird beim Hover kräftig */
+button.danger {
+  background: var(--danger-soft);
+  color: var(--danger-text);
+  border-color: color-mix(in srgb, var(--danger) 22%, transparent);
+  box-shadow: none;
+}
+button.danger:hover:not(:disabled) { background: var(--danger); color: #fff; border-color: transparent; }
+button.danger-solid {
+  background: var(--danger);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+}
+button.danger-solid:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 88%, #000); }
+
+button.ghost { background: transparent; border-color: transparent; box-shadow: none; }
+button.ghost:hover:not(:disabled) { background: var(--surface-2); }
+
+button.sm { height: 28px; padding: 0 10px; font-size: 12.5px; border-radius: 8px; }
+
+button.btn-icon {
+  width: 32px;
+  padding: 0;
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+button.btn-icon:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
+button.btn-icon.sm { width: 26px; height: 26px; border-radius: 7px; }
+
+.linklike {
+  height: auto; padding: 0; border: none; background: none; box-shadow: none;
+  font-size: 12px; color: var(--danger-text); text-decoration: underline; cursor: pointer;
+}
+.linklike:hover:not(:disabled) { background: none; opacity: 0.8; }
+
+/* Text-Link-Button (Akzentfarbe) */
+.linkbtn {
+  height: auto; min-height: 24px; padding: 0 2px; gap: 4px;
+  border: none; background: none; box-shadow: none;
+  font-size: 12px; font-weight: 550; color: var(--accent); cursor: pointer;
+}
+.linkbtn:hover:not(:disabled) { background: none; text-decoration: underline; text-underline-offset: 2px; }
+
+/* ------------------------------------------------------------------ */
+/* Eingaben                                                            */
+/* ------------------------------------------------------------------ */
+input[type="text"], input[type="password"], input[type="number"], input[type="search"],
+select, textarea {
+  height: 34px;
+  padding: 0 11px;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  background: var(--raised);
+  color: var(--text);
+  border-radius: 9px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+textarea { height: auto; padding: 8px 11px; line-height: 1.5; }
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--ring);
+}
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 0.85; }
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-cancel-button { -webkit-appearance: none; }
+input[type="checkbox"], input[type="radio"] {
+  accent-color: var(--accent);
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+}
+
+/* Icon-Hülle für data-icon */
+.ico-wrap { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ico { flex-shrink: 0; }
+
+.hidden { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

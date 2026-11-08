@@ -1,0 +1,19 @@
+# Build-Ergebnisse
+dist/
+*.xpi
+
+# Dev-Vorschau (wird aus cleaner.html erzeugt)
+src/ui/_dev.html
+
+# System / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+
+# Node (falls addons-linter lokal installiert wird)
+node_modules/
+
+# Lokale Claude-Code-Einstellungen
+.claude/settings.local.json

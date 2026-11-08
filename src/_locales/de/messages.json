@@ -1,0 +1,1217 @@
+{
+  "accountsFailed": {
+    "message": "Konten konnten nicht geladen werden: $1"
+  },
+  "actionLabel": {
+    "message": "Mail Cleaner"
+  },
+  "actionTitle": {
+    "message": "AI Mail Cleaner öffnen"
+  },
+  "add": {
+    "message": "Hinzufügen"
+  },
+  "advanced": {
+    "message": "Erweitert"
+  },
+  "allLocal": {
+    "message": "Alles bleibt auf deinem Rechner."
+  },
+  "allScored": {
+    "message": "Alle sichtbaren Mails sind bewertet."
+  },
+  "allScoredBtn": {
+    "message": "Alles bewertet"
+  },
+  "allSendersTrusted": {
+    "message": "Alle Absender sind bereits vertraut"
+  },
+  "apiKey": {
+    "message": "API-Schlüssel"
+  },
+  "apply": {
+    "message": "Übernehmen"
+  },
+  "approx": {
+    "message": "ca. $1"
+  },
+  "avgTitle": {
+    "message": "Durchschnittliche Spam-Wahrscheinlichkeit ($1 bewertet)"
+  },
+  "baseUrl": {
+    "message": "API-Basis-URL"
+  },
+  "batchHint": {
+    "message": "(KI/Lokal)"
+  },
+  "batchSize": {
+    "message": "Mails pro Anfrage"
+  },
+  "cancel": {
+    "message": "Abbrechen"
+  },
+  "cancelEsc": {
+    "message": "Abbrechen (Esc)"
+  },
+  "cfHiddenWarn_one": {
+    "message": "$1 Mail ist gerade ausgeblendet (Filter/Suche)"
+  },
+  "cfHiddenWarn_other": {
+    "message": "$1 Mails sind gerade ausgeblendet (Filter/Suche)"
+  },
+  "cfLowPart": {
+    "message": "$1 eher kein Spam"
+  },
+  "cfMostly": {
+    "message": "Vor allem: $1"
+  },
+  "cfSpamPart": {
+    "message": "$1 mit ≥ 80 % Spam"
+  },
+  "cfTrashTitle_one": {
+    "message": "$1 Mail in den Papierkorb?"
+  },
+  "cfTrashTitle_other": {
+    "message": "$1 Mails in den Papierkorb?"
+  },
+  "cfTrustedWarn_one": {
+    "message": "Achtung: $1 Mail von vertrauenswürdigen Absendern"
+  },
+  "cfTrustedWarn_other": {
+    "message": "Achtung: $1 Mails von vertrauenswürdigen Absendern"
+  },
+  "cfUndoHint": {
+    "message": "Landet im Papierkorb – direkt danach über „Rückgängig“ wiederherstellbar."
+  },
+  "cfUnscoredPart": {
+    "message": "$1 unbewertet"
+  },
+  "cfUnsurePart": {
+    "message": "$1 unsicher"
+  },
+  "chipAll": {
+    "message": "Alle"
+  },
+  "chipSpam": {
+    "message": "Spam ≥ 80 %"
+  },
+  "chipUnscored": {
+    "message": "Unbewertet"
+  },
+  "chipUnsure": {
+    "message": "Unsicher"
+  },
+  "chooseModel": {
+    "message": "Modell wählen…"
+  },
+  "chooseModelBtn": {
+    "message": "Modell wählen"
+  },
+  "chooseModelPh": {
+    "message": "Modell wählen …"
+  },
+  "chooseModelTitle": {
+    "message": "Modell wählen"
+  },
+  "clearGroupFilter": {
+    "message": "Gruppenfilter aufheben"
+  },
+  "clearSel": {
+    "message": "Auswahl aufheben"
+  },
+  "clearSelTitle": {
+    "message": "Auswahl aufheben (Esc)"
+  },
+  "close": {
+    "message": "Schließen"
+  },
+  "closeEsc": {
+    "message": "Schließen (Esc)"
+  },
+  "colDate": {
+    "message": "Datum"
+  },
+  "colDomain": {
+    "message": "Domain"
+  },
+  "colFrom": {
+    "message": "Absender"
+  },
+  "colSize": {
+    "message": "Größe"
+  },
+  "colSpam": {
+    "message": "Spam"
+  },
+  "colSubject": {
+    "message": "Betreff"
+  },
+  "collapse": {
+    "message": "Zuklappen"
+  },
+  "concurrency": {
+    "message": "Parallele Anfragen"
+  },
+  "connectionOk": {
+    "message": "Verbindung OK – $1: $2"
+  },
+  "costForFolder": {
+    "message": "$1 für diesen Ordner ($2)"
+  },
+  "costLabel": {
+    "message": "Kosten: $1"
+  },
+  "costNone": {
+    "message": "keine"
+  },
+  "costUnknown": {
+    "message": "Kosten: unbekannt – Preise stehen unter „Modell wählen“"
+  },
+  "create": {
+    "message": "Anlegen"
+  },
+  "createFailed": {
+    "message": "Anlegen fehlgeschlagen: $1"
+  },
+  "createKey": {
+    "message": "Schlüssel erstellen"
+  },
+  "creatingFolder": {
+    "message": "Lege „$1“ an …"
+  },
+  "ctxK": {
+    "message": "$1k Kontext"
+  },
+  "ctxMoveN_one": {
+    "message": "$1 Mail verschieben…"
+  },
+  "ctxMoveN_other": {
+    "message": "$1 Mails verschieben…"
+  },
+  "ctxNotSpamN_one": {
+    "message": "$1 Mail als „kein Spam“ markieren"
+  },
+  "ctxNotSpamN_other": {
+    "message": "$1 Mails als „kein Spam“ markieren"
+  },
+  "ctxSelectAllFrom": {
+    "message": "Alle von $1 auswählen"
+  },
+  "ctxTrashN_one": {
+    "message": "$1 Mail in den Papierkorb"
+  },
+  "ctxTrashN_other": {
+    "message": "$1 Mails in den Papierkorb"
+  },
+  "ctxTrustDomain": {
+    "message": "Domain vertrauen ($1)"
+  },
+  "ctxTrustSender": {
+    "message": "Absender vertrauen ($1)"
+  },
+  "ctxUntrust": {
+    "message": "$1 nicht mehr vertrauen"
+  },
+  "currentFolder": {
+    "message": "Aktueller Ordner"
+  },
+  "customUrl": {
+    "message": "Eigene URL (unter „Erweitert“)"
+  },
+  "deleteFailed": {
+    "message": "Löschen fehlgeschlagen: $1"
+  },
+  "detectNewsletters": {
+    "message": "Newsletter erkennen"
+  },
+  "detectNewslettersHint": {
+    "message": "Prüft die sichtbaren Mails auf Abmelde-Informationen (List-Unsubscribe-Header oder Hinweis im Text) und zeigt ein „Newsletter“-Etikett. Liest nur von deinem Mailserver – nichts wird irgendwohin gesendet."
+  },
+  "dismiss": {
+    "message": "Hinweis schließen"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "durH": {
+    "message": "$1 Std."
+  },
+  "durHM": {
+    "message": "$1 Std. $2 Min."
+  },
+  "durHardware": {
+    "message": "Dauer: hängt von deiner Hardware ab"
+  },
+  "durMin": {
+    "message": "$1 Min."
+  },
+  "durUnder1": {
+    "message": "unter 1 Min."
+  },
+  "durationLabel": {
+    "message": "Dauer: $1"
+  },
+  "emptyFolderHint": {
+    "message": "Hier gibt es nichts aufzuräumen."
+  },
+  "emptyFolderTitle": {
+    "message": "Ordner ist leer"
+  },
+  "emptyNoMatchHint": {
+    "message": "Nichts passt zu Suche, Gruppe oder Spam-Filter."
+  },
+  "emptyNoMatchTitle": {
+    "message": "Keine Treffer"
+  },
+  "enterApiKey": {
+    "message": "Bitte API-Schlüssel eintragen."
+  },
+  "enterFolderName": {
+    "message": "Bitte einen Ordnernamen eingeben."
+  },
+  "errAuth": {
+    "message": "Der API-Schlüssel wurde abgelehnt (ungültig oder ohne Guthaben)."
+  },
+  "errBadJson": {
+    "message": "Die Antwort war kein gültiges JSON."
+  },
+  "errNoBaseUrl": {
+    "message": "Keine API-Basis-URL konfiguriert."
+  },
+  "errNoConn": {
+    "message": "Keine Verbindung zu $1."
+  },
+  "errNoScore": {
+    "message": "Keine Bewertung in der Antwort."
+  },
+  "errNoUsableJson": {
+    "message": "Das Modell hat kein verwertbares JSON geliefert – bitte ein anderes Modell wählen."
+  },
+  "errNotDecision": {
+    "message": "Unerwartete Antwort – ist das wirklich ein Decision-Modell?"
+  },
+  "errNotFound": {
+    "message": "Modell „$1“ wurde beim Anbieter nicht gefunden."
+  },
+  "errOllama403": {
+    "message": "Ollama lehnt die Anfrage ab (403). Ollama mit OLLAMA_ORIGINS=moz-extension://* starten und erneut versuchen."
+  },
+  "errOllamaDown": {
+    "message": "Ollama ist nicht erreichbar – läuft „ollama serve“?"
+  },
+  "errOllamaOriginsShort": {
+    "message": "Ollama blockiert Thunderbird – mit OLLAMA_ORIGINS=moz-extension://* starten."
+  },
+  "errParse": {
+    "message": "Das Modell liefert keine verwertbaren Antworten – bitte ein anderes Modell wählen."
+  },
+  "errRate": {
+    "message": "Der Anbieter bremst (Rate-Limit)."
+  },
+  "errScan": {
+    "message": "Scan-Fehler: $1"
+  },
+  "etaLeft": {
+    "message": "noch ca. $1"
+  },
+  "etaSoon": {
+    "message": "gleich fertig"
+  },
+  "excerptChars": {
+    "message": "Textausschnitt (Zeichen)"
+  },
+  "expand": {
+    "message": "Aufklappen"
+  },
+  "extDescription": {
+    "message": "Spam-Wahrscheinlichkeit für jede Mail – per Decision-Modell, KI-Anbieter oder lokal mit Ollama. Newsletter erkennen, filtern, aufräumen."
+  },
+  "extName": {
+    "message": "AI Mail Cleaner"
+  },
+  "failed": {
+    "message": "Fehlgeschlagen: $1"
+  },
+  "folderCreated": {
+    "message": "„$1“ angelegt."
+  },
+  "folderCreatedSelected": {
+    "message": "„$1“ angelegt und als Ziel gewählt."
+  },
+  "folderTitle": {
+    "message": "Ordner: $1"
+  },
+  "folders": {
+    "message": "Ordner"
+  },
+  "folders_one": {
+    "message": "$1 Ordner"
+  },
+  "folders_other": {
+    "message": "$1 Ordnern"
+  },
+  "formatted": {
+    "message": "Formatiert"
+  },
+  "free": {
+    "message": "Kostenlos"
+  },
+  "freeLower": {
+    "message": "kostenlos"
+  },
+  "freeModelNote": {
+    "message": "(Gratis-Modell, ~20 Mails/Min.)"
+  },
+  "freeOnly": {
+    "message": "Nur kostenlose"
+  },
+  "fromCache": {
+    "message": "$1 Bewertungen aus dem Speicher."
+  },
+  "groups": {
+    "message": "Gruppen"
+  },
+  "hasAttachment": {
+    "message": "Hat Anhang"
+  },
+  "help": {
+    "message": "Hilfe"
+  },
+  "helpBrowse": {
+    "message": "In der Vorschau blättern"
+  },
+  "helpDelete": {
+    "message": "In den Papierkorb (mit Rückgängig)"
+  },
+  "helpEsc": {
+    "message": "Dialog schließen · Auswahl aufheben"
+  },
+  "helpHelp": {
+    "message": "Diese Hilfe"
+  },
+  "helpHint": {
+    "message": "Rechtsklick auf eine Mail öffnet ein Menü mit allen Aktionen. Gelöschte Mails landen im Papierkorb und lassen sich kurz danach über „Rückgängig“ zurückholen."
+  },
+  "helpNotSpam": {
+    "message": "In der Vorschau: kein Spam & weiter"
+  },
+  "helpPreview": {
+    "message": "Vorschau öffnen/schließen"
+  },
+  "helpSearch": {
+    "message": "Suche"
+  },
+  "helpSelect": {
+    "message": "Mail wählen (Shift erweitert den Bereich)"
+  },
+  "helpTitle": {
+    "message": "Tastenkürzel & Hilfe (?)"
+  },
+  "helpToggle": {
+    "message": "Mail an-/abwählen"
+  },
+  "helpUnsub": {
+    "message": "Vom Newsletter abmelden"
+  },
+  "hiddenKeepVisible": {
+    "message": "$1 ausgeblendet – nur sichtbare behalten"
+  },
+  "imagesBlocked_one": {
+    "message": "$1 Bild blockiert"
+  },
+  "imagesBlocked_other": {
+    "message": "$1 Bilder blockiert"
+  },
+  "imgBlocked": {
+    "message": "Bild blockiert"
+  },
+  "imgBlockedAlt": {
+    "message": "Bild blockiert: $1"
+  },
+  "includeSubTitle": {
+    "message": "Beim Laden & Scannen die Unterordner einbeziehen"
+  },
+  "keyDel": {
+    "message": "Entf"
+  },
+  "keyEnter": {
+    "message": "Enter"
+  },
+  "keyInheritedPh": {
+    "message": "•••••••••••• (von „$1“)"
+  },
+  "keyInheritedState": {
+    "message": "✓ Schlüssel von „$1“ wird mitgenutzt"
+  },
+  "keySavedPh": {
+    "message": "•••••••••••• (gespeichert)"
+  },
+  "keySavedState": {
+    "message": "✓ gespeichert – nur lokal, verschleiert"
+  },
+  "keySpace": {
+    "message": "Leertaste"
+  },
+  "keyWillBeRemoved": {
+    "message": "wird beim Speichern entfernt"
+  },
+  "keysBrowse": {
+    "message": "blättern"
+  },
+  "keysClose": {
+    "message": "schließen"
+  },
+  "keysNotSpam": {
+    "message": "kein Spam"
+  },
+  "keysTrash": {
+    "message": "Papierkorb"
+  },
+  "linkDisabled": {
+    "message": "Link deaktiviert: $1"
+  },
+  "linkLeadsTo": {
+    "message": "⚠ führt zu $1"
+  },
+  "linksDisabled": {
+    "message": "Links deaktiviert"
+  },
+  "loadError": {
+    "message": "Fehler beim Laden: $1"
+  },
+  "loadFailedBanner": {
+    "message": "Mails konnten nicht geladen werden: $1"
+  },
+  "loadLimit": {
+    "message": "Max. Mails laden"
+  },
+  "loaded": {
+    "message": "$1 geladen."
+  },
+  "loadedTruncated": {
+    "message": "$1 geladen (begrenzt auf $2)."
+  },
+  "loading": {
+    "message": "Lade …"
+  },
+  "loadingHeaders": {
+    "message": "Lade Kopfzeilen …"
+  },
+  "loadingHeadersSub": {
+    "message": "Lade Kopfzeilen (inkl. $1) …"
+  },
+  "loadingN": {
+    "message": "Lade $1 …"
+  },
+  "loadingShort": {
+    "message": "lädt …"
+  },
+  "localFree": {
+    "message": "Lokal · kostenlos"
+  },
+  "mailContent": {
+    "message": "Mail-Inhalt"
+  },
+  "mailsFromFolders": {
+    "message": "$1 aus $2"
+  },
+  "mails_one": {
+    "message": "$1 Mail"
+  },
+  "mails_other": {
+    "message": "$1 Mails"
+  },
+  "markedNotSpam": {
+    "message": "Als „kein Spam“ markiert"
+  },
+  "markedNotSpamN_one": {
+    "message": "$1 Mail als „kein Spam“ markiert"
+  },
+  "markedNotSpamN_other": {
+    "message": "$1 Mails als „kein Spam“ markiert"
+  },
+  "model": {
+    "message": "Modell"
+  },
+  "modelApplied": {
+    "message": "Modell übernommen – speichern nicht vergessen."
+  },
+  "modelChipTitle": {
+    "message": "Spam-Modell ändern"
+  },
+  "models": {
+    "message": "Modelle"
+  },
+  "move": {
+    "message": "Verschieben"
+  },
+  "moveAccountHint": {
+    "message": "„$1“ – ein neuer Ordner käme hierher."
+  },
+  "moveEllipsis": {
+    "message": "Verschieben…"
+  },
+  "moveFailed": {
+    "message": "Verschieben fehlgeschlagen: $1"
+  },
+  "movePickTarget": {
+    "message": "Ziel wählen – oder einen neuen Ordner anlegen."
+  },
+  "moveSelTitle": {
+    "message": "Auswahl verschieben"
+  },
+  "moveSub_one": {
+    "message": "$1 Mail in den gewählten Ordner verschieben."
+  },
+  "moveSub_other": {
+    "message": "$1 Mails in den gewählten Ordner verschieben."
+  },
+  "moveTarget": {
+    "message": "Ziel: $1"
+  },
+  "moveTo": {
+    "message": "Verschieben nach …"
+  },
+  "moveToTrash": {
+    "message": "In den Papierkorb"
+  },
+  "nScored": {
+    "message": "$1 bewertet"
+  },
+  "nSpam": {
+    "message": "$1 Spam"
+  },
+  "newSubfolder": {
+    "message": "Neuer Unterordner …"
+  },
+  "newSubfolderAria": {
+    "message": "Name des neuen Unterordners"
+  },
+  "newsletterTag": {
+    "message": "Newsletter"
+  },
+  "nextMail": {
+    "message": "Nächste Mail"
+  },
+  "nextTitle": {
+    "message": "Nächste (→)"
+  },
+  "noAccounts": {
+    "message": "Keine Konten/Ordner gefunden."
+  },
+  "noDisplayableText": {
+    "message": "Diese Mail enthält keinen darstellbaren Text."
+  },
+  "noDomain": {
+    "message": "(keine Domain)"
+  },
+  "noFolderHint": {
+    "message": "Links einen Ordner auswählen."
+  },
+  "noFolderTitle": {
+    "message": "Kein Ordner gewählt"
+  },
+  "noFolders": {
+    "message": "Keine Ordner."
+  },
+  "noModel": {
+    "message": "kein Modell"
+  },
+  "noSubject": {
+    "message": "(kein Betreff)"
+  },
+  "notScored": {
+    "message": "Nicht bewertet: $1"
+  },
+  "notScoredYet": {
+    "message": "Noch nicht bewertet"
+  },
+  "notSpam": {
+    "message": "Kein Spam"
+  },
+  "notSpamTitle": {
+    "message": "Als „kein Spam“ markieren und weiter (N)"
+  },
+  "obGetKey": {
+    "message": "Kostenlosen Schlüssel holen"
+  },
+  "obText": {
+    "message": "Verbinde ein Modell – dann bekommt jede Mail eine Spam-Wahrscheinlichkeit von 0–100 %. Am schnellsten mit einem kostenlosen OpenRouter-Schlüssel, oder komplett lokal mit Ollama."
+  },
+  "obTitle": {
+    "message": "Spam-Erkennung einrichten"
+  },
+  "only50": {
+    "message": "Nur 50 neueste"
+  },
+  "open": {
+    "message": "Öffnen"
+  },
+  "openFailed": {
+    "message": "Mail konnte nicht geöffnet werden: $1"
+  },
+  "openInTb": {
+    "message": "In Thunderbird öffnen"
+  },
+  "openSubjectTitle": {
+    "message": "$1 – in Thunderbird öffnen"
+  },
+  "optOpen": {
+    "message": "Einstellungen öffnen"
+  },
+  "optText": {
+    "message": "Alle Einstellungen (Spam-Modell, Anbieter, vertrauenswürdige Absender) findest du direkt im Cleaner über das Zahnrad oben rechts."
+  },
+  "optionalParen": {
+    "message": "(optional)"
+  },
+  "pctSpam": {
+    "message": "$1 Spam"
+  },
+  "perMTok": {
+    "message": "$1 / 1 Mio. Token"
+  },
+  "perMTokShort": {
+    "message": "/ 1 Mio. Token"
+  },
+  "perThousandMails": {
+    "message": "$1 je 1.000 Mails"
+  },
+  "pickLocationFirst": {
+    "message": "Bitte zuerst einen Ort wählen."
+  },
+  "pickModelFirst": {
+    "message": "Bitte Modell wählen (und ggf. Basis-URL)."
+  },
+  "pickSubfolderForAccount": {
+    "message": "Für dieses Konto bitte einen Unterordner wählen."
+  },
+  "pillFreeRate": {
+    "message": "~20 Mails/Min."
+  },
+  "pillLocal": {
+    "message": "Lokal"
+  },
+  "pillPaid": {
+    "message": "Bezahlt"
+  },
+  "pkLoadFailed": {
+    "message": "Modell-Liste konnte nicht geladen werden: $1"
+  },
+  "pkNeedKey": {
+    "message": "Der Anbieter verlangt einen gültigen API-Schlüssel – bitte erst in den Einstellungen eintragen."
+  },
+  "pkNoHits": {
+    "message": "Keine Treffer für diese Suche."
+  },
+  "pkNoModels": {
+    "message": "Der Anbieter hat keine Modelle gemeldet. Den Modellnamen kannst du auch direkt eintippen."
+  },
+  "pkNoOllamaModels": {
+    "message": "Noch keine Modelle installiert. Ein kleines, gutes Modell holen:"
+  },
+  "pkOllamaDown": {
+    "message": "Ollama ist nicht erreichbar. Läuft es? Im Terminal starten:"
+  },
+  "pkOllamaOrigins": {
+    "message": "Ollama blockiert Anfragen aus Thunderbird. Ollama so starten:"
+  },
+  "presetLmStudio": {
+    "message": "LM Studio (lokal)"
+  },
+  "prevMail": {
+    "message": "Vorherige Mail"
+  },
+  "prevTitle": {
+    "message": "Vorherige (←)"
+  },
+  "preview": {
+    "message": "Vorschau"
+  },
+  "previewSpace": {
+    "message": "Vorschau (Leertaste)"
+  },
+  "previewUnavailable": {
+    "message": "Vorschau nicht verfügbar: $1"
+  },
+  "priceUnknown": {
+    "message": "Preis unbekannt"
+  },
+  "privacy": {
+    "message": "Datenschutz"
+  },
+  "privacyBody": {
+    "message": "Gesendet an $1: Absender und Betreff sowie bis zu $2 Zeichen Text der Mail. Der Textausschnitt verbessert die Erkennung deutlich."
+  },
+  "privacyNoBody": {
+    "message": "Gesendet an $1: Absender und Betreff."
+  },
+  "provDecisionDesc": {
+    "message": "Nicht-generativer Klassifizierer (z. B. Jev, Span-01) über die OpenRouter-Decisions-API. Schnell, günstig, kalibrierte Wahrscheinlichkeit – kein LLM."
+  },
+  "provDecisionLabel": {
+    "message": "Decision-Modell"
+  },
+  "provDecisionSub": {
+    "message": "empfohlen · OpenRouter"
+  },
+  "provDecisionTitle": {
+    "message": "Decision-Modell"
+  },
+  "provOllamaDesc": {
+    "message": "Läuft komplett auf deinem Rechner – kein Schlüssel, keine Kosten, keine Mail verlässt den Rechner. Benötigt Ollama (ollama.com)."
+  },
+  "provOllamaLabel": {
+    "message": "Ollama (lokal)"
+  },
+  "provOllamaSub": {
+    "message": "Ollama · offline"
+  },
+  "provOllamaTitle": {
+    "message": "Lokal"
+  },
+  "provOpenaiDesc": {
+    "message": "Beliebiger Anbieter mit OpenAI-kompatibler API (OpenRouter, OpenAI, Groq, Mistral …) oder lokal (LM Studio). Nutzt ein Sprachmodell (LLM)."
+  },
+  "provOpenaiLabel": {
+    "message": "OpenAI-kompatibel"
+  },
+  "provOpenaiSub": {
+    "message": "OpenAI-kompatibel"
+  },
+  "provOpenaiTitle": {
+    "message": "KI-Anbieter"
+  },
+  "providerLabel": {
+    "message": "Anbieter"
+  },
+  "pvTrustTitle": {
+    "message": "Absender-Adresse dauerhaft vertrauen (nie Spam)"
+  },
+  "pvTrustedTitle": {
+    "message": "Adresse ist vertraut – nicht mehr vertrauen"
+  },
+  "rangeFmt": {
+    "message": "$1–$2 %"
+  },
+  "rangeFrom": {
+    "message": "Spam-% von"
+  },
+  "rangeTitle": {
+    "message": "Eigenen Spam-Bereich wählen"
+  },
+  "rangeTo": {
+    "message": "Spam-% bis"
+  },
+  "ready": {
+    "message": "Bereit."
+  },
+  "reload": {
+    "message": "Neu laden"
+  },
+  "reloadList": {
+    "message": "Liste neu laden"
+  },
+  "remove": {
+    "message": "entfernen"
+  },
+  "removeX": {
+    "message": "„$1“ entfernen"
+  },
+  "resetFilters": {
+    "message": "Filter zurücksetzen"
+  },
+  "retry": {
+    "message": "Erneut versuchen"
+  },
+  "runsLocally": {
+    "message": "läuft lokal"
+  },
+  "save": {
+    "message": "Speichern"
+  },
+  "scan": {
+    "message": "Scannen"
+  },
+  "scanAllN": {
+    "message": "Alle $1 scannen"
+  },
+  "scanBtnTitle": {
+    "message": "Unbewertete sichtbare Mails bewerten"
+  },
+  "scanDone": {
+    "message": "Scan fertig: $1 bewertet"
+  },
+  "scanFailedPart": {
+    "message": ", $1 fehlgeschlagen"
+  },
+  "scanN_one": {
+    "message": "$1 Mail scannen"
+  },
+  "scanN_other": {
+    "message": "$1 Mails scannen"
+  },
+  "scanStopped": {
+    "message": "Scan gestoppt: $1 bewertet"
+  },
+  "scanTitle_one": {
+    "message": "$1 Mail scannen?"
+  },
+  "scanTitle_other": {
+    "message": "$1 Mails scannen?"
+  },
+  "scanningBody": {
+    "message": "Scanne (inkl. Textausschnitt) …"
+  },
+  "scanningHead": {
+    "message": "Scanne (Absender & Betreff) …"
+  },
+  "scoring": {
+    "message": "Wird bewertet …"
+  },
+  "search": {
+    "message": "Suchen"
+  },
+  "searchModel": {
+    "message": "Modell suchen …"
+  },
+  "searchPlaceholder": {
+    "message": "Absender, Domain, Betreff …"
+  },
+  "searchTitle": {
+    "message": "Suchen (Taste /)"
+  },
+  "select": {
+    "message": "Auswählen"
+  },
+  "selectAllCount": {
+    "message": "Alle $1 auswählen"
+  },
+  "selectAllVisible": {
+    "message": "Alle sichtbaren auswählen"
+  },
+  "selectedModel": {
+    "message": "Gewählt: $1"
+  },
+  "selectedSuffix": {
+    "message": "ausgewählt"
+  },
+  "sendExcerpt": {
+    "message": "Textausschnitt an das Modell senden"
+  },
+  "sender": {
+    "message": "Absender"
+  },
+  "sendersTrusted_one": {
+    "message": "$1 Absender vertraut"
+  },
+  "sendersTrusted_other": {
+    "message": "$1 Absender vertraut"
+  },
+  "sentToNoBody": {
+    "message": "Gesendet an $1: Absender und Betreff."
+  },
+  "sentToWithBody": {
+    "message": "Gesendet an $1: Absender, Betreff und bis zu $2 Zeichen Text."
+  },
+  "settings": {
+    "message": "Einstellungen"
+  },
+  "settingsSaved": {
+    "message": "Einstellungen gespeichert"
+  },
+  "settingsSub": {
+    "message": "Wie sollen deine Mails bewertet werden?"
+  },
+  "setup": {
+    "message": "Einrichten"
+  },
+  "setupTitle": {
+    "message": "Spam-Modell einrichten"
+  },
+  "shortcuts": {
+    "message": "Tastenkürzel"
+  },
+  "shortcutsSub": {
+    "message": "Schneller aufräumen, ohne Maus."
+  },
+  "sidebarHide": {
+    "message": "Seitenleiste ausblenden"
+  },
+  "sidebarShow": {
+    "message": "Seitenleiste einblenden"
+  },
+  "sidebarToggle": {
+    "message": "Seitenleiste ein-/ausblenden"
+  },
+  "sortBy": {
+    "message": "Sortierung"
+  },
+  "sortCtx": {
+    "message": "Größter Kontext"
+  },
+  "sortName": {
+    "message": "Name"
+  },
+  "sortPrice": {
+    "message": "Günstigste zuerst"
+  },
+  "sortRec": {
+    "message": "Empfohlen"
+  },
+  "sortSize": {
+    "message": "Kleinste zuerst"
+  },
+  "spamFilter": {
+    "message": "Spam-Filter"
+  },
+  "spamProbTitle": {
+    "message": "Spam-Wahrscheinlichkeit $1"
+  },
+  "statusMoving_one": {
+    "message": "Verschiebe $1 Mail …"
+  },
+  "statusMoving_other": {
+    "message": "Verschiebe $1 Mails …"
+  },
+  "statusTrashed_one": {
+    "message": "$1 Mail in den Papierkorb verschoben."
+  },
+  "statusTrashed_other": {
+    "message": "$1 Mails in den Papierkorb verschoben."
+  },
+  "statusTrashing_one": {
+    "message": "Verschiebe $1 Mail in den Papierkorb …"
+  },
+  "statusTrashing_other": {
+    "message": "Verschiebe $1 Mails in den Papierkorb …"
+  },
+  "staysLocal": {
+    "message": "Bleibt auf deinem Rechner."
+  },
+  "stop": {
+    "message": "Stopp"
+  },
+  "stopTitle": {
+    "message": "Scan abbrechen"
+  },
+  "stopping": {
+    "message": "Scan wird gestoppt …"
+  },
+  "subfolders": {
+    "message": "Unterordner"
+  },
+  "subfolders_one": {
+    "message": "$1 Unterordner"
+  },
+  "subfolders_other": {
+    "message": "$1 Unterordner"
+  },
+  "tableAria": {
+    "message": "Mails – Pfeiltasten zum Navigieren, x zum Auswählen, Enter für Vorschau"
+  },
+  "targetFolder": {
+    "message": "Zielordner"
+  },
+  "testConnection": {
+    "message": "Verbindung testen"
+  },
+  "testReply": {
+    "message": "$1 %"
+  },
+  "testReplySample": {
+    "message": "$1 % (Testmail)"
+  },
+  "testing": {
+    "message": "Teste …"
+  },
+  "text": {
+    "message": "Text"
+  },
+  "textOnlyNote": {
+    "message": "Nur Text – nichts wird nachgeladen"
+  },
+  "thTitle": {
+    "message": "Klicken: sortieren · Ziehen: verschieben · Rand ziehen: Breite"
+  },
+  "toLabel": {
+    "message": "An"
+  },
+  "toastInTrash_one": {
+    "message": "$1 Mail im Papierkorb"
+  },
+  "toastInTrash_other": {
+    "message": "$1 Mails im Papierkorb"
+  },
+  "toastMoved_one": {
+    "message": "$1 Mail nach „$2“ verschoben"
+  },
+  "toastMoved_other": {
+    "message": "$1 Mails nach „$2“ verschoben"
+  },
+  "toastRestored_one": {
+    "message": "$1 Mail wiederhergestellt"
+  },
+  "toastRestored_other": {
+    "message": "$1 Mails wiederhergestellt"
+  },
+  "toastSelectedAllFrom": {
+    "message": "Alle von $1 ausgewählt"
+  },
+  "toastSelectedFrom_one": {
+    "message": "$1 Mail von $2 ausgewählt"
+  },
+  "toastSelectedFrom_other": {
+    "message": "$1 Mails von $2 ausgewählt"
+  },
+  "toastSelected_one": {
+    "message": "$1 Mail ausgewählt"
+  },
+  "toastSelected_other": {
+    "message": "$1 Mails ausgewählt"
+  },
+  "trackersRemoved_one": {
+    "message": "$1 Tracker entfernt"
+  },
+  "trackersRemoved_other": {
+    "message": "$1 Tracker entfernt"
+  },
+  "trash": {
+    "message": "Papierkorb"
+  },
+  "trashAllCount": {
+    "message": "Alle $1 in den Papierkorb"
+  },
+  "trashDel": {
+    "message": "In den Papierkorb (Entf)"
+  },
+  "trashInstead": {
+    "message": "Lieber in den Papierkorb"
+  },
+  "trashNextTitle": {
+    "message": "In den Papierkorb und weiter (Entf)"
+  },
+  "trashSelTitle": {
+    "message": "Auswahl in den Papierkorb (Entf)"
+  },
+  "trashSpamN_one": {
+    "message": "$1 Spam-Mail in den Papierkorb"
+  },
+  "trashSpamN_other": {
+    "message": "$1 Spam-Mails in den Papierkorb"
+  },
+  "trust": {
+    "message": "Vertrauen"
+  },
+  "trustSelTitle": {
+    "message": "Absender der Auswahl vertrauen"
+  },
+  "trusted": {
+    "message": "Vertraut"
+  },
+  "trustedBadge": {
+    "message": "Vertraut"
+  },
+  "trustedBadgeTitle": {
+    "message": "Vertrauenswürdiger Absender – gilt nie als Spam"
+  },
+  "trustedHint": {
+    "message": "– gelten nie als Spam"
+  },
+  "trustedSenders": {
+    "message": "Vertrauenswürdige Absender"
+  },
+  "trustedToast": {
+    "message": "„$1“ vertraut – gilt nie als Spam"
+  },
+  "undo": {
+    "message": "Rückgängig"
+  },
+  "undoMissing_one": {
+    "message": "$1 Mail konnte nicht automatisch zurückgeholt werden – sie liegt im Papierkorb."
+  },
+  "undoMissing_other": {
+    "message": "$1 Mails konnten nicht automatisch zurückgeholt werden – sie liegen im Papierkorb."
+  },
+  "unknown": {
+    "message": "(unbekannt)"
+  },
+  "unscoredLeft_one": {
+    "message": "$1 Mail blieb unbewertet."
+  },
+  "unscoredLeft_other": {
+    "message": "$1 Mails blieben unbewertet."
+  },
+  "unscoredLower": {
+    "message": "unbewertet"
+  },
+  "unsubAnyway": {
+    "message": "Trotzdem abmelden"
+  },
+  "unsubDraftFailed": {
+    "message": "Entwurf konnte nicht geöffnet werden: $1"
+  },
+  "unsubDraftOpened": {
+    "message": "Abmelde-Entwurf geöffnet – prüfen und auf „Senden“ klicken."
+  },
+  "unsubFromBody": {
+    "message": "(im Mail-Text gefunden)"
+  },
+  "unsubOpenedWeb": {
+    "message": "Abmeldeseite im Browser geöffnet ($1)"
+  },
+  "unsubSpamBody": {
+    "message": "Diese Mail sieht nach Spam aus ($1). Bei Spam bestätigen Abmelde-Links oft nur, dass deine Adresse aktiv ist. Sicherer ist der Papierkorb."
+  },
+  "unsubSpamTitle": {
+    "message": "Von wahrscheinlichem Spam abmelden?"
+  },
+  "unsubTipBoth": {
+    "message": "Newsletter – klicken zum Abmelden (Webseite auf $1 oder per Mail)"
+  },
+  "unsubTipMail": {
+    "message": "Newsletter – klicken öffnet eine Abmelde-Mail an $1"
+  },
+  "unsubTipNone": {
+    "message": "Newsletter – keine Abmeldemöglichkeit gefunden"
+  },
+  "unsubTipUrl": {
+    "message": "Newsletter – klicken zum Abmelden über $1"
+  },
+  "unsubViaMail": {
+    "message": "Abmelde-Mail an $1 schreiben"
+  },
+  "unsubViaWeb": {
+    "message": "Auf der Webseite abmelden ($1)"
+  },
+  "unsubscribe": {
+    "message": "Abmelden"
+  },
+  "unsubscribeEllipsis": {
+    "message": "Abmelden…"
+  },
+  "untrustedToast": {
+    "message": "„$1“ nicht mehr vertraut"
+  },
+  "wlActiveTitle": {
+    "message": "„$1“ ist vertraut – nicht mehr vertrauen"
+  },
+  "wlEmpty": {
+    "message": "Noch niemand – z. B. eigene Domain oder wichtige Kontakte hinzufügen."
+  },
+  "wlPlaceholder": {
+    "message": "Adresse oder Domain hinzufügen …"
+  },
+  "wlTrustAddr": {
+    "message": "Adresse „$1“ vertrauen (nie Spam)"
+  },
+  "wlTrustDomain": {
+    "message": "Domain „$1“ vertrauen (nie Spam)"
+  },
+  "xOfY": {
+    "message": "$1 von $2"
+  },
+  "yesterday": {
+    "message": "Gestern"
+  }
+}

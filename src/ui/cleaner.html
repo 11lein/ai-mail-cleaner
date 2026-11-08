@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AI Mail Cleaner</title>
+  <link rel="stylesheet" href="common.css" />
+  <link rel="stylesheet" href="cleaner.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Toolbar -->
+    <header class="toolbar">
+      <div class="tb-left">
+        <button id="sidebarToggle" class="btn-icon" data-i18n-aria="sidebarToggle" aria-pressed="false"><span data-icon="panel-left" data-size="17"></span></button>
+        <div class="brand">
+          <span class="brand-mark"><span data-icon="mail" data-size="14"></span></span>
+          <span class="brand-name">AI Mail Cleaner</span>
+        </div>
+        <span class="tb-sep"></span>
+        <nav id="currentFolderLabel" class="crumb" data-i18n-aria="currentFolder"></nav>
+        <button id="reloadBtn" class="btn-icon" data-i18n-title="reload" data-i18n-aria="reload"><span data-icon="refresh"></span></button>
+      </div>
+      <div class="tb-right">
+        <label class="search" data-i18n-title="searchTitle">
+          <span data-icon="search" data-size="15"></span>
+          <input type="search" id="searchBox" data-i18n-placeholder="searchPlaceholder" data-i18n-aria="search" autocomplete="off" />
+          <kbd>/</kbd>
+        </label>
+        <button id="scanBtn" class="primary"><span data-icon="sparkles"></span><span id="scanLabel" data-i18n="scan"></span></button>
+        <button id="stopBtn" class="danger-solid hidden" data-i18n-title="stopTitle"><span data-icon="stop"></span><span data-i18n="stop"></span></button>
+        <button id="helpBtn" class="btn-icon" data-i18n-title="helpTitle" data-i18n-aria="help"><span data-icon="help" data-size="17"></span></button>
+        <button id="settingsBtn" class="btn-icon" data-i18n-title="settings" data-i18n-aria="settings"><span data-icon="gear" data-size="17"></span></button>
+      </div>
+    </header>
+
+    <!-- Error / info banner -->
+    <div id="banner" class="banner hidden" role="alert">
+      <span data-icon="alert" data-size="16"></span>
+      <span id="bannerText" class="banner-text"></span>
+      <span id="bannerActions" class="banner-actions"></span>
+      <button id="bannerClose" class="btn-icon sm" data-i18n-aria="dismiss"><span data-icon="x" data-size="14"></span></button>
+    </div>
+
+    <!-- Selection + filter -->
+    <div class="subbar">
+      <div class="sb-left">
+        <span id="selInfo" class="sel-info"></span>
+        <button id="selVisibleOnly" class="linkbtn hidden"></button>
+        <div id="selActions" class="sel-actions hidden">
+          <button id="deleteBtn" class="danger sm" data-i18n-title="trashSelTitle"><span data-icon="trash" data-size="15"></span><span data-i18n="trash"></span></button>
+          <button id="moveBtn" class="sm" data-i18n-title="moveSelTitle"><span data-icon="folder-move" data-size="15"></span><span data-i18n="moveEllipsis"></span></button>
+          <button id="trustBtn" class="sm" data-i18n-title="trustSelTitle"><span data-icon="shield-check" data-size="15"></span><span data-i18n="trust"></span></button>
+          <button id="clearSelBtn" class="btn-icon sm" data-i18n-title="clearSelTitle" data-i18n-aria="clearSel"><span data-icon="x" data-size="15"></span></button>
+        </div>
+      </div>
+      <div class="sb-right">
+        <div id="progress" class="progress hidden" aria-live="polite">
+          <span class="pulse"></span>
+          <div class="bar"><div id="progressFill"></div></div>
+          <span id="progressText"></span>
+        </div>
+        <div class="chips" role="group" data-i18n-aria="spamFilter">
+          <button class="chip active" data-preset="all"><span data-i18n="chipAll"></span></button>
+          <button class="chip" data-preset="spam"><span class="dot d-high"></span><span data-i18n="chipSpam"></span><b id="cntSpam">0</b></button>
+          <button class="chip" data-preset="unsure"><span class="dot d-mid"></span><span data-i18n="chipUnsure"></span><b id="cntUnsure">0</b></button>
+          <button class="chip" data-preset="unscored"><span class="dot d-none"></span><span data-i18n="chipUnscored"></span><b id="cntUnscored">0</b></button>
+        </div>
+        <div class="filter" data-i18n-title="rangeTitle">
+          <div id="spamRange" class="range">
+            <div class="range-track"><div id="rangeFill" class="range-fill"></div></div>
+            <input type="range" id="spamMin" min="0" max="100" step="1" value="0" data-i18n-aria="rangeFrom" />
+            <input type="range" id="spamMax" min="0" max="100" step="1" value="100" data-i18n-aria="rangeTo" />
+          </div>
+          <span id="rangeLabel" class="rlabel"></span>
+        </div>
+        <button id="selectFilteredBtn" class="sm hidden"><span data-icon="check-square" data-size="15"></span><span id="selectFilteredLabel"></span></button>
+        <button id="trashFilteredBtn" class="danger-solid sm hidden"><span data-icon="trash" data-size="15"></span><span id="trashFilteredLabel"></span></button>
+      </div>
+    </div>
+
+    <!-- Main area -->
+    <div class="main">
+      <aside class="sidebar">
+        <div class="side-section folders">
+          <div class="side-head">
+            <span class="side-title" data-i18n="folders"></span>
+            <label class="switch" data-i18n-title="includeSubTitle">
+              <input type="checkbox" id="includeSub" />
+              <span class="track"></span>
+              <span class="switch-text" data-i18n="subfolders"></span>
+            </label>
+          </div>
+          <ul id="folderTree" class="folder-tree" role="tree" data-i18n-aria="folders"></ul>
+        </div>
+        <div class="side-section groups">
+          <div class="side-head">
+            <span class="side-title" data-i18n="groups"></span>
+            <div class="seg">
+              <button data-group="domain" class="seg-btn active" data-i18n="domain"></button>
+              <button data-group="sender" class="seg-btn" data-i18n="sender"></button>
+            </div>
+          </div>
+          <ul id="groupList" class="group-list" role="listbox" data-i18n-aria="groups"></ul>
+        </div>
+      </aside>
+
+      <section class="content">
+        <div id="onboard" class="onboard hidden">
+          <div class="ob-icon"><span data-icon="sparkles" data-size="22"></span></div>
+          <div class="ob-text">
+            <h3 data-i18n="obTitle"></h3>
+            <p data-i18n="obText"></p>
+          </div>
+          <div class="ob-actions">
+            <button id="obSetup" class="primary" data-i18n="setup"></button>
+            <button id="obKey" class="ghost"><span data-i18n="obGetKey"></span><span data-icon="external" data-size="14"></span></button>
+          </div>
+        </div>
+        <div id="tableWrap" class="table-wrap" tabindex="0" role="grid" data-i18n-aria="tableAria">
+          <table id="mailTable">
+            <colgroup id="colGroup"></colgroup>
+            <thead>
+              <tr id="headRow"></tr>
+            </thead>
+            <tbody id="mailBody"></tbody>
+          </table>
+          <div id="emptyState" class="empty hidden"></div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Status bar -->
+    <footer class="statusbar">
+      <span id="statusText" data-i18n="ready"></span>
+      <button id="modelChip" class="model-chip" data-i18n-title="modelChipTitle"><span id="modelChipIcon" class="ico-wrap"></span><span id="modelChipText"></span></button>
+    </footer>
+  </div>
+
+  <!-- Settings -->
+  <div id="settingsBackdrop" class="modal-backdrop hidden">
+    <div class="modal modal-settings" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="setTitle" data-i18n="settings"></h2>
+          <p class="modal-sub" data-i18n="settingsSub"></p>
+        </div>
+        <button id="setClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="17"></span></button>
+      </div>
+      <div class="modal-body">
+        <div class="prov-grid" role="radiogroup" data-i18n-aria="providerLabel">
+          <button type="button" class="prov" data-provider="decision" role="radio"><span data-icon="target" data-size="18"></span><span class="prov-title" data-i18n="provDecisionTitle"></span><span class="prov-sub" data-i18n="provDecisionSub"></span></button>
+          <button type="button" class="prov" data-provider="openai" role="radio"><span data-icon="cloud" data-size="18"></span><span class="prov-title" data-i18n="provOpenaiTitle"></span><span class="prov-sub" data-i18n="provOpenaiSub"></span></button>
+          <button type="button" class="prov" data-provider="ollama" role="radio"><span data-icon="cpu" data-size="18"></span><span class="prov-title" data-i18n="provOllamaTitle"></span><span class="prov-sub" data-i18n="provOllamaSub"></span></button>
+        </div>
+        <p id="provDesc" class="prov-desc"></p>
+
+        <div class="mfield" id="presetField">
+          <label for="presetSelect" data-i18n="providerLabel"></label>
+          <select id="presetSelect"></select>
+        </div>
+
+        <div class="mfield" id="keyField">
+          <label for="mApiKey" id="mApiKeyLabel" data-i18n="apiKey"></label>
+          <input type="password" id="mApiKey" autocomplete="off" spellcheck="false" />
+          <div class="keyrow">
+            <span id="mKeyState" class="keystate"></span>
+            <span class="keylinks">
+              <button type="button" id="mKeyLink" class="linkbtn"><span data-i18n="createKey"></span><span data-icon="external" data-size="13"></span></button>
+              <button type="button" id="mKeyClear" class="linklike hidden" data-i18n="remove"></button>
+            </span>
+          </div>
+        </div>
+
+        <div class="mfield">
+          <label for="mModel" data-i18n="model"></label>
+          <div class="model-row">
+            <input type="text" id="mModel" autocomplete="off" spellcheck="false" />
+            <button type="button" id="mPick"><span data-icon="list-check" data-size="15"></span><span data-i18n="chooseModel"></span></button>
+          </div>
+          <div id="mModelInfo" class="model-info"></div>
+        </div>
+
+        <div class="msection">
+          <div class="msection-title" data-i18n="privacy"></div>
+          <label class="switch mswitch">
+            <input type="checkbox" id="mScanBody" />
+            <span class="track"></span>
+            <span class="switch-text" data-i18n="sendExcerpt"></span>
+          </label>
+          <p id="privacyNote" class="hint"></p>
+          <label class="switch mswitch">
+            <input type="checkbox" id="mNlDetect" />
+            <span class="track"></span>
+            <span class="switch-text" data-i18n="detectNewsletters"></span>
+          </label>
+          <p class="hint" data-i18n="detectNewslettersHint"></p>
+        </div>
+
+        <div class="msection">
+          <div class="msection-title"><span data-i18n="trustedSenders"></span> <span class="lbl-hint" data-i18n="trustedHint"></span></div>
+          <div id="wlChips" class="wl-chips"></div>
+          <div class="wl-add">
+            <input type="text" id="wlInput" data-i18n-placeholder="wlPlaceholder" autocomplete="off" />
+            <button type="button" id="wlAdd" class="sm"><span data-icon="plus" data-size="14"></span><span data-i18n="add"></span></button>
+          </div>
+        </div>
+
+        <details class="adv">
+          <summary data-i18n="advanced"></summary>
+          <div class="mfield">
+            <label for="mBaseUrl" data-i18n="baseUrl"></label>
+            <input type="text" id="mBaseUrl" spellcheck="false" />
+          </div>
+          <div class="adv-grid">
+            <div class="mfield"><label for="mConc" data-i18n="concurrency"></label><input type="number" id="mConc" min="1" max="10" /></div>
+            <div class="mfield"><label for="mBatch"><span data-i18n="batchSize"></span> <span class="lbl-hint" data-i18n="batchHint"></span></label><input type="number" id="mBatch" min="1" max="25" /></div>
+            <div class="mfield"><label for="mLimit" data-i18n="loadLimit"></label><input type="number" id="mLimit" min="100" max="100000" step="100" /></div>
+            <div class="mfield"><label for="mChars" data-i18n="excerptChars"></label><input type="number" id="mChars" min="0" max="20000" step="100" /></div>
+          </div>
+        </details>
+      </div>
+      <div class="modal-actions">
+        <button id="mTest" class="ghost"><span data-icon="refresh" data-size="14"></span><span data-i18n="testConnection"></span></button>
+        <span id="mStatus" class="mstatus" aria-live="polite"></span>
+        <div class="spacer"></div>
+        <button id="mCancel" data-i18n="cancel"></button>
+        <button id="mSave" class="primary" data-i18n="save"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model picker -->
+  <div id="pickerBackdrop" class="modal-backdrop hidden">
+    <div class="modal modal-picker" role="dialog" aria-modal="true" aria-labelledby="pkTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="pkTitle" data-i18n="chooseModelTitle"></h2>
+          <p id="pkSub" class="modal-sub"></p>
+        </div>
+        <button id="pkClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="17"></span></button>
+      </div>
+      <div class="pk-tools">
+        <label class="search pk-search">
+          <span data-icon="search" data-size="15"></span>
+          <input type="search" id="pkSearch" data-i18n-placeholder="searchModel" data-i18n-aria="searchModel" autocomplete="off" />
+        </label>
+        <select id="pkSort" data-i18n-aria="sortBy">
+          <option value="rec" data-i18n="sortRec"></option>
+          <option value="price" data-i18n="sortPrice"></option>
+          <option value="name" data-i18n="sortName"></option>
+          <option value="ctx" data-i18n="sortCtx"></option>
+          <option value="size" data-i18n="sortSize"></option>
+        </select>
+        <label class="switch">
+          <input type="checkbox" id="pkFree" />
+          <span class="track"></span>
+          <span class="switch-text" data-i18n="freeOnly"></span>
+        </label>
+        <button id="pkReload" class="btn-icon" data-i18n-title="reloadList" data-i18n-aria="reloadList"><span data-icon="refresh"></span></button>
+      </div>
+      <div id="pkList" class="pk-list" role="listbox" data-i18n-aria="models" tabindex="0"></div>
+      <div class="modal-actions">
+        <span id="pkSel" class="mstatus"></span>
+        <div class="spacer"></div>
+        <button id="pkCancel" data-i18n="cancel"></button>
+        <button id="pkApply" class="primary" disabled data-i18n="apply"></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Move -->
+  <div id="moveBackdrop" class="modal-backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="moveTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="moveTitle" data-i18n="moveTo"></h2>
+          <p id="moveSub" class="modal-sub"></p>
+        </div>
+        <button id="moveClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="17"></span></button>
+      </div>
+      <div class="modal-body">
+        <ul id="moveTree" class="folder-tree move-tree" role="tree" data-i18n-aria="targetFolder"></ul>
+        <div class="newfolder-row">
+          <input type="text" id="newFolderName" data-i18n-placeholder="newSubfolder" data-i18n-aria="newSubfolderAria" autocomplete="off" />
+          <button id="newFolderBtn"><span data-icon="plus" data-size="14"></span><span data-i18n="create"></span></button>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <span id="moveStatus" class="mstatus"></span>
+        <div class="spacer"></div>
+        <button id="moveCancel" data-i18n="cancel"></button>
+        <button id="moveConfirm" class="primary" disabled><span data-icon="folder-move" data-size="15"></span><span data-i18n="move"></span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mail preview -->
+  <div id="previewBackdrop" class="modal-backdrop pv-backdrop hidden">
+    <div id="preview" class="preview" role="dialog" aria-modal="true" aria-labelledby="pvSubject" tabindex="-1">
+      <div class="pv-head">
+        <div class="pv-top">
+          <div class="pv-nav">
+            <button id="pvPrev" class="btn-icon sm" data-i18n-title="prevTitle" data-i18n-aria="prevMail"><span data-icon="chevron-left" data-size="16"></span></button>
+            <span id="pvPos" class="pv-pos"></span>
+            <button id="pvNext" class="btn-icon sm" data-i18n-title="nextTitle" data-i18n-aria="nextMail"><span data-icon="chevron-right" data-size="16"></span></button>
+          </div>
+          <div class="pv-actions">
+            <button id="pvUnsub" class="ghost sm hidden"><span data-icon="log-out" data-size="15"></span><span data-i18n="unsubscribe"></span></button>
+            <button id="pvNotSpam" class="ghost sm" data-i18n-title="notSpamTitle"><span data-icon="check-circle" data-size="15"></span><span data-i18n="notSpam"></span></button>
+            <button id="pvTrust" class="ghost sm"><span data-icon="shield-check" data-size="15"></span><span data-i18n="trust"></span></button>
+            <button id="pvOpen" class="ghost sm" data-i18n-title="openInTb"><span data-icon="external" data-size="15"></span><span data-i18n="open"></span></button>
+            <button id="pvDelete" class="danger sm" data-i18n-title="trashNextTitle"><span data-icon="trash" data-size="15"></span><span data-i18n="trash"></span></button>
+            <span class="pv-divider"></span>
+            <button id="pvClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="18"></span></button>
+          </div>
+        </div>
+        <h2 id="pvSubject" class="pv-subject"></h2>
+        <div class="pv-meta">
+          <span id="pvAvatar" class="avatar lg"></span>
+          <div class="pv-from">
+            <div id="pvFromName" class="pv-name"></div>
+            <div id="pvFromAddr" class="pv-addr"></div>
+          </div>
+          <div class="pv-side">
+            <span id="pvSpam"></span>
+            <span id="pvDate" class="pv-date"></span>
+          </div>
+        </div>
+        <div id="pvTo" class="pv-to"></div>
+        <div id="pvAtt" class="pv-att hidden"></div>
+      </div>
+      <div class="pv-bar">
+        <div id="pvMode" class="seg sm hidden">
+          <button data-mode="html" class="seg-btn active" data-i18n="formatted"></button>
+          <button data-mode="text" class="seg-btn" data-i18n="text"></button>
+        </div>
+        <span id="pvBlocked" class="pv-note"></span>
+        <span class="pv-keys"><kbd>←</kbd><kbd>→</kbd> <span data-i18n="keysBrowse"></span> <kbd>N</kbd> <span data-i18n="keysNotSpam"></span> <kbd data-i18n="keyDel"></kbd> <span data-i18n="keysTrash"></span> <kbd>Esc</kbd> <span data-i18n="keysClose"></span></span>
+      </div>
+      <div id="pvBody" class="pv-body"></div>
+    </div>
+  </div>
+
+  <!-- Confirmation -->
+  <div id="confirmBackdrop" class="modal-backdrop hidden">
+    <div class="modal modal-confirm" role="alertdialog" aria-modal="true" aria-labelledby="cfTitle">
+      <div class="modal-head">
+        <div><h2 id="cfTitle"></h2></div>
+        <button id="cfClose" class="btn-icon" data-i18n-title="cancelEsc" data-i18n-aria="cancel"><span data-icon="x" data-size="17"></span></button>
+      </div>
+      <div id="cfBody" class="modal-body cf-body"></div>
+      <div class="modal-actions">
+        <div class="spacer"></div>
+        <span id="cfButtons" class="cf-buttons"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help -->
+  <div id="helpBackdrop" class="modal-backdrop hidden">
+    <div class="modal modal-help" role="dialog" aria-modal="true" aria-labelledby="hpTitle">
+      <div class="modal-head">
+        <div>
+          <h2 id="hpTitle" data-i18n="shortcuts"></h2>
+          <p class="modal-sub" data-i18n="shortcutsSub"></p>
+        </div>
+        <button id="hpClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="17"></span></button>
+      </div>
+      <div class="modal-body">
+        <dl class="keys">
+          <dt><kbd>↑</kbd><kbd>↓</kbd></dt><dd data-i18n="helpSelect"></dd>
+          <dt><kbd>x</kbd></dt><dd data-i18n="helpToggle"></dd>
+          <dt><kbd data-i18n="keySpace"></kbd> / <kbd data-i18n="keyEnter"></kbd></dt><dd data-i18n="helpPreview"></dd>
+          <dt><kbd>←</kbd><kbd>→</kbd></dt><dd data-i18n="helpBrowse"></dd>
+          <dt><kbd>N</kbd></dt><dd data-i18n="helpNotSpam"></dd>
+          <dt><kbd>U</kbd></dt><dd data-i18n="helpUnsub"></dd>
+          <dt><kbd data-i18n="keyDel"></kbd></dt><dd data-i18n="helpDelete"></dd>
+          <dt><kbd>/</kbd></dt><dd data-i18n="helpSearch"></dd>
+          <dt><kbd>Esc</kbd></dt><dd data-i18n="helpEsc"></dd>
+          <dt><kbd>?</kbd></dt><dd data-i18n="helpHelp"></dd>
+        </dl>
+        <p class="hint" data-i18n="helpHint"></p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+  <div id="ctxMenu" class="ctx hidden" role="menu"></div>
+
+  <script type="module" src="cleaner.js"></script>
+</body>
+</html>

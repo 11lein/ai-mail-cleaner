@@ -1,0 +1,19 @@
+{
+  "name": "ai-mail-cleaner",
+  "version": "2.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Thunderbird add-on: clean out your mailbox with a spam probability per mail and one-click newsletter unsubscribe (decision model, any AI provider or local Ollama).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/11lein/ai-mail-cleaner.git"
+  },
+  "scripts": {
+    "dev": "sh scripts/dev.sh",
+    "build": "sh scripts/build.sh",
+    "icons": "sh scripts/icons.sh",
+    "i18n": "node scripts/i18n/build.mjs",
+    "lint": "npx --yes addons-linter dist/ai-mail-cleaner-$npm_package_version.xpi"
+  }
+}

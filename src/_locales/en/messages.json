@@ -1,0 +1,1217 @@
+{
+  "accountsFailed": {
+    "message": "Could not load accounts: $1"
+  },
+  "actionLabel": {
+    "message": "Mail Cleaner"
+  },
+  "actionTitle": {
+    "message": "Open AI Mail Cleaner"
+  },
+  "add": {
+    "message": "Add"
+  },
+  "advanced": {
+    "message": "Advanced"
+  },
+  "allLocal": {
+    "message": "Everything stays on your computer."
+  },
+  "allScored": {
+    "message": "All visible mails are scored."
+  },
+  "allScoredBtn": {
+    "message": "All scored"
+  },
+  "allSendersTrusted": {
+    "message": "All senders are already trusted"
+  },
+  "apiKey": {
+    "message": "API key"
+  },
+  "apply": {
+    "message": "Apply"
+  },
+  "approx": {
+    "message": "approx. $1"
+  },
+  "avgTitle": {
+    "message": "Average spam probability ($1 scored)"
+  },
+  "baseUrl": {
+    "message": "API base URL"
+  },
+  "batchHint": {
+    "message": "(AI/local)"
+  },
+  "batchSize": {
+    "message": "Mails per request"
+  },
+  "cancel": {
+    "message": "Cancel"
+  },
+  "cancelEsc": {
+    "message": "Cancel (Esc)"
+  },
+  "cfHiddenWarn_one": {
+    "message": "$1 mail is currently hidden (filter/search)"
+  },
+  "cfHiddenWarn_other": {
+    "message": "$1 mails are currently hidden (filter/search)"
+  },
+  "cfLowPart": {
+    "message": "$1 probably not spam"
+  },
+  "cfMostly": {
+    "message": "Mostly: $1"
+  },
+  "cfSpamPart": {
+    "message": "$1 with ≥ 80% spam"
+  },
+  "cfTrashTitle_one": {
+    "message": "Move $1 mail to the trash?"
+  },
+  "cfTrashTitle_other": {
+    "message": "Move $1 mails to the trash?"
+  },
+  "cfTrustedWarn_one": {
+    "message": "Caution: $1 mail from trusted senders"
+  },
+  "cfTrustedWarn_other": {
+    "message": "Caution: $1 mails from trusted senders"
+  },
+  "cfUndoHint": {
+    "message": "They go to the trash – you can restore them right after via “Undo”."
+  },
+  "cfUnscoredPart": {
+    "message": "$1 unscored"
+  },
+  "cfUnsurePart": {
+    "message": "$1 unsure"
+  },
+  "chipAll": {
+    "message": "All"
+  },
+  "chipSpam": {
+    "message": "Spam ≥ 80%"
+  },
+  "chipUnscored": {
+    "message": "Unscored"
+  },
+  "chipUnsure": {
+    "message": "Unsure"
+  },
+  "chooseModel": {
+    "message": "Choose model…"
+  },
+  "chooseModelBtn": {
+    "message": "Choose model"
+  },
+  "chooseModelPh": {
+    "message": "Choose a model …"
+  },
+  "chooseModelTitle": {
+    "message": "Choose model"
+  },
+  "clearGroupFilter": {
+    "message": "Clear group filter"
+  },
+  "clearSel": {
+    "message": "Clear selection"
+  },
+  "clearSelTitle": {
+    "message": "Clear selection (Esc)"
+  },
+  "close": {
+    "message": "Close"
+  },
+  "closeEsc": {
+    "message": "Close (Esc)"
+  },
+  "colDate": {
+    "message": "Date"
+  },
+  "colDomain": {
+    "message": "Domain"
+  },
+  "colFrom": {
+    "message": "Sender"
+  },
+  "colSize": {
+    "message": "Size"
+  },
+  "colSpam": {
+    "message": "Spam"
+  },
+  "colSubject": {
+    "message": "Subject"
+  },
+  "collapse": {
+    "message": "Collapse"
+  },
+  "concurrency": {
+    "message": "Parallel requests"
+  },
+  "connectionOk": {
+    "message": "Connection OK – $1: $2"
+  },
+  "costForFolder": {
+    "message": "$1 for this folder ($2)"
+  },
+  "costLabel": {
+    "message": "Cost: $1"
+  },
+  "costNone": {
+    "message": "none"
+  },
+  "costUnknown": {
+    "message": "Cost: unknown – prices are shown under “Choose model”"
+  },
+  "create": {
+    "message": "Create"
+  },
+  "createFailed": {
+    "message": "Could not create the folder: $1"
+  },
+  "createKey": {
+    "message": "Create key"
+  },
+  "creatingFolder": {
+    "message": "Creating “$1” …"
+  },
+  "ctxK": {
+    "message": "$1k context"
+  },
+  "ctxMoveN_one": {
+    "message": "Move $1 mail…"
+  },
+  "ctxMoveN_other": {
+    "message": "Move $1 mails…"
+  },
+  "ctxNotSpamN_one": {
+    "message": "Mark $1 mail as not spam"
+  },
+  "ctxNotSpamN_other": {
+    "message": "Mark $1 mails as not spam"
+  },
+  "ctxSelectAllFrom": {
+    "message": "Select all from $1"
+  },
+  "ctxTrashN_one": {
+    "message": "Move $1 mail to the trash"
+  },
+  "ctxTrashN_other": {
+    "message": "Move $1 mails to the trash"
+  },
+  "ctxTrustDomain": {
+    "message": "Trust domain ($1)"
+  },
+  "ctxTrustSender": {
+    "message": "Trust sender ($1)"
+  },
+  "ctxUntrust": {
+    "message": "Stop trusting $1"
+  },
+  "currentFolder": {
+    "message": "Current folder"
+  },
+  "customUrl": {
+    "message": "Custom URL (under “Advanced”)"
+  },
+  "deleteFailed": {
+    "message": "Delete failed: $1"
+  },
+  "detectNewsletters": {
+    "message": "Recognize newsletters"
+  },
+  "detectNewslettersHint": {
+    "message": "Checks the visible mails for unsubscribe information (List-Unsubscribe header or a note in the text) and shows a “Newsletter” tag. Read from your mail server only – nothing is sent anywhere."
+  },
+  "dismiss": {
+    "message": "Dismiss"
+  },
+  "domain": {
+    "message": "Domain"
+  },
+  "durH": {
+    "message": "$1 h"
+  },
+  "durHM": {
+    "message": "$1 h $2 min"
+  },
+  "durHardware": {
+    "message": "Duration: depends on your hardware"
+  },
+  "durMin": {
+    "message": "$1 min"
+  },
+  "durUnder1": {
+    "message": "under 1 min"
+  },
+  "durationLabel": {
+    "message": "Duration: $1"
+  },
+  "emptyFolderHint": {
+    "message": "Nothing to clean up here."
+  },
+  "emptyFolderTitle": {
+    "message": "Folder is empty"
+  },
+  "emptyNoMatchHint": {
+    "message": "Nothing matches the search, group or spam filter."
+  },
+  "emptyNoMatchTitle": {
+    "message": "No matches"
+  },
+  "enterApiKey": {
+    "message": "Please enter an API key."
+  },
+  "enterFolderName": {
+    "message": "Please enter a folder name."
+  },
+  "errAuth": {
+    "message": "The API key was rejected (invalid or out of credit)."
+  },
+  "errBadJson": {
+    "message": "The response was not valid JSON."
+  },
+  "errNoBaseUrl": {
+    "message": "No API base URL configured."
+  },
+  "errNoConn": {
+    "message": "No connection to $1."
+  },
+  "errNoScore": {
+    "message": "No score in the response."
+  },
+  "errNoUsableJson": {
+    "message": "The model did not return usable JSON – please choose another model."
+  },
+  "errNotDecision": {
+    "message": "Unexpected response – is this really a decision model?"
+  },
+  "errNotFound": {
+    "message": "Model “$1” was not found at the provider."
+  },
+  "errOllama403": {
+    "message": "Ollama rejects the request (403). Start Ollama with OLLAMA_ORIGINS=moz-extension://* and try again."
+  },
+  "errOllamaDown": {
+    "message": "Ollama is not reachable – is “ollama serve” running?"
+  },
+  "errOllamaOriginsShort": {
+    "message": "Ollama blocks Thunderbird – start it with OLLAMA_ORIGINS=moz-extension://*."
+  },
+  "errParse": {
+    "message": "The model returns no usable answers – please choose another model."
+  },
+  "errRate": {
+    "message": "The provider is rate-limiting requests."
+  },
+  "errScan": {
+    "message": "Scan error: $1"
+  },
+  "etaLeft": {
+    "message": "about $1 left"
+  },
+  "etaSoon": {
+    "message": "almost done"
+  },
+  "excerptChars": {
+    "message": "Text excerpt (characters)"
+  },
+  "expand": {
+    "message": "Expand"
+  },
+  "extDescription": {
+    "message": "A spam probability for every mail – decision model, any AI provider or local Ollama. Spot newsletters, filter, clean up fast."
+  },
+  "extName": {
+    "message": "AI Mail Cleaner"
+  },
+  "failed": {
+    "message": "Failed: $1"
+  },
+  "folderCreated": {
+    "message": "“$1” created."
+  },
+  "folderCreatedSelected": {
+    "message": "“$1” created and selected as target."
+  },
+  "folderTitle": {
+    "message": "Folder: $1"
+  },
+  "folders": {
+    "message": "Folders"
+  },
+  "folders_one": {
+    "message": "$1 folder"
+  },
+  "folders_other": {
+    "message": "$1 folders"
+  },
+  "formatted": {
+    "message": "Formatted"
+  },
+  "free": {
+    "message": "Free"
+  },
+  "freeLower": {
+    "message": "free"
+  },
+  "freeModelNote": {
+    "message": "(free model, ~20 mails/min)"
+  },
+  "freeOnly": {
+    "message": "Free only"
+  },
+  "fromCache": {
+    "message": "$1 scores from memory."
+  },
+  "groups": {
+    "message": "Groups"
+  },
+  "hasAttachment": {
+    "message": "Has attachment"
+  },
+  "help": {
+    "message": "Help"
+  },
+  "helpBrowse": {
+    "message": "Browse in the preview"
+  },
+  "helpDelete": {
+    "message": "Move to trash (with undo)"
+  },
+  "helpEsc": {
+    "message": "Close dialog · clear selection"
+  },
+  "helpHelp": {
+    "message": "This help"
+  },
+  "helpHint": {
+    "message": "Right-click a mail for a menu with all actions. Deleted mails go to the trash and can be restored right after via “Undo”."
+  },
+  "helpNotSpam": {
+    "message": "In the preview: not spam & next"
+  },
+  "helpPreview": {
+    "message": "Open / close preview"
+  },
+  "helpSearch": {
+    "message": "Search"
+  },
+  "helpSelect": {
+    "message": "Select mail (Shift extends the range)"
+  },
+  "helpTitle": {
+    "message": "Keyboard shortcuts & help (?)"
+  },
+  "helpToggle": {
+    "message": "Select / deselect mail"
+  },
+  "helpUnsub": {
+    "message": "Unsubscribe from the newsletter"
+  },
+  "hiddenKeepVisible": {
+    "message": "$1 hidden – keep only visible"
+  },
+  "imagesBlocked_one": {
+    "message": "$1 image blocked"
+  },
+  "imagesBlocked_other": {
+    "message": "$1 images blocked"
+  },
+  "imgBlocked": {
+    "message": "Image blocked"
+  },
+  "imgBlockedAlt": {
+    "message": "Image blocked: $1"
+  },
+  "includeSubTitle": {
+    "message": "Include subfolders when loading and scanning"
+  },
+  "keyDel": {
+    "message": "Del"
+  },
+  "keyEnter": {
+    "message": "Enter"
+  },
+  "keyInheritedPh": {
+    "message": "•••••••••••• (from “$1”)"
+  },
+  "keyInheritedState": {
+    "message": "✓ the key from “$1” is reused"
+  },
+  "keySavedPh": {
+    "message": "•••••••••••• (saved)"
+  },
+  "keySavedState": {
+    "message": "✓ saved – local only, obfuscated"
+  },
+  "keySpace": {
+    "message": "Space"
+  },
+  "keyWillBeRemoved": {
+    "message": "will be removed when you save"
+  },
+  "keysBrowse": {
+    "message": "browse"
+  },
+  "keysClose": {
+    "message": "close"
+  },
+  "keysNotSpam": {
+    "message": "not spam"
+  },
+  "keysTrash": {
+    "message": "trash"
+  },
+  "linkDisabled": {
+    "message": "Link disabled: $1"
+  },
+  "linkLeadsTo": {
+    "message": "⚠ leads to $1"
+  },
+  "linksDisabled": {
+    "message": "links disabled"
+  },
+  "loadError": {
+    "message": "Error while loading: $1"
+  },
+  "loadFailedBanner": {
+    "message": "Mails could not be loaded: $1"
+  },
+  "loadLimit": {
+    "message": "Max. mails to load"
+  },
+  "loaded": {
+    "message": "$1 loaded."
+  },
+  "loadedTruncated": {
+    "message": "$1 loaded (limited to $2)."
+  },
+  "loading": {
+    "message": "Loading …"
+  },
+  "loadingHeaders": {
+    "message": "Loading headers …"
+  },
+  "loadingHeadersSub": {
+    "message": "Loading headers (incl. $1) …"
+  },
+  "loadingN": {
+    "message": "Loading $1 …"
+  },
+  "loadingShort": {
+    "message": "loading …"
+  },
+  "localFree": {
+    "message": "Local · free"
+  },
+  "mailContent": {
+    "message": "Mail content"
+  },
+  "mailsFromFolders": {
+    "message": "$1 from $2"
+  },
+  "mails_one": {
+    "message": "$1 mail"
+  },
+  "mails_other": {
+    "message": "$1 mails"
+  },
+  "markedNotSpam": {
+    "message": "Marked as not spam"
+  },
+  "markedNotSpamN_one": {
+    "message": "$1 mail marked as not spam"
+  },
+  "markedNotSpamN_other": {
+    "message": "$1 mails marked as not spam"
+  },
+  "model": {
+    "message": "Model"
+  },
+  "modelApplied": {
+    "message": "Model applied – don't forget to save."
+  },
+  "modelChipTitle": {
+    "message": "Change spam model"
+  },
+  "models": {
+    "message": "Models"
+  },
+  "move": {
+    "message": "Move"
+  },
+  "moveAccountHint": {
+    "message": "“$1” – a new folder would be created here."
+  },
+  "moveEllipsis": {
+    "message": "Move…"
+  },
+  "moveFailed": {
+    "message": "Move failed: $1"
+  },
+  "movePickTarget": {
+    "message": "Choose a target – or create a new folder."
+  },
+  "moveSelTitle": {
+    "message": "Move selection"
+  },
+  "moveSub_one": {
+    "message": "Move $1 mail into the selected folder."
+  },
+  "moveSub_other": {
+    "message": "Move $1 mails into the selected folder."
+  },
+  "moveTarget": {
+    "message": "Target: $1"
+  },
+  "moveTo": {
+    "message": "Move to …"
+  },
+  "moveToTrash": {
+    "message": "Move to trash"
+  },
+  "nScored": {
+    "message": "$1 scored"
+  },
+  "nSpam": {
+    "message": "$1 spam"
+  },
+  "newSubfolder": {
+    "message": "New subfolder …"
+  },
+  "newSubfolderAria": {
+    "message": "Name of the new subfolder"
+  },
+  "newsletterTag": {
+    "message": "Newsletter"
+  },
+  "nextMail": {
+    "message": "Next mail"
+  },
+  "nextTitle": {
+    "message": "Next (→)"
+  },
+  "noAccounts": {
+    "message": "No accounts or folders found."
+  },
+  "noDisplayableText": {
+    "message": "This mail has no displayable text."
+  },
+  "noDomain": {
+    "message": "(no domain)"
+  },
+  "noFolderHint": {
+    "message": "Select a folder on the left."
+  },
+  "noFolderTitle": {
+    "message": "No folder selected"
+  },
+  "noFolders": {
+    "message": "No folders."
+  },
+  "noModel": {
+    "message": "no model"
+  },
+  "noSubject": {
+    "message": "(no subject)"
+  },
+  "notScored": {
+    "message": "Not scored: $1"
+  },
+  "notScoredYet": {
+    "message": "Not scored yet"
+  },
+  "notSpam": {
+    "message": "Not spam"
+  },
+  "notSpamTitle": {
+    "message": "Mark as not spam and continue (N)"
+  },
+  "obGetKey": {
+    "message": "Get a free key"
+  },
+  "obText": {
+    "message": "Connect a model and every mail gets a spam probability from 0 to 100%. Quickest with a free OpenRouter key – or fully local with Ollama."
+  },
+  "obTitle": {
+    "message": "Set up spam detection"
+  },
+  "only50": {
+    "message": "Only 50 newest"
+  },
+  "open": {
+    "message": "Open"
+  },
+  "openFailed": {
+    "message": "Could not open the mail: $1"
+  },
+  "openInTb": {
+    "message": "Open in Thunderbird"
+  },
+  "openSubjectTitle": {
+    "message": "$1 – open in Thunderbird"
+  },
+  "optOpen": {
+    "message": "Open settings"
+  },
+  "optText": {
+    "message": "All settings (spam model, provider, trusted senders) are in the cleaner itself, behind the gear icon at the top right."
+  },
+  "optionalParen": {
+    "message": "(optional)"
+  },
+  "pctSpam": {
+    "message": "$1 spam"
+  },
+  "perMTok": {
+    "message": "$1 / 1M tokens"
+  },
+  "perMTokShort": {
+    "message": "/ 1M tokens"
+  },
+  "perThousandMails": {
+    "message": "$1 per 1,000 mails"
+  },
+  "pickLocationFirst": {
+    "message": "Please choose a location first."
+  },
+  "pickModelFirst": {
+    "message": "Please choose a model (and a base URL if needed)."
+  },
+  "pickSubfolderForAccount": {
+    "message": "Please choose a subfolder for this account."
+  },
+  "pillFreeRate": {
+    "message": "~20 mails/min"
+  },
+  "pillLocal": {
+    "message": "Local"
+  },
+  "pillPaid": {
+    "message": "Paid"
+  },
+  "pkLoadFailed": {
+    "message": "Could not load the model list: $1"
+  },
+  "pkNeedKey": {
+    "message": "The provider requires a valid API key – please enter it in the settings first."
+  },
+  "pkNoHits": {
+    "message": "No matches for this search."
+  },
+  "pkNoModels": {
+    "message": "The provider reported no models. You can also type the model name directly."
+  },
+  "pkNoOllamaModels": {
+    "message": "No models installed yet. Get a small, good model:"
+  },
+  "pkOllamaDown": {
+    "message": "Ollama is not reachable. Is it running? Start it in a terminal:"
+  },
+  "pkOllamaOrigins": {
+    "message": "Ollama blocks requests from Thunderbird. Start Ollama like this:"
+  },
+  "presetLmStudio": {
+    "message": "LM Studio (local)"
+  },
+  "prevMail": {
+    "message": "Previous mail"
+  },
+  "prevTitle": {
+    "message": "Previous (←)"
+  },
+  "preview": {
+    "message": "Preview"
+  },
+  "previewSpace": {
+    "message": "Preview (Space)"
+  },
+  "previewUnavailable": {
+    "message": "Preview not available: $1"
+  },
+  "priceUnknown": {
+    "message": "price unknown"
+  },
+  "privacy": {
+    "message": "Privacy"
+  },
+  "privacyBody": {
+    "message": "Sent to $1: sender and subject, plus up to $2 characters of the mail text. The excerpt improves detection considerably."
+  },
+  "privacyNoBody": {
+    "message": "Sent to $1: sender and subject."
+  },
+  "provDecisionDesc": {
+    "message": "Non-generative classifier (e.g. Jev, Span-01) via the OpenRouter Decisions API. Fast, cheap, calibrated probability – no LLM."
+  },
+  "provDecisionLabel": {
+    "message": "Decision model"
+  },
+  "provDecisionSub": {
+    "message": "recommended · OpenRouter"
+  },
+  "provDecisionTitle": {
+    "message": "Decision model"
+  },
+  "provOllamaDesc": {
+    "message": "Runs entirely on your computer – no key, no cost, no mail leaves your machine. Requires Ollama (ollama.com)."
+  },
+  "provOllamaLabel": {
+    "message": "Ollama (local)"
+  },
+  "provOllamaSub": {
+    "message": "Ollama · offline"
+  },
+  "provOllamaTitle": {
+    "message": "Local"
+  },
+  "provOpenaiDesc": {
+    "message": "Any provider with an OpenAI-compatible API (OpenRouter, OpenAI, Groq, Mistral …) or local (LM Studio). Uses a language model (LLM)."
+  },
+  "provOpenaiLabel": {
+    "message": "OpenAI-compatible"
+  },
+  "provOpenaiSub": {
+    "message": "OpenAI-compatible"
+  },
+  "provOpenaiTitle": {
+    "message": "AI provider"
+  },
+  "providerLabel": {
+    "message": "Provider"
+  },
+  "pvTrustTitle": {
+    "message": "Always trust this sender address (never spam)"
+  },
+  "pvTrustedTitle": {
+    "message": "Address is trusted – stop trusting"
+  },
+  "rangeFmt": {
+    "message": "$1–$2%"
+  },
+  "rangeFrom": {
+    "message": "Spam % from"
+  },
+  "rangeTitle": {
+    "message": "Choose your own spam range"
+  },
+  "rangeTo": {
+    "message": "Spam % to"
+  },
+  "ready": {
+    "message": "Ready."
+  },
+  "reload": {
+    "message": "Reload"
+  },
+  "reloadList": {
+    "message": "Reload list"
+  },
+  "remove": {
+    "message": "remove"
+  },
+  "removeX": {
+    "message": "Remove “$1”"
+  },
+  "resetFilters": {
+    "message": "Reset filters"
+  },
+  "retry": {
+    "message": "Try again"
+  },
+  "runsLocally": {
+    "message": "runs locally"
+  },
+  "save": {
+    "message": "Save"
+  },
+  "scan": {
+    "message": "Scan"
+  },
+  "scanAllN": {
+    "message": "Scan all $1"
+  },
+  "scanBtnTitle": {
+    "message": "Score the unscored visible mails"
+  },
+  "scanDone": {
+    "message": "Scan finished: $1 scored"
+  },
+  "scanFailedPart": {
+    "message": ", $1 failed"
+  },
+  "scanN_one": {
+    "message": "Scan $1 mail"
+  },
+  "scanN_other": {
+    "message": "Scan $1 mails"
+  },
+  "scanStopped": {
+    "message": "Scan stopped: $1 scored"
+  },
+  "scanTitle_one": {
+    "message": "Scan $1 mail?"
+  },
+  "scanTitle_other": {
+    "message": "Scan $1 mails?"
+  },
+  "scanningBody": {
+    "message": "Scanning (incl. text excerpt) …"
+  },
+  "scanningHead": {
+    "message": "Scanning (sender & subject) …"
+  },
+  "scoring": {
+    "message": "Scoring …"
+  },
+  "search": {
+    "message": "Search"
+  },
+  "searchModel": {
+    "message": "Search models …"
+  },
+  "searchPlaceholder": {
+    "message": "Sender, domain, subject …"
+  },
+  "searchTitle": {
+    "message": "Search (key /)"
+  },
+  "select": {
+    "message": "Select"
+  },
+  "selectAllCount": {
+    "message": "Select all $1"
+  },
+  "selectAllVisible": {
+    "message": "Select all visible"
+  },
+  "selectedModel": {
+    "message": "Selected: $1"
+  },
+  "selectedSuffix": {
+    "message": "selected"
+  },
+  "sendExcerpt": {
+    "message": "Send a text excerpt to the model"
+  },
+  "sender": {
+    "message": "Sender"
+  },
+  "sendersTrusted_one": {
+    "message": "$1 sender trusted"
+  },
+  "sendersTrusted_other": {
+    "message": "$1 senders trusted"
+  },
+  "sentToNoBody": {
+    "message": "Sent to $1: sender and subject."
+  },
+  "sentToWithBody": {
+    "message": "Sent to $1: sender, subject and up to $2 characters of text."
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "settingsSaved": {
+    "message": "Settings saved"
+  },
+  "settingsSub": {
+    "message": "How should your mails be scored?"
+  },
+  "setup": {
+    "message": "Set up"
+  },
+  "setupTitle": {
+    "message": "Set up a spam model"
+  },
+  "shortcuts": {
+    "message": "Keyboard shortcuts"
+  },
+  "shortcutsSub": {
+    "message": "Clean up faster, without the mouse."
+  },
+  "sidebarHide": {
+    "message": "Hide sidebar"
+  },
+  "sidebarShow": {
+    "message": "Show sidebar"
+  },
+  "sidebarToggle": {
+    "message": "Show/hide sidebar"
+  },
+  "sortBy": {
+    "message": "Sort by"
+  },
+  "sortCtx": {
+    "message": "Largest context"
+  },
+  "sortName": {
+    "message": "Name"
+  },
+  "sortPrice": {
+    "message": "Cheapest first"
+  },
+  "sortRec": {
+    "message": "Recommended"
+  },
+  "sortSize": {
+    "message": "Smallest first"
+  },
+  "spamFilter": {
+    "message": "Spam filter"
+  },
+  "spamProbTitle": {
+    "message": "Spam probability $1"
+  },
+  "statusMoving_one": {
+    "message": "Moving $1 mail …"
+  },
+  "statusMoving_other": {
+    "message": "Moving $1 mails …"
+  },
+  "statusTrashed_one": {
+    "message": "$1 mail moved to the trash."
+  },
+  "statusTrashed_other": {
+    "message": "$1 mails moved to the trash."
+  },
+  "statusTrashing_one": {
+    "message": "Moving $1 mail to the trash …"
+  },
+  "statusTrashing_other": {
+    "message": "Moving $1 mails to the trash …"
+  },
+  "staysLocal": {
+    "message": "Stays on your computer."
+  },
+  "stop": {
+    "message": "Stop"
+  },
+  "stopTitle": {
+    "message": "Cancel scan"
+  },
+  "stopping": {
+    "message": "Stopping scan …"
+  },
+  "subfolders": {
+    "message": "Subfolders"
+  },
+  "subfolders_one": {
+    "message": "$1 subfolder"
+  },
+  "subfolders_other": {
+    "message": "$1 subfolders"
+  },
+  "tableAria": {
+    "message": "Mails – arrow keys to navigate, x to select, Enter for preview"
+  },
+  "targetFolder": {
+    "message": "Target folder"
+  },
+  "testConnection": {
+    "message": "Test connection"
+  },
+  "testReply": {
+    "message": "$1%"
+  },
+  "testReplySample": {
+    "message": "$1% (test mail)"
+  },
+  "testing": {
+    "message": "Testing …"
+  },
+  "text": {
+    "message": "Text"
+  },
+  "textOnlyNote": {
+    "message": "Text only – nothing is loaded"
+  },
+  "thTitle": {
+    "message": "Click: sort · Drag: move · Drag the edge: width"
+  },
+  "toLabel": {
+    "message": "To"
+  },
+  "toastInTrash_one": {
+    "message": "$1 mail in the trash"
+  },
+  "toastInTrash_other": {
+    "message": "$1 mails in the trash"
+  },
+  "toastMoved_one": {
+    "message": "$1 mail moved to “$2”"
+  },
+  "toastMoved_other": {
+    "message": "$1 mails moved to “$2”"
+  },
+  "toastRestored_one": {
+    "message": "$1 mail restored"
+  },
+  "toastRestored_other": {
+    "message": "$1 mails restored"
+  },
+  "toastSelectedAllFrom": {
+    "message": "All from $1 selected"
+  },
+  "toastSelectedFrom_one": {
+    "message": "$1 mail from $2 selected"
+  },
+  "toastSelectedFrom_other": {
+    "message": "$1 mails from $2 selected"
+  },
+  "toastSelected_one": {
+    "message": "$1 mail selected"
+  },
+  "toastSelected_other": {
+    "message": "$1 mails selected"
+  },
+  "trackersRemoved_one": {
+    "message": "$1 tracker removed"
+  },
+  "trackersRemoved_other": {
+    "message": "$1 trackers removed"
+  },
+  "trash": {
+    "message": "Trash"
+  },
+  "trashAllCount": {
+    "message": "Move all $1 to the trash"
+  },
+  "trashDel": {
+    "message": "Move to trash (Del)"
+  },
+  "trashInstead": {
+    "message": "Move to trash instead"
+  },
+  "trashNextTitle": {
+    "message": "Move to trash and continue (Del)"
+  },
+  "trashSelTitle": {
+    "message": "Move the selection to the trash (Del)"
+  },
+  "trashSpamN_one": {
+    "message": "Move $1 spam mail to the trash"
+  },
+  "trashSpamN_other": {
+    "message": "Move $1 spam mails to the trash"
+  },
+  "trust": {
+    "message": "Trust"
+  },
+  "trustSelTitle": {
+    "message": "Trust the senders of the selection"
+  },
+  "trusted": {
+    "message": "Trusted"
+  },
+  "trustedBadge": {
+    "message": "Trusted"
+  },
+  "trustedBadgeTitle": {
+    "message": "Trusted sender – never spam"
+  },
+  "trustedHint": {
+    "message": "– never treated as spam"
+  },
+  "trustedSenders": {
+    "message": "Trusted senders"
+  },
+  "trustedToast": {
+    "message": "“$1” trusted – never spam"
+  },
+  "undo": {
+    "message": "Undo"
+  },
+  "undoMissing_one": {
+    "message": "$1 mail could not be restored automatically – it is in the trash."
+  },
+  "undoMissing_other": {
+    "message": "$1 mails could not be restored automatically – they are in the trash."
+  },
+  "unknown": {
+    "message": "(unknown)"
+  },
+  "unscoredLeft_one": {
+    "message": "$1 mail stayed unscored."
+  },
+  "unscoredLeft_other": {
+    "message": "$1 mails stayed unscored."
+  },
+  "unscoredLower": {
+    "message": "unscored"
+  },
+  "unsubAnyway": {
+    "message": "Unsubscribe anyway"
+  },
+  "unsubDraftFailed": {
+    "message": "Could not open the draft: $1"
+  },
+  "unsubDraftOpened": {
+    "message": "Unsubscribe draft opened – check it and click Send."
+  },
+  "unsubFromBody": {
+    "message": "(found in the mail text)"
+  },
+  "unsubOpenedWeb": {
+    "message": "Unsubscribe page opened in your browser ($1)"
+  },
+  "unsubSpamBody": {
+    "message": "This mail looks like spam ($1). In spam, unsubscribe links often just confirm that your address is active. Moving it to the trash is safer."
+  },
+  "unsubSpamTitle": {
+    "message": "Unsubscribe from likely spam?"
+  },
+  "unsubTipBoth": {
+    "message": "Newsletter – click to unsubscribe (web page on $1 or by email)"
+  },
+  "unsubTipMail": {
+    "message": "Newsletter – click to open an unsubscribe email to $1"
+  },
+  "unsubTipNone": {
+    "message": "Newsletter – no unsubscribe option found"
+  },
+  "unsubTipUrl": {
+    "message": "Newsletter – click to unsubscribe via $1"
+  },
+  "unsubViaMail": {
+    "message": "Write an unsubscribe email to $1"
+  },
+  "unsubViaWeb": {
+    "message": "Unsubscribe on the web page ($1)"
+  },
+  "unsubscribe": {
+    "message": "Unsubscribe"
+  },
+  "unsubscribeEllipsis": {
+    "message": "Unsubscribe…"
+  },
+  "untrustedToast": {
+    "message": "“$1” is no longer trusted"
+  },
+  "wlActiveTitle": {
+    "message": "“$1” is trusted – stop trusting"
+  },
+  "wlEmpty": {
+    "message": "No one yet – e.g. add your own domain or important contacts."
+  },
+  "wlPlaceholder": {
+    "message": "Add address or domain …"
+  },
+  "wlTrustAddr": {
+    "message": "Trust address “$1” (never spam)"
+  },
+  "wlTrustDomain": {
+    "message": "Trust domain “$1” (never spam)"
+  },
+  "xOfY": {
+    "message": "$1 of $2"
+  },
+  "yesterday": {
+    "message": "Yesterday"
+  }
+}
