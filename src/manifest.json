@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "__MSG_extName__",
-  "version": "2.1.0",
+  "version": "2.5.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "author": "Ronny Elflein",
@@ -17,6 +17,7 @@
   },
   "permissions": [
     "accountsRead",
+    "addressBooks",
     "accountsFolders",
     "messagesRead",
     "messagesMove",
@@ -26,7 +27,9 @@
     "https://openrouter.ai/*"
   ],
   "optional_permissions": [
-    "<all_urls>"
+    "<all_urls>",
+    "webRequest",
+    "webRequestBlocking"
   ],
   "background": {
     "scripts": ["background.js"]

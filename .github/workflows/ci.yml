@@ -1,0 +1,79 @@
+# Build and checks for every push to main and every pull request:
+# syntax, versions, translations, package build, addons-linter (the same linter
+# addons.thunderbird.net runs), npm audit – and on pull requests a review of new dependencies.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build & lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      # no install scripts: the tools don't need them, and they are a common supply-chain vector
+      - name: Install build tools
+        run: npm ci --ignore-scripts
+
+      - name: Syntax and versions
+        run: npm run check
+
+      - name: Translations complete, generated files up to date
+        run: |
+          npm run i18n
+          git diff --exit-code -- src/_locales || { echo "::error::src/_locales is out of date – run 'npm run i18n' and commit the result"; exit 1; }
+
+      - name: Build
+        run: npm run build
+
+      - name: addons-linter
+        run: npm run lint
+
+      - name: npm audit (high and critical)
+        run: npm audit --audit-level=high
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ai-mail-cleaner-xpi
+          path: dist/*.xpi
+          if-no-files-found: error
+          retention-days: 14
+
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # fails the pull request if it adds a dependency with a known vulnerability (moderate or worse)
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: moderate
+          comment-summary-in-pr: on-failure

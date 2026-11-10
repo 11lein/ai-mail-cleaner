@@ -4,7 +4,7 @@
 AI Mail Cleaner
 
 ## Summary (max. 250 characters)
-Clean out your mailbox with AI: every mail gets a spam probability, newsletters are recognized and unsubscribed with one click. Group by domain, filter, trash thousands at once – with undo. OpenRouter, any AI provider or local Ollama.
+Clean out your mailbox with AI: every mail gets a spam probability, newsletters are recognized and unsubscribed with one click. Group by domain, filter, trash thousands at once – with undo. Cloud or fully local (Ollaya, Ollama).
 
 ## Description
 
@@ -13,19 +13,27 @@ every mail gets a **spam probability from 0 to 100 %** and newsletters get a **N
 so you can tidy up with confidence.
 
 **How it works**
-1. Pick a folder. Headers load quickly, even for thousands of mails.
-2. Click “Scan mails”. Before anything is sent you see the expected duration, the cost and which data is sent.
-3. Filter to “Spam ≥ 80 %” and move everything to the trash. **Undo** is one click away.
-4. Newsletters you no longer read: click the tag to unsubscribe.
+1. Choose **Decision model** or **Language model** and a provider – a note below the list says
+   how to set it up.
+2. Pick a folder. Headers load quickly, even for thousands of mails.
+3. Click “Scan”. Decision models and local models start right away; for paid cloud language
+   models you first see the expected duration, the cost and which data is sent.
+4. Filter to “Spam ≥ 80 %” and move everything to the trash. **Undo** is one click away.
+5. Newsletters you no longer read: click the tag to unsubscribe.
 
 **Features**
-- Spam scoring via a **decision model** (e.g. Jev, Span-01 on OpenRouter, free tier available),
-  **any OpenAI-compatible provider** (OpenAI, Groq, Mistral …) or **fully local with Ollama** –
-  then no mail ever leaves your computer.
+- Spam scoring via a **decision model** – calibrated classifiers such as Jev or Span-01 on
+  OpenRouter (free tier available), or **fully local** with **Ollaya**, LM Studio or a jev-style
+  server – or via a **language model** from any OpenAI-compatible provider (OpenAI, Groq,
+  Mistral …) or locally with LM Studio or **Ollama**. Locally, no mail ever leaves your computer.
+- One API key per provider, kept when you switch back and forth
 - **Newsletter detection** (List-Unsubscribe header or a note in the text) with **one-click
   unsubscribe**: opens the unsubscribe page, or a ready-made unsubscribe email draft. Warns you
   before unsubscribing from spam.
 - Model picker with price, estimated cost per 1,000 mails, context length and model size
+- **Context-aware**: knows whether the sender is in your address book and how many of their mails you open
+- After unsubscribing: move all mails of that newsletter to the trash in one click
+- Filter the list by sender or domain; clear the cache to scan again
 - Group by **domain** or **sender** with average spam score; select or delete whole groups
 - Filter chips and a spam range slider, search, sortable and reorderable columns
 - 📎 Attachment indicator, safe preview (no trackers, no remote images, phishing hints on links)
@@ -45,7 +53,7 @@ Source code and issue tracker: GitHub (link below).
 Message and News Reading (alternatively: Privacy and Security)
 
 ## Tags
-spam, cleanup, inbox, newsletter, unsubscribe, ai, ollama, openrouter, bulk delete
+spam, cleanup, inbox, newsletter, unsubscribe, ai, ollaya, ollama, openrouter, bulk delete
 
 ## License
 MIT

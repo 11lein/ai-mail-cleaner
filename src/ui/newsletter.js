@@ -149,7 +149,15 @@ export function extractListInfo(full, html, plain, ownAddrs) {
     if (found.url || found.mail) { url = found.url; mail = found.mail; isList = true; fromBody = true; }
   }
   if (!isList) return null;
-  return { url, mail, oneClick, fromBody };
+  return { url, mail, oneClick, fromBody, listId: listIdOf(h["list-id"]) };
+}
+
+/** "Product News <news.example.com>" → "news.example.com" (lowercase, for grouping) */
+export function listIdOf(v) {
+  const s = String(v || "");
+  const m = s.match(/<([^<>\s]{1,200})>/);
+  const id = (m ? m[1] : s).trim().toLowerCase();
+  return /^[a-z0-9._@+-]{3,200}$/.test(id) ? id : "";
 }
 
 /* Compact cache format (storage.local): 0 = no newsletter, otherwise { u, m, o, b } */
@@ -160,6 +168,7 @@ export function packList(info) {
   if (info.mail) o.m = info.mail;
   if (info.oneClick) o.o = 1;
   if (info.fromBody) o.b = 1;
+  if (info.listId) o.l = info.listId;
   return o;
 }
 export function unpackList(v) {
@@ -167,5 +176,5 @@ export function unpackList(v) {
   if (!v || typeof v !== "object") return undefined; // unknown → probe again
   const url = safeHttpUrl(v.u);
   const mail = parseMailto(v.m) ? String(v.m) : "";
-  return { url, mail, oneClick: Boolean(url && v.o), fromBody: Boolean(v.b) };
+  return { url, mail, oneClick: Boolean(url && v.o), fromBody: Boolean(v.b), listId: listIdOf(v.l ? `<${v.l}>` : "") };
 }

@@ -1,13 +1,14 @@
 import {
-  loadSettings, saveSettings, isConfigured, isLocalUrl, PROVIDERS, OPENAI_PRESETS,
-  matchesWhitelist, parseWhitelist, loadScoreCache, saveScoreCache, loadListCache, saveListCache
+  loadSettings, saveSettings, isConfigured, isLocalUrl, PROVIDERS, SOURCES, kindOf, sourceFor, keyHost, keyFor, modelSlot, isOllamaUrl,
+  isOllayaUrl, OLLAYA, matchesWhitelist, parseWhitelist, loadScoreCache, saveScoreCache, loadListCache, saveListCache
 } from "./settings.js";
 import {
-  testConnection, scoreMessages, listModels, estimateCost, estimateRate, isFreeModel, hostOf
+  testConnection, scoreMessages, listModels, estimateCost, estimateRate, isFreeModel, hostOf, decisionApi, isOllamaServer,
+  isOllayaServer
 } from "./ai.js";
 import { icon, hydrateIcons } from "./icons.js";
 import {
-  t, tn, localizeDocument, fmtInt, fmtPct, fmtUsd, fmtSize, fmtDate, fmtDateLong, fmtDateSmart, fmtDuration
+  t, tn, localizeDocument, fmtInt, fmtPct, fmtUsd, fmtSize, fmtDate, fmtDateLong, fmtDateMedium, fmtDateSmart, fmtDuration
 } from "./i18n.js";
 import { collectText, snippetFrom, buildPreviewDoc, htmlToText } from "./preview.js";
 import { extractListInfo, parseMailto, packList, unpackList } from "./newsletter.js";
@@ -41,6 +42,7 @@ const failedIds = new Map();     // id -> error message
 
 let listCache = {};              // headerMessageId -> packed newsletter info (persisted)
 let listSaveTimer = null;
+let contactSet = new Set();      // e-mail addresses from the address books (lowercase, local only)
 
 let selected = new Set();
 let anchorId = null;             // anchor for shift selection
@@ -129,7 +131,12 @@ function textSpan(s) { const el = document.createElement("span"); el.textContent
 function setStatus(text) { $("statusText").textContent = text; }
 function byId(id) { return rowIndex.get(id); }
 function rowEl(id) { return $("mailBody").querySelector(`tr[data-id="${id}"]`); }
-function providerLabel(p) { return t((PROVIDERS[p] || PROVIDERS.decision).labelKey); }
+/** "Decision model" – or for LLMs the provider's name (OpenRouter, Ollama, LM Studio …) */
+function engineLabel(s) {
+  if (s.provider === "decision") return t("provDecisionLabel");
+  const src = currentSource(s.provider, s.aiBaseUrl);
+  return src ? sourceLabel(src) : t("provLlmLabel");
+}
 function openExternal(url) {
   try {
     if (messenger.windows && messenger.windows.openDefaultBrowser) return messenger.windows.openDefaultBrowser(url);
@@ -374,20 +381,49 @@ async function unsubscribe(r, anchor) {
     if (choice === "trash") { deleteIds([r.id]); return; }
     if (choice !== "go") return;
   }
+  const viaWeb = () => { unsubWeb(info.url); offerCleanup(r); };
+  const viaMail = async () => { if (await unsubMail(r, info.mail)) offerCleanup(r); };
   if (info.url && info.mail) {
     const rect = (anchor && document.contains(anchor)) ? anchor.getBoundingClientRect() : null;
     showMenu([
-      { icon: "globe", label: t("unsubViaWeb", hostOf(info.url)), run: () => unsubWeb(info.url) },
-      { icon: "mail", label: t("unsubViaMail", parseMailto(info.mail).to[0]), run: () => unsubMail(r, info.mail) }
+      { icon: "globe", label: t("unsubViaWeb", hostOf(info.url)), run: viaWeb },
+      { icon: "mail", label: t("unsubViaMail", parseMailto(info.mail).to[0]), run: viaMail }
     ], rect ? rect.left : window.innerWidth / 2 - 150, rect ? rect.bottom + 4 : window.innerHeight / 3);
     return;
   }
-  if (info.url) unsubWeb(info.url);
-  else unsubMail(r, info.mail);
+  if (info.url) viaWeb();
+  else viaMail();
 }
 function unsubWeb(url) {
   openExternal(url);
   toast(t("unsubOpenedWeb", hostOf(url)));
+}
+/* Mails that apparently belong to the same newsletter: same sender address or same List-Id */
+function relatedNewsletterRows(r) {
+  const addr = (r.fromAddress || "").toLowerCase();
+  const lid = r.list && r.list.listId;
+  return rows.filter((x) => (addr && (x.fromAddress || "").toLowerCase() === addr) ||
+    (lid && x.list && x.list.listId === lid));
+}
+// After unsubscribing: offer to move the newsletter's mails to the trash
+async function offerCleanup(r) {
+  const related = relatedNewsletterRows(r);
+  if (!related.length) return;
+  const dates = related.map((x) => x.dateMs).filter(Boolean).sort((a, b) => a - b);
+  const sender = r.fromName && r.fromName !== r.fromAddress ? `${r.fromName} <${r.fromAddress}>` : (r.fromAddress || r.fromName);
+  const body = cfList([
+    { icon: "user", text: sender },
+    dates.length > 1 ? { icon: "clock", text: t("dateRange", fmtDateMedium(dates[0]), fmtDateMedium(dates[dates.length - 1])) } : null,
+    { icon: "undo", text: t("cfUndoHint") }
+  ]);
+  const ok = await confirmDialog(tn("unsubCleanupTitle", related.length), body, [
+    { label: t("keepThem"), value: false },
+    { label: tn("ctxTrashN", related.length), value: true, cls: "danger-solid", icon: "trash" }
+  ]);
+  if (!ok) return;
+  const ids = related.map((x) => x.id).filter((id) => rowIndex.has(id));
+  if (pvId != null && ids.includes(pvId)) closePreview();
+  deleteIds(ids, { skipConfirm: true });
 }
 function identityFor(r) {
   const ids = accountIdentities.get(r.account) || [];
@@ -397,7 +433,7 @@ function identityFor(r) {
 }
 async function unsubMail(r, mailto) {
   const p = parseMailto(mailto);
-  if (!p) return;
+  if (!p) return false;
   try {
     const details = {
       to: p.to,
@@ -409,9 +445,54 @@ async function unsubMail(r, mailto) {
     if (identityId) details.identityId = identityId;
     await messenger.compose.beginNew(details); // opens a draft – the user checks and sends it
     toast(t("unsubDraftOpened"));
+    return true;
   } catch (e) {
     showBanner(t("unsubDraftFailed", (e && e.message) || String(e)));
+    return false;
   }
+}
+
+/* ================================================================== */
+/* List filter by sender / domain (shares state with the group list)    */
+/* ================================================================== */
+function filterMode(kind) { return kind === "domain" ? "domain" : "sender"; }
+function isListFilter(kind, value) { return activeGroup != null && activeGroup === value && groupMode === filterMode(kind); }
+function syncGroupSegs() {
+  document.querySelectorAll(".seg-btn[data-group]").forEach((x) => x.classList.toggle("active", x.dataset.group === groupMode));
+}
+function setListFilter(kind, value) {
+  if (!value) return;
+  groupMode = filterMode(kind);
+  syncGroupSegs();
+  activeGroup = value;
+  $("tableWrap").scrollTop = 0;
+  render();
+}
+function clearListFilter() {
+  if (activeGroup == null) return;
+  activeGroup = null;
+  render();
+}
+function toggleListFilter(kind, value) {
+  if (isListFilter(kind, value)) clearListFilter(); else setListFilter(kind, value);
+}
+function filterBtn(kind, value) {
+  const active = isListFilter(kind, value);
+  const b = document.createElement("button");
+  b.className = "cellfilter" + (active ? " active" : "");
+  b.appendChild(icon("funnel", 14));
+  b.title = active ? t("filterClear") : t(kind === "domain" ? "filterByDomain" : "filterBySender", value);
+  b.setAttribute("aria-label", b.title);
+  b.setAttribute("aria-pressed", active ? "true" : "false");
+  b.addEventListener("click", (e) => { e.stopPropagation(); toggleListFilter(kind, value); });
+  return b;
+}
+function updateFilterChip() {
+  const chip = $("filterChip");
+  chip.classList.toggle("hidden", activeGroup == null);
+  if (activeGroup == null) return;
+  $("filterChipText").textContent = t(groupMode === "domain" ? "filterChipDomain" : "filterChipSender", activeGroup);
+  chip.title = $("filterChipText").textContent;
 }
 
 /* ================================================================== */
@@ -588,16 +669,80 @@ function hostPattern(url) {
     return null;
   }
 }
-function requestHostPermission(url) {
+/** Ask for access to a provider's host (call synchronously in a click). For Ollama – and for
+ *  Ollaya only when asked to (originFixToo, after a 403) – also the optional webRequest permission,
+ *  so the add-on can fix the Origin header (see below). */
+function requestHostPermission(url, provider, originFixToo) {
   const pat = hostPattern(url);
   if (!pat || pat === "https://openrouter.ai/*") return Promise.resolve(true);
   const api = typeof messenger !== "undefined" && messenger.permissions;
   if (!api || typeof api.request !== "function") return Promise.resolve(true);
+  const guarded = provider === "ollama" || Boolean(originFixToo);
+  const ollaya = provider === "decision" && isOllayaUrl(url);
   try {
-    return Promise.resolve(api.request({ origins: [pat] })).catch(() => false);
+    const req = guarded ? { origins: [pat], permissions: ORIGIN_FIX_PERMS } : { origins: [pat] };
+    return Promise.resolve(api.request(req))
+      // Ollaya: a webRequest permission granted earlier still gets the fix (no-op without it)
+      .then((ok) => { if (ok && (guarded || ollaya)) installOriginFix(url); return ok; })
+      .catch(() => false);
   } catch (_) {
     return Promise.resolve(false);
   }
+}
+
+/* Ollama and Ollaya answer 403 to requests that carry a browser-extension Origin
+ * (moz-extension://…) unless OLLAMA_ORIGINS / OLLAYA_ORIGINS allows it. Ollaya is started from a
+ * terminal, so the hint tells to start it with OLLAYA_ORIGINS='moz-extension://*'; Ollama's desktop
+ * apps can't easily be started with it. Either way, with the optional webRequest permission the
+ * add-on can set the Origin header of its OWN requests to the server's own address instead: their
+ * CORS check (Ollaya mirrors Ollama's) allows http://127.0.0.1 / localhost on any port (the same
+ * approach other Firefox add-ons for Ollama use). Nothing else is touched – not other add-ons,
+ * not web pages, not other servers. */
+const ORIGIN_FIX_PERMS = ["webRequest", "webRequestBlocking"];
+/** The local server with such an Origin check that `s` talks to – its name for messages, or "". */
+function guardedServer(s) { return isOllamaServer(s) ? "Ollama" : isOllayaServer(s) ? "Ollaya" : ""; }
+/** Its start command – Ollaya's with Thunderbird allowed. */
+function serveCmd(name) { return name === "Ollaya" ? originsCmd(name) : "ollama serve"; }
+/** Fallback: allow Thunderbird in the server itself (Ollama's desktop apps read the variable at
+ *  start; Ollaya's is started from a terminal with it). */
+function originsCmd(name) {
+  const p = String((navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || "");
+  const win = /win/i.test(p) && !/darwin/i.test(p);
+  if (name === "Ollaya") return win ? "$env:OLLAYA_ORIGINS='moz-extension://*'; ollaya serve" : "OLLAYA_ORIGINS='moz-extension://*' ollaya serve";
+  if (/mac/i.test(p)) return "launchctl setenv OLLAMA_ORIGINS 'moz-extension://*'";
+  if (win) return "setx OLLAMA_ORIGINS \"moz-extension://*\"";
+  return "OLLAMA_ORIGINS='moz-extension://*' ollama serve";
+}
+/** what to do when the server still says 403 with the Origin fix (or without webRequest) */
+function manual403(name) { return t(name === "Ollaya" ? "errOllaya403Manual" : "errOllama403Manual", originsCmd(name)); }
+/** a 403 from Ollama/Ollaya = its Origin check (Ollama sends no body, Ollaya code FORBIDDEN) */
+function originBlocked(s, err) { return Boolean(guardedServer(s)) && err && err.status === 403; }
+/** Ollaya doesn't have the model yet (404 MODEL_NOT_FOUND) → the pull command */
+function ollayaMissing(s, err) { return isOllayaServer(s) && err && err.status === 404 && (!err.code || err.code === "MODEL_NOT_FOUND"); }
+let originFix = null; // { origin, listener }
+function installOriginFix(url) {
+  let origin;
+  try { origin = new URL(url).origin; } catch (_) { return false; }
+  if (originFix && originFix.origin === origin) return true;
+  let ev = null;
+  try { ev = messenger.webRequest && messenger.webRequest.onBeforeSendHeaders; } catch (_) { /* no permission */ }
+  if (!ev) return false;
+  const self = messenger.runtime.getURL("");
+  const listener = (d) => {
+    const from = d.originUrl || d.documentUrl || "";
+    if (!from.startsWith(self) || !d.url.startsWith(origin + "/")) return {};
+    for (const h of d.requestHeaders) if (h.name.toLowerCase() === "origin") h.value = origin;
+    return { requestHeaders: d.requestHeaders };
+  };
+  try {
+    if (originFix) ev.removeListener(originFix.listener);
+    ev.addListener(listener, { urls: [hostPattern(url)] }, ["blocking", "requestHeaders"]);
+  } catch (_) {
+    originFix = null;
+    return false;
+  }
+  originFix = { origin, listener };
+  return true;
 }
 
 /* ================================================================== */
@@ -771,6 +916,7 @@ function buildRow(msg, node, includeSub) {
     dateMs: toMs(msg.date),
     size: typeof msg.size === "number" ? msg.size : null,
     read: Boolean(msg.read),
+    junk: Boolean(msg.junk),
     to: Array.isArray(msg.recipients) ? msg.recipients : [],
     cc: Array.isArray(msg.ccList) ? msg.ccList : [],
     folder: node.folder,
@@ -949,6 +1095,7 @@ function render() {
   renderTable();
   renderGroups();
   updateChips(base);
+  updateFilterChip();
   updateSelectionUI();
   updateChrome();
 }
@@ -1216,7 +1363,7 @@ function buildCell(key, r) {
       wrap.appendChild(lines);
       td.appendChild(wrap);
       td.title = r.fromAddress && r.fromAddress !== r.fromName ? `${r.fromName} <${r.fromAddress}>` : r.fromName;
-      if (r.fromAddress) td.appendChild(wlToggle(r.fromAddress, addressWhitelisted(r), "addr"));
+      if (r.fromAddress) td.append(filterBtn("sender", r.fromAddress), wlToggle(r.fromAddress, addressWhitelisted(r), "addr"));
       break;
     }
     case "domain": {
@@ -1225,7 +1372,7 @@ function buildCell(key, r) {
       txt.textContent = r.fromDomain;
       txt.title = r.fromDomain;
       td.appendChild(txt);
-      if (r.fromDomain) td.appendChild(wlToggle(r.fromDomain, domainWhitelisted(r), "domain"));
+      if (r.fromDomain) td.append(filterBtn("domain", r.fromDomain), wlToggle(r.fromDomain, domainWhitelisted(r), "domain"));
       break;
     }
     case "subject": {
@@ -1428,6 +1575,48 @@ function updateRangeUI() {
   fill.style.width = (hi - lo) + "%";
   fill.style.backgroundPosition = `-${(lo / 100) * 104}px 0`;
 }
+/* Double slider: pick and drag the thumb nearest to the pointer ourselves (see cleaner.css .range).
+ * The inputs keep their keyboard handling; here we only set their value and fire "input". */
+const RANGE_INSET = 8; // = half thumb width = .range-track left/right
+function wireRangePointer() {
+  const range = $("spamRange");
+  const lo = $("spamMin"), hi = $("spamMax");
+  let drag = null;
+  const valueAt = (clientX) => {
+    const r = range.getBoundingClientRect();
+    const pct = (clientX - r.left - RANGE_INSET) / Math.max(1, r.width - 2 * RANGE_INSET);
+    return Math.round(Math.max(0, Math.min(1, pct)) * 100);
+  };
+  const apply = (v) => {
+    const next = drag === lo ? Math.min(v, Number(hi.value)) : Math.max(v, Number(lo.value));
+    if (Number(drag.value) === next) return;
+    drag.value = next;
+    drag.dispatchEvent(new Event("input"));
+  };
+  range.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    const v = valueAt(e.clientX);
+    const a = Number(lo.value), b = Number(hi.value);
+    const dA = Math.abs(v - a), dB = Math.abs(v - b);
+    // nearest thumb; if both sit on the same spot, the click direction decides
+    drag = dA < dB ? lo : dB < dA ? hi : (v < a ? lo : hi);
+    drag.focus({ preventScroll: true, focusVisible: false }); // arrow keys then move this thumb
+    range.classList.add("dragging");
+    try { range.setPointerCapture(e.pointerId); } catch (_) {}
+    apply(v);
+  });
+  range.addEventListener("pointermove", (e) => { if (drag) apply(valueAt(e.clientX)); });
+  const end = (e) => {
+    if (!drag) return;
+    drag = null;
+    range.classList.remove("dragging");
+    try { range.releasePointerCapture(e.pointerId); } catch (_) {}
+  };
+  range.addEventListener("pointerup", end);
+  range.addEventListener("pointercancel", end);
+  range.addEventListener("lostpointercapture", end);
+}
 function resetFilters() {
   activeGroup = null;
   searchText = "";
@@ -1478,16 +1667,19 @@ function updateChrome() {
     btn.title = t("setupTitle");
     btn.disabled = false;
   } else {
-    const n = scanTodo().length;
-    lbl.textContent = n ? tn("scanN", n) : t("allScoredBtn");
-    btn.title = n ? t("scanBtnTitle") : t("allScored");
+    const todo = scanTodo();
+    const n = todo.length;
+    // only mails that failed last time are left → say so instead of "Scan N"
+    const retry = n > 0 && todo.every((r) => failedIds.has(r.id));
+    lbl.textContent = !n ? t("allScoredBtn") : retry ? tn("retryN", n) : tn("scanN", n);
+    btn.title = !n ? t("allScored") : retry ? t("retryTitle") : t("scanBtnTitle");
     btn.disabled = !n || loading;
   }
-  const p = PROVIDERS[settings.provider] || PROVIDERS.decision;
   const ic = $("modelChipIcon");
   ic.textContent = "";
-  ic.appendChild(icon(p.icon, 13));
-  $("modelChipText").textContent = `${t(p.labelKey)} · ${settings.aiModel || t("noModel")}`;
+  ic.appendChild(icon(settings.provider === "decision" ? "target"
+    : settings.provider === "ollama" || isLocalUrl(settings.aiBaseUrl) ? "cpu" : "sparkles", 13));
+  $("modelChipText").textContent = `${engineLabel(settings)} · ${settings.aiModel || t("noModel")}`;
 }
 
 /* ================================================================== */
@@ -1771,6 +1963,11 @@ function openCtx(e, r) {
     r.fromAddress ? { icon: "shield-check", label: addressWhitelisted(r) ? t("ctxUntrust", r.fromAddress) : t("ctxTrustSender", r.fromAddress), run: () => toggleWhitelistValue(r.fromAddress) } : null,
     r.fromDomain ? { icon: "globe", label: domainWhitelisted(r) ? t("ctxUntrust", r.fromDomain) : t("ctxTrustDomain", r.fromDomain), run: () => toggleWhitelistValue(r.fromDomain) } : null,
     "sep",
+    activeGroup != null ? { icon: "x", label: t("filterClear"), run: clearListFilter } : null,
+    r.fromAddress && !isListFilter("sender", r.fromAddress) ? { icon: "funnel", label: t("filterBySender", r.fromAddress), run: () => setListFilter("sender", r.fromAddress) } : null,
+    r.fromDomain && !isListFilter("domain", r.fromDomain) ? { icon: "funnel", label: t("filterByDomain", r.fromDomain), run: () => setListFilter("domain", r.fromDomain) } : null,
+    isConfigured(settings) ? { icon: "refresh", label: multi ? tn("ctxRescoreN", ids.length) : t("rescore"), run: () => rescore(ids) } : null,
+    "sep",
     r.fromDomain ? { icon: "check-square", label: t("ctxSelectAllFrom", r.fromDomain), run: () => selectIds(rows.filter((x) => x.fromDomain === r.fromDomain).map((x) => x.id), t("toastSelectedAllFrom", r.fromDomain)) } : null,
     { icon: "folder-move", label: multi ? tn("ctxMoveN", ids.length) : t("moveEllipsis"), run: () => openMoveModal(ids) },
     { icon: "trash", label: multi ? tn("ctxTrashN", ids.length) : t("moveToTrash"), danger: true, run: () => deleteIds(ids) }
@@ -1812,7 +2009,8 @@ async function confirmScan(n) {
   const costText = cost === null ? t("costUnknown") : t("costLabel", cost === 0 ? t("costNone") : fmtCostApprox(cost));
   const privacy = local
     ? t("staysLocal")
-    : s.scanBody ? t("sentToWithBody", hostOf(s.aiBaseUrl), fmtInt(Number(s.bodyChars) || 0)) : t("sentToNoBody", hostOf(s.aiBaseUrl));
+    : (s.scanBody ? t("sentToWithBody", hostOf(s.aiBaseUrl), fmtInt(Number(s.bodyChars) || 0)) : t("sentToNoBody", hostOf(s.aiBaseUrl))) +
+      (s.sendContext !== false ? " " + t("ctxAlsoSent") : "");
   const body = cfList([
     { icon: "clock", text: dur },
     { icon: "coins", text: costText },
@@ -1826,7 +2024,7 @@ async function confirmScan(n) {
 
 function onScanClick() {
   if (!isConfigured(settings)) { openSettings(); return; }
-  const perm = requestHostPermission(settings.aiBaseUrl); // synchronously in the click
+  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
   startScan(perm);
 }
 async function startScan(perm) {
@@ -1834,7 +2032,7 @@ async function startScan(perm) {
   const todoAll = scanTodo();
   if (!todoAll.length) { setStatus(t("allScored")); return; }
   let todo = todoAll;
-  if (todoAll.length > 25) {
+  if (needsScanConfirm(todoAll.length)) {
     const choice = await confirmScan(todoAll.length);
     if (!choice) return;
     if (choice === "50") todo = todoAll.slice().sort((a, b) => b.dateMs - a.dateMs).slice(0, 50);
@@ -1842,9 +2040,75 @@ async function startScan(perm) {
   await perm;
   runScan(todo);
 }
+// Decision models (fast, fractions of a cent) and local models scan right away;
+// only paid cloud LLMs ask first – there cost and duration can add up.
+function needsScanConfirm(n) {
+  return n > 25 && settings.provider === "openai" && !isLocalUrl(settings.aiBaseUrl) && !isFreeModel(settings);
+}
+
+/* ----- context for the model: address book, mails from the sender, open rate ----- */
+async function loadContacts() {
+  const ab = typeof messenger !== "undefined" && messenger.addressBooks;
+  if (!ab || typeof ab.list !== "function") return;
+  try {
+    const set = new Set();
+    const addFrom = (c) => {
+      const p = (c && c.properties) || {};
+      for (const k of ["PrimaryEmail", "SecondEmail"]) if (p[k]) set.add(String(p[k]).trim().toLowerCase());
+      const vc = String(p.vCard || (c && c.vCard) || "");
+      for (const m of vc.matchAll(/^(?:item\d+\.)?EMAIL[^:\r\n]*:([^\r\n]+)/gim)) set.add(m[1].trim().toLowerCase());
+    };
+    for (const book of await ab.list(true)) for (const c of book.contacts || []) if (!c.type || c.type === "contact") addFrom(c);
+    contactSet = set;
+  } catch (e) {
+    console.warn("Address books not available:", e);
+  }
+}
+function senderStats() {
+  const byAddr = new Map(), byDom = new Map();
+  const add = (m, k, read) => {
+    if (!k) return;
+    let s = m.get(k);
+    if (!s) { s = { n: 0, read: 0 }; m.set(k, s); }
+    s.n++;
+    if (read) s.read++;
+  };
+  for (const r of rows) { add(byAddr, r.fromAddress.toLowerCase(), r.read); add(byDom, r.fromDomain, r.read); }
+  return { byAddr, byDom };
+}
+function contextFor(r, st) {
+  const a = st.byAddr.get(r.fromAddress.toLowerCase()) || { n: 0, read: 0 };
+  const d = st.byDom.get(r.fromDomain) || { n: 0, read: 0 };
+  return {
+    known: contactSet.has(r.fromAddress.toLowerCase()),
+    senderCount: a.n, senderReadPct: a.n ? Math.round((a.read / a.n) * 100) : null,
+    domainCount: d.n, domainReadPct: d.n ? Math.round((d.read / d.n) * 100) : null,
+    junk: Boolean(r.junk)
+  };
+}
+
+/** Score selected mails again (forgets their stored score first). */
+function rescore(ids) {
+  if (scanning || loading) { toast(t("scanRunning")); return; }
+  if (!isConfigured(settings)) { openSettings(); return; }
+  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
+  const items = ids.map(byId).filter(Boolean);
+  for (const r of items) {
+    scores.delete(r.id);
+    failedIds.delete(r.id);
+    if (r.msgId && Object.prototype.hasOwnProperty.call(scoreCache, r.msgId)) delete scoreCache[r.msgId];
+  }
+  scoresVersion++;
+  scheduleScoreCacheSave();
+  render();
+  perm.then(() => runScan(items));
+}
 
 async function runScan(todo) {
   settings = await loadSettings();
+  if (settings.sendContext !== false) await loadContacts();
+  const stats = settings.sendContext !== false ? senderStats() : null;
+  const batch = stats ? todo.map((r) => ({ ...r, meta: contextFor(r, stats) })) : todo;
   scanAbort = new AbortController();
   setScanningUI(true);
   hideBanner();
@@ -1860,7 +2124,7 @@ async function runScan(todo) {
   const fetchSnippet = settings.scanBody ? (id) => getBodySnippet(id, settings.bodyChars) : undefined;
   let res = { scored: 0, failed: 0, stopped: false, lastError: null };
   try {
-    res = await scoreMessages(todo, settings, {
+    res = await scoreMessages(batch, settings, {
       onProgress: (done, total) => {
         $("progressFill").style.width = Math.round((done / total) * 100) + "%";
         let eta = "";
@@ -1903,13 +2167,36 @@ function showScanError(err, todo) {
   const retry = { label: t("retry"), onClick: () => { const again = todo.filter((r) => failedIds.has(r.id) && rowIndex.has(r.id)); if (again.length) runScan(again); } };
   const pick = { label: t("chooseModelBtn"), onClick: () => openSettings() };
   const n = failedIds.size;
-  if (err.kind === "auth" && settings.provider === "ollama") { showBanner(t("errOllama403"), [retry]); return; }
+  const srv = guardedServer(settings);
+  if (originBlocked(settings, err)) {
+    // no Origin fix yet → offer it (the click may ask for permission); fix active but still 403 → the server's own setting
+    const manual = () => showBanner(manual403(srv), [retry]);
+    const allow = { label: t("allowAccess"), onClick: () => {
+      requestHostPermission(settings.aiBaseUrl, settings.provider, true).then((ok) => {
+        if (!ok) return;
+        if (originFix) retry.onClick();
+        else manual();
+      });
+    } };
+    if (originFix) manual();
+    // Ollaya: first the start command with OLLAYA_ORIGINS, the webRequest fix as the alternative
+    else showBanner(srv === "Ollaya" ? t("errOllaya403", originsCmd(srv)) : t("errOrigin403", srv), [allow, retry]);
+    return;
+  }
+  if (ollayaMissing(settings, err)) {
+    showBanner(t("errOllayaPull", settings.aiModel, "ollaya pull " + settings.aiModel), [retry, pick]);
+    return;
+  }
   switch (err.kind) {
     case "auth": showBanner(t("errAuth"), [{ label: t("settings"), onClick: () => openSettings() }]); break;
     case "rate": showBanner(t("errRate") + " " + tn("unscoredLeft", n), [retry, pick]); break;
     case "notfound": showBanner(t("errNotFound", settings.aiModel), [pick]); break;
-    case "network": showBanner(settings.provider === "ollama" ? t("errOllamaDown") : t("errNoConn", hostOf(settings.aiBaseUrl)), [retry]); break;
-    case "parse": showBanner(t("errParse"), [pick]); break;
+    case "network": showBanner(srv ? t("errServerDown", srv, serveCmd(srv))
+      : jevDown(settings, err) ? t("pkJevDown", hostOf(settings.aiBaseUrl)) + " " + jevServeCmd(settings.aiBaseUrl)
+      : t("errNoConn", hostOf(settings.aiBaseUrl)), [retry]); break;
+    case "parse": showBanner(t("errParse") + (err.unreadable ? " " + err.message : ""), [pick]); break;
+    case "config": showBanner(err.message, [{ label: t("settings"), onClick: () => openSettings() }]); break;
+    case "origin": showBanner(err.message, [retry]); break;
     default: showBanner(t("errScan", err.message), [retry]);
   }
 }
@@ -2151,23 +2438,28 @@ function keyUrlFor(base) {
 function openSettings(msg) {
   draft = {
     provider: settings.provider,
-    profiles: Object.fromEntries(Object.entries(settings.profiles).map(([k, p]) => [k, {
-      baseUrl: p.baseUrl, model: p.model, keyTyped: "", keyCleared: false, hasKey: Boolean(p.apiKey)
-    }])),
+    llm: settings.provider === "ollama" ? "ollama" : "openai", // last LLM API, for the LLM card
+    profiles: Object.fromEntries(Object.entries(settings.profiles).map(([k, p]) => [k, { baseUrl: p.baseUrl, model: p.model }])),
+    keys: {},                     // host → { typed, cleared } – what changed in this dialog
+    models: { ...(settings.models || {}) },
+    sourceUrls: { ...(settings.sourceUrls || {}) },
     whitelist: [...(settings.whitelist || [])],
     modelInfo: { ...(settings.modelInfo || {}) }
   };
   $("mScanBody").checked = settings.scanBody !== false;
+  $("mSendCtx").checked = settings.sendContext !== false;
   $("mNlDetect").checked = settings.detectNewsletters !== false;
+  renderCacheInfo();
   $("mConc").value = settings.aiConcurrency;
   $("mBatch").value = settings.aiBatchSize;
   $("mLimit").value = settings.loadLimit;
   $("mChars").value = settings.bodyChars;
   $("wlInput").value = "";
   renderSettings();
+  $("settingsBackdrop").querySelector(".modal-body").scrollTop = 0;
   settingsStatus(msg || "", msg ? "warn" : "");
   const p = draft.profiles[draft.provider];
-  const needKey = PROVIDERS[draft.provider].needsKey && !isLocalUrl(p.baseUrl) && !p.hasKey && !inheritedKey(draft.provider);
+  const needKey = PROVIDERS[draft.provider].needsKey && !isLocalUrl(p.baseUrl) && !draftKeyFor(p.baseUrl);
   openDialog("settingsBackdrop", needKey ? "#mApiKey" : ".prov[aria-checked='true']");
 }
 function closeSettings() { closeDialog("settingsBackdrop"); }
@@ -2182,36 +2474,33 @@ function stashFields() {
   p.baseUrl = $("mBaseUrl").value.trim();
   p.model = $("mModel").value.trim();
   const typed = $("mApiKey").value;
-  if (typed) { p.keyTyped = typed; p.keyCleared = false; }
+  const st = keyState(p.baseUrl);
+  if (typed && st) { st.typed = typed; st.cleared = false; }
 }
-function draftKey(k) {
-  const d = draft.profiles[k];
-  return d.keyTyped || (d.keyCleared ? "" : (settings.profiles[k] || {}).apiKey || "");
+/* API keys belong to a server (host incl. port): switching to another provider and back
+ * brings its key back; OpenRouter's one key serves decision and LLM models. */
+function keyState(url) {
+  const h = keyHost(url);
+  if (!h) return null;
+  return draft.keys[h] || (draft.keys[h] = { typed: "", cleared: false });
 }
-function hostnameOf(url) { try { return new URL(url).hostname; } catch (_) { return ""; } }
-// same host in another profile (e.g. OpenRouter) → reuse its key
-function inheritedKey(prov) {
-  const host = hostnameOf(draft.profiles[prov].baseUrl);
-  if (!host) return null;
-  for (const k of Object.keys(draft.profiles)) {
-    if (k === prov) continue;
-    const key = draftKey(k);
-    if (key && hostnameOf(draft.profiles[k].baseUrl) === host) return { key, from: k };
-  }
-  return null;
+function draftKeyFor(url) {
+  const st = keyState(url);
+  if (!st) return "";
+  return st.typed || (st.cleared ? "" : keyFor(settings.keys, url));
 }
 function draftSettings() {
   stashFields();
   const prov = draft.provider;
   const p = draft.profiles[prov];
-  const inh = inheritedKey(prov);
   return {
     ...settings,
     provider: prov,
     aiBaseUrl: p.baseUrl,
     aiModel: p.model,
-    aiApiKey: draftKey(prov) || (inh ? inh.key : ""),
+    aiApiKey: draftKeyFor(p.baseUrl),
     scanBody: $("mScanBody").checked,
+    sendContext: $("mSendCtx").checked,
     aiConcurrency: Number($("mConc").value) || 3,
     aiBatchSize: Number($("mBatch").value) || 8,
     bodyChars: Number($("mChars").value) || 1500,
@@ -2229,6 +2518,7 @@ function modelInfoPills(info, s, container) {
   if (info.params) add(info.params + (info.quant ? " · " + info.quant : ""));
   if (info.sizeBytes) add(fmtSize(info.sizeBytes));
   if (info.contextLength) add(ctxLabel(info.contextLength));
+  if (info.jsonMode && s.provider === "openai") add(t("pillJson"), "json");
   const n = rows.length;
   if (n && !info.local && !info.free && info.pricePrompt != null) {
     const c = estimateCost(info, s, n);
@@ -2237,44 +2527,44 @@ function modelInfoPills(info, s, container) {
 }
 function renderSettings() {
   const prov = draft.provider;
+  const kind = kindOf(prov);
   const meta = PROVIDERS[prov];
   const p = draft.profiles[prov];
-  document.querySelectorAll(".prov").forEach((b) => b.setAttribute("aria-checked", b.dataset.provider === prov ? "true" : "false"));
-  $("provDesc").textContent = t(meta.descKey);
-
-  // provider presets (OpenAI-compatible only)
-  $("presetField").classList.toggle("hidden", prov !== "openai");
-  if (prov === "openai") {
-    const sel = $("presetSelect");
-    sel.textContent = "";
-    let matched = false;
-    for (const pr of OPENAI_PRESETS) {
-      const o = document.createElement("option");
-      o.value = pr.baseUrl;
-      o.textContent = pr.labelKey ? t(pr.labelKey) : pr.label;
-      if (pr.baseUrl === p.baseUrl) { o.selected = true; matched = true; }
-      sel.appendChild(o);
-    }
-    const custom = document.createElement("option");
-    custom.value = "";
-    custom.textContent = t("customUrl");
-    if (!matched) custom.selected = true;
-    sel.appendChild(custom);
-  }
-
-  // key
   const local = prov === "ollama" || isLocalUrl(p.baseUrl);
-  $("keyField").classList.toggle("hidden", prov === "ollama");
+  document.querySelectorAll(".prov").forEach((b) => b.setAttribute("aria-checked", b.dataset.kind === kind ? "true" : "false"));
+  $("provDesc").textContent = t(kind === "decision" ? "provDecisionDesc" : "provLlmDesc");
+
+  // provider drop-down: cloud first, then this computer, then a custom URL
+  const cur = currentSource(prov, p.baseUrl);
+  const sel = $("presetSelect");
+  sel.textContent = "";
+  for (const group of ["cloud", "local"]) {
+    const og = document.createElement("optgroup");
+    og.label = t(group === "cloud" ? "groupCloud" : "groupLocal");
+    for (const src of SOURCES[kind].filter((x) => x.group === group)) {
+      const o = document.createElement("option");
+      o.value = src.id;
+      o.textContent = sourceLabel(src);
+      o.selected = src === cur;
+      og.appendChild(o);
+    }
+    sel.appendChild(og);
+  }
+  const custom = document.createElement("option");
+  custom.value = "custom";
+  custom.textContent = t("customUrl");
+  custom.selected = !cur;
+  sel.appendChild(custom);
+  renderSourceHint(cur, p);
+
+  // key – one per server, kept when switching providers
+  $("keyField").classList.toggle("hidden", isOllamaServer({ provider: prov, aiBaseUrl: p.baseUrl }));
   $("mApiKeyLabel").textContent = t("apiKey") + (local ? " " + t("optionalParen") : "");
-  $("mApiKey").value = p.keyTyped || "";
-  const saved = p.hasKey && !p.keyCleared;
-  const inh = !saved && !p.keyTyped ? inheritedKey(prov) : null;
-  $("mApiKey").placeholder = saved ? t("keySavedPh")
-    : inh ? t("keyInheritedPh", providerLabel(inh.from))
-    : (prov === "decision" || /openrouter/.test(p.baseUrl) ? "sk-or-…" : "sk-…");
-  $("mKeyState").textContent = saved ? t("keySavedState")
-    : inh ? t("keyInheritedState", providerLabel(inh.from))
-    : p.keyCleared ? t("keyWillBeRemoved") : "";
+  const st = keyState(p.baseUrl) || { typed: "", cleared: false };
+  $("mApiKey").value = st.typed || "";
+  const saved = Boolean(keyFor(settings.keys, p.baseUrl)) && !st.cleared;
+  $("mApiKey").placeholder = saved ? t("keySavedPh") : (/openrouter/.test(p.baseUrl) ? "sk-or-…" : "sk-…");
+  $("mKeyState").textContent = saved ? t("keySavedState", keyHost(p.baseUrl)) : st.cleared ? t("keyWillBeRemoved") : "";
   $("mKeyClear").classList.toggle("hidden", !saved);
   const keyUrl = keyUrlFor(p.baseUrl);
   $("mKeyLink").classList.toggle("hidden", !keyUrl);
@@ -2291,9 +2581,120 @@ function renderSettings() {
   const host = hostOf(p.baseUrl);
   $("privacyNote").textContent = local
     ? t("allLocal")
-    : $("mScanBody").checked ? t("privacyBody", host, fmtInt(Number($("mChars").value) || 0)) : t("privacyNoBody", host);
+    : ($("mScanBody").checked ? t("privacyBody", host, fmtInt(Number($("mChars").value) || 0)) : t("privacyNoBody", host)) +
+      ($("mSendCtx").checked ? " " + t("ctxAlsoSent") : "");
 
   renderWlChips();
+}
+/** The command that starts the jev-style server for this URL – with `--port` unless it's the
+ * default 8765. `--allow-any-host` exists only in newer jev-style versions (0.6.3 has no origin
+ * check and rejects the flag), so it's only suggested after the server answered 403. */
+function jevServeCmd(url, extra) {
+  let port = "";
+  try { const u = new URL(url); if (u.port && u.port !== "8765") port = " --port " + u.port; } catch { /* custom text */ }
+  return "jev-style serve" + port + (extra ? " " + extra : "");
+}
+/** local decision server not reachable? */
+function jevDown(s, err) {
+  return s.provider === "decision" && decisionApi(s) === "systemone" && isLocalUrl(s.aiBaseUrl) && !isOllamaUrl(s.aiBaseUrl) &&
+    err && err.kind === "network";
+}
+/** The drop-down entry for a provider + URL. A local decision server on another port is still
+ * LM Studio / Jev-Style (by its API); anything else unknown is a custom URL (null). */
+function currentSource(prov, url) {
+  const exact = sourceFor(prov, url);
+  if (exact || prov !== "decision" || !isLocalUrl(url)) return exact;
+  const api = decisionApi({ aiBaseUrl: url });
+  const id = api === "letters" ? "lmstudio" : api === "ollaya" ? "ollaya" : "jevstyle";
+  return SOURCES.decision.find((x) => x.id === id) || null;
+}
+function sourceLabel(src) { return src.labelKey ? t(src.labelKey) : src.label; }
+/** Note under the drop-down: what the provider is, how to set it up, links to it. */
+function renderSourceHint(src, p) {
+  const ico = $("srcHintIcon");
+  ico.textContent = "";
+  ico.appendChild(icon(!src ? "globe" : src.group === "local" ? "cpu" : "cloud", 15));
+  const text = !src ? t(draft.provider === "decision" ? "srcHintCustomDecision" : "srcHintCustom")
+    : src.hintKey === "jevHint" ? t("jevHint", hostOf(p.baseUrl), jevServeCmd(p.baseUrl))
+    : t(src.hintKey);
+  richText($("srcHintText"), text);
+  const links = $("srcLinks");
+  links.textContent = "";
+  for (const [labelKey, url] of (src && src.links) || []) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "linkbtn";
+    b.appendChild(textSpan(t(labelKey)));
+    b.appendChild(icon("external", 13));
+    b.addEventListener("click", () => openExternal(url));
+    links.appendChild(b);
+  }
+}
+/** Remember URL and model of the provider being left, so switching back restores them. */
+function rememberSource() {
+  const prov = draft.provider;
+  const p = draft.profiles[prov];
+  if (p.model) draft.models[modelSlot(prov, p.baseUrl)] = p.model;
+  if (prov === "ollama") return;
+  const cur = currentSource(prov, p.baseUrl);
+  draft.sourceUrls[kindOf(prov) + ":" + (cur ? cur.id : "custom")] = p.baseUrl;
+}
+function selectSource(id) {
+  stashFields();
+  rememberSource();
+  const kind = kindOf(draft.provider);
+  const src = SOURCES[kind].find((x) => x.id === id);
+  if (src && src.provider === "ollama") {
+    draft.provider = draft.llm = "ollama";
+  } else {
+    const prov = src ? src.provider : kind === "decision" ? "decision" : "openai";
+    if (prov === "openai") draft.llm = "openai";
+    draft.provider = prov;
+    const p = draft.profiles[prov];
+    const url = draft.sourceUrls[kind + ":" + (src ? src.id : "custom")] || (src ? src.baseUrl : "");
+    if (!src || p.baseUrl !== url) {
+      p.baseUrl = url;
+      p.model = draft.models[modelSlot(prov, url)] || (src && src.model) || "";
+    }
+  }
+  renderSettings();
+  settingsStatus("");
+  if (!src) { $("settingsBackdrop").querySelector("details.adv").open = true; $("mBaseUrl").focus(); }
+}
+/** Text with `code` spans (from a translation) – built with text nodes only, no HTML. */
+function richText(el, text) {
+  el.textContent = "";
+  String(text).split("`").forEach((part, i) => {
+    if (!part) return;
+    if (i % 2) { const c = document.createElement("code"); c.textContent = part; el.appendChild(c); }
+    else el.appendChild(document.createTextNode(part));
+  });
+}
+function renderCacheInfo() {
+  $("cacheInfo").textContent = t("cacheInfo", fmtInt(Object.keys(scoreCache).length), fmtInt(Object.keys(listCache).length));
+}
+async function clearCache() {
+  const nScores = Object.keys(scoreCache).length, nLists = Object.keys(listCache).length;
+  const ok = await confirmDialog(t("clearCacheTitle"), t("clearCacheBody", fmtInt(nScores), fmtInt(nLists)), [
+    { label: t("cancel"), value: false },
+    { label: t("clearCache"), value: true, cls: "danger-solid", icon: "trash" }
+  ]);
+  if (!ok) return;
+  if (scoreSaveTimer) { clearTimeout(scoreSaveTimer); scoreSaveTimer = null; }
+  if (listSaveTimer) { clearTimeout(listSaveTimer); listSaveTimer = null; }
+  scoreCache = {};
+  listCache = {};
+  await Promise.all([saveScoreCache({}), saveListCache({})]);
+  scores.clear();
+  failedIds.clear();
+  probeSkip.clear();
+  for (const r of rows) r.list = undefined;
+  firstScanDone = false;
+  rowsVersion++;
+  scoresVersion++;
+  render();
+  renderCacheInfo();
+  settingsStatus(t("cacheCleared"), "ok");
 }
 function draftSettingsLite() {
   return { ...settings, provider: draft.provider, aiBaseUrl: draft.profiles[draft.provider].baseUrl, aiModel: draft.profiles[draft.provider].model, scanBody: $("mScanBody").checked, bodyChars: Number($("mChars").value) || 1500, aiBatchSize: Number($("mBatch").value) || 8 };
@@ -2329,29 +2730,38 @@ function addWlFromInput() {
   $("wlInput").value = "";
   renderWlChips();
 }
-function switchProvider(prov) {
-  if (!draft || prov === draft.provider) return;
+/** card click: decision models ↔ language models (back to the LLM API used last) */
+function switchKind(kind) {
+  if (!draft || kindOf(draft.provider) === kind) return;
   stashFields();
-  draft.provider = prov;
+  rememberSource();
+  draft.provider = kind === "decision" ? "decision" : draft.llm;
   renderSettings();
   settingsStatus("");
 }
 async function saveSettingsDialog(perm) {
   const s = draftSettings();
   addWlFromInput();
+  rememberSource();
   const profiles = {};
-  for (const [k, p] of Object.entries(draft.profiles)) {
-    const savedKey = (settings.profiles[k] || {}).apiKey || "";
-    profiles[k] = { baseUrl: p.baseUrl, model: p.model, apiKey: p.keyTyped || (p.keyCleared ? "" : savedKey) };
+  for (const [k, p] of Object.entries(draft.profiles)) profiles[k] = { baseUrl: p.baseUrl, model: p.model };
+  const keys = { ...settings.keys };
+  for (const [h, st] of Object.entries(draft.keys)) {
+    if (st.typed) keys[h] = st.typed;
+    else if (st.cleared) delete keys[h];
   }
   const prevLimit = settings.loadLimit;
   const nlBefore = settings.detectNewsletters !== false;
   settings = await saveSettings({
     provider: s.provider,
     profiles,
+    keys,
+    models: draft.models,
+    sourceUrls: draft.sourceUrls,
     modelInfo: draft.modelInfo,
     whitelist: draft.whitelist,
     scanBody: s.scanBody,
+    sendContext: $("mSendCtx").checked,
     detectNewsletters: $("mNlDetect").checked,
     aiConcurrency: Math.max(1, Math.min(10, s.aiConcurrency)),
     aiBatchSize: Math.max(1, Math.min(25, s.aiBatchSize)),
@@ -2373,10 +2783,20 @@ async function testSettings(perm) {
   await perm;
   try {
     const r = await testConnection(s);
+    // a jev-style server runs exactly one model – take over its real name (not Ollaya: there the
+    // answer names the routed model, e.g. laya:en for a "laya" request)
+    if (s.provider === "decision" && decisionApi(s) === "systemone" && r.servedModel && isLocalUrl(s.aiBaseUrl) && r.servedModel !== s.aiModel) {
+      draft.profiles.decision.model = r.servedModel;
+      renderSettings();
+    }
     settingsStatus(t("connectionOk", r.model, r.reply), "ok");
   } catch (err) {
-    const msg = s.provider === "ollama" && err.kind === "network" ? t("errOllamaDown")
-      : s.provider === "ollama" && err.kind === "auth" ? t("errOllamaOriginsShort")
+    const srv = guardedServer(s);
+    const msg = srv && err.kind === "network" ? t("errServerDown", srv, serveCmd(srv))
+      : originBlocked(s, err)
+        ? (originFix ? manual403(srv) : srv === "Ollaya" ? t("errOllaya403", originsCmd(srv)) : t("errOriginShort", srv))
+      : ollayaMissing(s, err) ? t("errOllayaPull", s.aiModel, "ollaya pull " + s.aiModel)
+      : jevDown(s, err) ? t("pkJevDown", hostOf(s.aiBaseUrl)) + " " + jevServeCmd(s.aiBaseUrl)
       : t("failed", err.message);
     settingsStatus(msg, "err");
   }
@@ -2388,9 +2808,10 @@ async function testSettings(perm) {
 let pk = { models: [], sel: null, loading: false, error: null, s: null };
 function openPicker() {
   const s = draftSettings();
-  const perm = requestHostPermission(s.aiBaseUrl); // synchronously in the click
+  const perm = requestHostPermission(s.aiBaseUrl, s.provider); // synchronously in the click
   pk = { models: [], sel: s.aiModel || null, loading: true, error: null, s };
-  $("pkSub").textContent = `${providerLabel(s.provider)} · ${hostOf(s.aiBaseUrl)}`;
+  const src = currentSource(s.provider, s.aiBaseUrl);
+  $("pkSub").textContent = `${t(s.provider === "decision" ? "provDecisionLabel" : "provLlmLabel")} · ${src ? sourceLabel(src) + " · " : ""}${hostOf(s.aiBaseUrl)}`;
   $("pkSearch").value = "";
   $("pkSort").value = "rec";
   $("pkFree").checked = false;
@@ -2405,6 +2826,11 @@ async function loadPickerModels() {
   renderPicker();
   try {
     pk.models = await listModels(pk.s);
+    // Ollama/Ollaya list "laya:latest" for the model "laya"
+    if (pk.sel && !pk.sel.includes(":") && !pk.models.some((m) => m.id === pk.sel) && pk.models.some((m) => m.id === pk.sel + ":latest")) pk.sel += ":latest";
+    // a previously chosen model that isn't offered (e.g. an audio model) shouldn't stay preselected
+    const filtered = pk.s.provider === "openai" || (pk.s.provider === "decision" && decisionApi(pk.s) === "letters");
+    if (filtered && pk.sel && !pk.models.some((m) => m.id === pk.sel)) pk.sel = null;
   } catch (e) {
     pk.error = e;
     pk.models = [];
@@ -2433,8 +2859,13 @@ function pickerItems() {
     case "ctx": list.sort((a, b) => (b.contextLength || 0) - (a.contextLength || 0)); break;
     case "size": list.sort((a, b) => size(a) - size(b)); break;
     default:
-      if (pk.s.provider === "ollama") list.sort((a, b) => size(a) - size(b));
-      else list.sort((a, b) => price(a) - price(b) || (a.name || a.id).localeCompare(b.name || b.id));
+      // local model stores: smallest first – Ollaya's recommended model (laya:en) before that
+      if (isOllamaServer(pk.s) || isOllayaServer(pk.s)) {
+        const rec = (m) => (isOllayaServer(pk.s) && m.id === OLLAYA.model ? 1 : 0);
+        list.sort((a, b) => rec(b) - rec(a) || size(a) - size(b));
+      }
+      // LLMs: models with a JSON response format first (much more reliable), then the cheapest
+      else list.sort((a, b) => (b.jsonMode ? 1 : 0) - (a.jsonMode ? 1 : 0) || price(a) - price(b) || (a.name || a.id).localeCompare(b.name || b.id));
   }
   return list;
 }
@@ -2464,8 +2895,11 @@ function renderPicker() {
   }
   if (pk.error) {
     const e = pk.error;
-    if (pk.s.provider === "ollama" && e.kind === "network") pickerMsg(t("pkOllamaDown"), "ollama serve");
-    else if (pk.s.provider === "ollama" && e.kind === "auth") pickerMsg(t("pkOllamaOrigins"), "OLLAMA_ORIGINS='moz-extension://*' ollama serve");
+    const srv = guardedServer(pk.s);
+    if (srv && e.kind === "network") pickerMsg(t("pkServerDown", srv), serveCmd(srv));
+    else if (originBlocked(pk.s, e)) pickerMsg(t(srv === "Ollaya" ? "pkOllayaOrigins" : "pkOriginBlocked", srv), originsCmd(srv));
+    else if (e.kind === "origin") pickerMsg(e.message, jevServeCmd(pk.s.aiBaseUrl, "--allow-any-host"));
+    else if (jevDown(pk.s, e)) pickerMsg(t("pkJevDown", hostOf(pk.s.aiBaseUrl)), jevServeCmd(pk.s.aiBaseUrl));
     else if (e.kind === "auth") pickerMsg(t("pkNeedKey"));
     else pickerMsg(t("pkLoadFailed", e.message));
     return;
@@ -2473,6 +2907,8 @@ function renderPicker() {
   const items = pickerItems();
   if (!pk.models.length) {
     if (pk.s.provider === "ollama") pickerMsg(t("pkNoOllamaModels"), "ollama pull llama3.2:3b");
+    else if (isOllayaServer(pk.s)) pickerMsg(t("pkNoOllayaModels"), "ollaya pull " + OLLAYA.model);
+    else if (pk.s.provider === "decision" && decisionApi(pk.s) === "letters") pickerMsg(t("pkNoLmDecision"), "chaoliangUNSW/Jev-Style-Qwen3.5-2B-Decision-GGUF");
     else pickerMsg(t("pkNoModels"));
     return;
   }
@@ -2502,6 +2938,7 @@ function renderPicker() {
     if (m.params) pill((m.local ? "" : "~") + m.params + (m.quant ? " · " + m.quant : ""));
     if (m.sizeBytes) pill(fmtSize(m.sizeBytes));
     if (m.contextLength) pill(ctxLabel(m.contextLength));
+    if (m.jsonMode && pk.s.provider === "openai") { pill(t("pillJson"), "json"); meta.lastChild.title = t("pillJsonTitle"); }
     if (!m.local && /:free$/.test(m.id)) pill(t("pillFreeRate"));
     if (meta.childNodes.length) main.appendChild(meta);
     const price = document.createElement("div");
@@ -2556,7 +2993,8 @@ function applyPicker() {
   if (m) {
     draft.modelInfo[prov] = {
       id: m.id, pricePrompt: m.pricePrompt, priceCompletion: m.priceCompletion, free: m.free, local: m.local,
-      contextLength: m.contextLength, params: m.params, quant: m.quant, sizeBytes: m.sizeBytes
+      contextLength: m.contextLength, params: m.params, quant: m.quant, sizeBytes: m.sizeBytes,
+      jsonMode: Boolean(m.jsonMode), textOut: m.textOut !== false
     };
   }
   closePicker();
@@ -2673,6 +3111,7 @@ function onKeyDown(e) {
     if (top) { DIALOG_CLOSERS[top](); e.preventDefault(); return; }
     if (tg === $("searchBox") && $("searchBox").value) { $("searchBox").value = ""; searchText = ""; render(); e.preventDefault(); return; }
     if (selected.size) { clearSelection(); e.preventDefault(); }
+    else if (activeGroup != null) { clearListFilter(); e.preventDefault(); }
     return;
   }
   if (e.altKey) return;
@@ -2763,6 +3202,7 @@ function wireEvents() {
   };
   $("spamMin").addEventListener("input", onRange("min"));
   $("spamMax").addEventListener("input", onRange("max"));
+  wireRangePointer();
   $("selectFilteredBtn").addEventListener("click", selectFiltered);
   $("trashFilteredBtn").addEventListener("click", () => deleteIds(view.map((r) => r.id)));
 
@@ -2783,13 +3223,13 @@ function wireEvents() {
     const li = e.target.closest("li");
     if (li && e.target === li && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); groupClick(li, null); }
   });
-  const groupSegs = document.querySelectorAll(".seg-btn[data-group]");
-  groupSegs.forEach((b) => b.addEventListener("click", () => {
+  document.querySelectorAll(".seg-btn[data-group]").forEach((b) => b.addEventListener("click", () => {
     groupMode = b.dataset.group;
     activeGroup = null;
-    groupSegs.forEach((x) => x.classList.toggle("active", x === b));
+    syncGroupSegs();
     render();
   }));
+  $("filterChipClear").addEventListener("click", clearListFilter);
 
   // scan
   $("scanBtn").addEventListener("click", onScanClick);
@@ -2809,36 +3249,38 @@ function wireEvents() {
   $("setClose").addEventListener("click", closeSettings);
   $("mCancel").addEventListener("click", closeSettings);
   bindBackdropClose($("settingsBackdrop"), closeSettings);
-  document.querySelectorAll(".prov").forEach((b) => b.addEventListener("click", () => switchProvider(b.dataset.provider)));
-  $("presetSelect").addEventListener("change", (e) => {
-    if (!e.target.value) { $("settingsBackdrop").querySelector("details.adv").open = true; $("mBaseUrl").focus(); return; }
+  document.querySelectorAll(".prov").forEach((b) => b.addEventListener("click", () => switchKind(b.dataset.kind)));
+  $("presetSelect").addEventListener("change", (e) => selectSource(e.target.value));
+  $("mApiKey").addEventListener("input", () => {
+    const st = keyState($("mBaseUrl").value.trim());
+    if (!st) return;
+    st.typed = $("mApiKey").value;
+    if (st.typed) st.cleared = false;
+  });
+  $("mKeyClear").addEventListener("click", () => {
     stashFields();
-    const p = draft.profiles.openai;
-    if (p.baseUrl !== e.target.value) { p.baseUrl = e.target.value; p.model = ""; }
+    const st = keyState(draft.profiles[draft.provider].baseUrl);
+    if (st) { st.cleared = true; st.typed = ""; }
     renderSettings();
   });
-  $("mApiKey").addEventListener("input", () => {
-    const p = draft.profiles[draft.provider];
-    p.keyTyped = $("mApiKey").value;
-    if (p.keyTyped) p.keyCleared = false;
-  });
-  $("mKeyClear").addEventListener("click", () => { const p = draft.profiles[draft.provider]; p.keyCleared = true; p.keyTyped = ""; renderSettings(); });
   $("mKeyLink").addEventListener("click", () => { const u = $("mKeyLink").dataset.url; if (u) openExternal(u); });
   $("mBaseUrl").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mModel").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mScanBody").addEventListener("change", () => { stashFields(); renderSettings(); });
+  $("mSendCtx").addEventListener("change", () => { stashFields(); renderSettings(); });
+  $("mClearCache").addEventListener("click", clearCache);
   $("mChars").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("wlAdd").addEventListener("click", addWlFromInput);
   $("wlInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addWlFromInput(); } });
   $("mPick").addEventListener("click", openPicker);
-  $("mSave").addEventListener("click", () => { stashFields(); saveSettingsDialog(requestHostPermission(draft.profiles[draft.provider].baseUrl)); });
-  $("mTest").addEventListener("click", () => { stashFields(); testSettings(requestHostPermission(draft.profiles[draft.provider].baseUrl)); });
+  $("mSave").addEventListener("click", () => { stashFields(); saveSettingsDialog(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
+  $("mTest").addEventListener("click", () => { stashFields(); testSettings(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
 
   // model picker
   $("pkClose").addEventListener("click", closePicker);
   $("pkCancel").addEventListener("click", closePicker);
   $("pkApply").addEventListener("click", applyPicker);
-  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl); perm.then(loadPickerModels); });
+  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl, pk.s.provider); perm.then(loadPickerModels); });
   bindBackdropClose($("pickerBackdrop"), closePicker);
   let pkTimer = 0;
   $("pkSearch").addEventListener("input", () => { clearTimeout(pkTimer); pkTimer = setTimeout(renderPicker, 100); });

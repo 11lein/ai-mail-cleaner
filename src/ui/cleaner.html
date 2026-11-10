@@ -44,6 +44,7 @@
     <!-- Selection + filter -->
     <div class="subbar">
       <div class="sb-left">
+        <span id="filterChip" class="filter-chip hidden"><span data-icon="funnel" data-size="13"></span><span id="filterChipText"></span><button id="filterChipClear" class="btn-icon sm" data-i18n-title="filterClear" data-i18n-aria="filterClear"><span data-icon="x" data-size="13"></span></button></span>
         <span id="selInfo" class="sel-info"></span>
         <button id="selVisibleOnly" class="linkbtn hidden"></button>
         <div id="selActions" class="sel-actions hidden">
@@ -54,6 +55,9 @@
         </div>
       </div>
       <div class="sb-right">
+        <!-- buttons that come and go sit LEFT of chips/slider, so the slider never moves under the mouse -->
+        <button id="selectFilteredBtn" class="sm hidden"><span data-icon="check-square" data-size="15"></span><span id="selectFilteredLabel"></span></button>
+        <button id="trashFilteredBtn" class="danger-solid sm hidden"><span data-icon="trash" data-size="15"></span><span id="trashFilteredLabel"></span></button>
         <div id="progress" class="progress hidden" aria-live="polite">
           <span class="pulse"></span>
           <div class="bar"><div id="progressFill"></div></div>
@@ -73,8 +77,6 @@
           </div>
           <span id="rangeLabel" class="rlabel"></span>
         </div>
-        <button id="selectFilteredBtn" class="sm hidden"><span data-icon="check-square" data-size="15"></span><span id="selectFilteredLabel"></span></button>
-        <button id="trashFilteredBtn" class="danger-solid sm hidden"><span data-icon="trash" data-size="15"></span><span id="trashFilteredLabel"></span></button>
       </div>
     </div>
 
@@ -147,16 +149,22 @@
         <button id="setClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="17"></span></button>
       </div>
       <div class="modal-body">
-        <div class="prov-grid" role="radiogroup" data-i18n-aria="providerLabel">
-          <button type="button" class="prov" data-provider="decision" role="radio"><span data-icon="target" data-size="18"></span><span class="prov-title" data-i18n="provDecisionTitle"></span><span class="prov-sub" data-i18n="provDecisionSub"></span></button>
-          <button type="button" class="prov" data-provider="openai" role="radio"><span data-icon="cloud" data-size="18"></span><span class="prov-title" data-i18n="provOpenaiTitle"></span><span class="prov-sub" data-i18n="provOpenaiSub"></span></button>
-          <button type="button" class="prov" data-provider="ollama" role="radio"><span data-icon="cpu" data-size="18"></span><span class="prov-title" data-i18n="provOllamaTitle"></span><span class="prov-sub" data-i18n="provOllamaSub"></span></button>
+        <div class="prov-grid" role="radiogroup" data-i18n-aria="kindLabel">
+          <button type="button" class="prov" data-kind="decision" role="radio"><span data-icon="target" data-size="18"></span><span class="prov-title" data-i18n="provDecisionTitle"></span><span class="prov-sub" data-i18n="provDecisionSub"></span></button>
+          <button type="button" class="prov" data-kind="llm" role="radio"><span data-icon="sparkles" data-size="18"></span><span class="prov-title" data-i18n="provLlmTitle"></span><span class="prov-sub" data-i18n="provLlmSub"></span></button>
         </div>
         <p id="provDesc" class="prov-desc"></p>
 
         <div class="mfield" id="presetField">
           <label for="presetSelect" data-i18n="providerLabel"></label>
           <select id="presetSelect"></select>
+          <div id="srcHint" class="src-hint">
+            <span id="srcHintIcon" class="src-hint-ico"></span>
+            <div class="src-hint-body">
+              <p id="srcHintText"></p>
+              <div id="srcLinks" class="src-links"></div>
+            </div>
+          </div>
         </div>
 
         <div class="mfield" id="keyField">
@@ -187,6 +195,11 @@
             <span class="track"></span>
             <span class="switch-text" data-i18n="sendExcerpt"></span>
           </label>
+          <label class="switch mswitch mswitch-tight">
+            <input type="checkbox" id="mSendCtx" />
+            <span class="track"></span>
+            <span class="switch-text" data-i18n="sendContext"></span>
+          </label>
           <p id="privacyNote" class="hint"></p>
           <label class="switch mswitch">
             <input type="checkbox" id="mNlDetect" />
@@ -202,6 +215,14 @@
           <div class="wl-add">
             <input type="text" id="wlInput" data-i18n-placeholder="wlPlaceholder" autocomplete="off" />
             <button type="button" id="wlAdd" class="sm"><span data-icon="plus" data-size="14"></span><span data-i18n="add"></span></button>
+          </div>
+        </div>
+
+        <div class="msection">
+          <div class="msection-title" data-i18n="storedData"></div>
+          <div class="cache-row">
+            <span id="cacheInfo" class="hint"></span>
+            <button type="button" id="mClearCache" class="sm"><span data-icon="trash" data-size="14"></span><span data-i18n="clearCache"></span></button>
           </div>
         </div>
 
@@ -377,6 +398,7 @@
           <dt><kbd data-i18n="keyDel"></kbd></dt><dd data-i18n="helpDelete"></dd>
           <dt><kbd>/</kbd></dt><dd data-i18n="helpSearch"></dd>
           <dt><kbd>Esc</kbd></dt><dd data-i18n="helpEsc"></dd>
+          <dt><span data-icon="funnel" data-size="15"></span></dt><dd data-i18n="helpFilter"></dd>
           <dt><kbd>?</kbd></dt><dd data-i18n="helpHelp"></dd>
         </dl>
         <p class="hint" data-i18n="helpHint"></p>

@@ -52,6 +52,9 @@ const PV_BASE_CSS =
   ".amc-warn{background:#fee2e2;color:#b91c1c;font-weight:600}";
 const PV_DROP = "script,noscript,iframe,frame,frameset,object,embed,applet,meta,link,base,form,input,button,textarea,select,option,template,portal,audio,video,source,track";
 const PV_URL_ATTRS = /^(href|src|action|background|poster|lowsrc|dynsrc|xlink:href|data|srcset)$/;
+// SVG animation elements can set attributes later – e.g. turn an <a> back into a link
+const PV_ANIM = /^(animate|animatemotion|animatetransform|set|discard)$/;
+const HTML_NS = "http://www.w3.org/1999/xhtml";
 const PV_MAX = 2000000;
 
 function extractHost(text) {
@@ -63,10 +66,15 @@ function sameSite(a, b) { return a === b || a.endsWith("." + b) || b.endsWith(".
 function sanitizeMail(html) {
   const doc = new DOMParser().parseFromString(String(html).slice(0, PV_MAX), "text/html"); // inert
   doc.querySelectorAll(PV_DROP).forEach((n) => n.remove());
-  for (const el of doc.querySelectorAll("*")) {
+  for (const el of [...doc.querySelectorAll("*")]) {
+    if (el.namespaceURI !== HTML_NS && PV_ANIM.test(el.localName.toLowerCase())) { el.remove(); continue; }
+    // only HTML <a> keeps its href for now – it is disabled below, with its target shown. Any other
+    // link (<area>, SVG/MathML xlink:href) would still navigate the preview frame on a click.
+    const htmlLink = el.namespaceURI === HTML_NS && el.localName === "a";
     for (const a of [...el.attributes]) {
       const n = a.name.toLowerCase();
       if (n.startsWith("on") || n === "srcdoc" || n === "formaction" || n === "ping" || n === "http-equiv") { el.removeAttribute(a.name); continue; }
+      if ((n === "href" || n === "xlink:href") && !htmlLink) { el.removeAttribute(a.name); continue; }
       if (PV_URL_ATTRS.test(n) && /^\s*(javascript|vbscript|data:(?!image\/(png|gif|jpe?g|webp);))/i.test(a.value)) el.removeAttribute(a.name);
     }
   }

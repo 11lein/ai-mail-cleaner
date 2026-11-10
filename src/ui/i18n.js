@@ -65,6 +65,7 @@ const dtDayMonthYear = new Intl.DateTimeFormat(LANG, { day: "numeric", month: "s
 const dtLong = new Intl.DateTimeFormat(LANG, { weekday: "short", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" });
 
 export const fmtDate = (ms) => (ms ? dtFull.format(new Date(ms)) : "");
+export const fmtDateMedium = (ms) => (ms ? dtDayMonthYear.format(new Date(ms)) : "");
 export const fmtDateLong = (ms) => (ms ? dtLong.format(new Date(ms)) : "");
 
 /** Compact: "14:32" · "Yesterday" · "Mon" · "Jul 9" · "Oct 2, 2025" */

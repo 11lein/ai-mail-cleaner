@@ -63,6 +63,7 @@ html, body { height: 100%; }
   flex-shrink: 0;
 }
 .sb-left, .sb-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.sb-right { justify-content: flex-end; margin-left: auto; }
 .sel-info { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; padding-left: 4px; }
 .sel-info b { color: var(--text); font-weight: 650; }
 .sel-actions { display: flex; align-items: center; gap: 6px; padding-left: 4px; }
@@ -92,8 +93,12 @@ html, body { height: 100%; }
 .d-none { background: transparent; box-shadow: inset 0 0 0 1.5px var(--muted); }
 
 .filter { display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 4px; }
-.rlabel { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; min-width: 60px; color: var(--text-2); }
-.range { position: relative; width: 120px; height: 24px; display: flex; align-items: center; }
+/* fixed width: a growing label ("0–100%" → "10–100%") would otherwise push the slider sideways */
+.rlabel { font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; width: 72px; flex-shrink: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-2); }
+/* Double slider: the two inputs ignore the mouse completely – .range handles pointer events itself
+   and moves the nearest thumb (Gecko ignores pointer-events on range thumbs, so clicks always hit
+   the top input and its thumb jumped). The inputs stay for keyboard and screen readers. */
+.range { position: relative; width: 120px; height: 24px; display: flex; align-items: center; cursor: pointer; touch-action: none; }
 .range-track {
   position: absolute; left: 8px; right: 8px; height: 4px;
   background: var(--border-strong); border-radius: 999px;
@@ -108,17 +113,19 @@ html, body { height: 100%; }
   -webkit-appearance: none; appearance: none; background: transparent; pointer-events: none;
 }
 .range input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none; pointer-events: auto;
+  -webkit-appearance: none; appearance: none; pointer-events: none;
   width: 16px; height: 16px; border-radius: 50%;
   background: #fff; border: 1px solid var(--border-strong);
-  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.28); cursor: grab;
+  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.28);
 }
 .range input[type="range"]::-moz-range-thumb {
-  pointer-events: auto; width: 16px; height: 16px; border-radius: 50%;
+  pointer-events: none; width: 16px; height: 16px; border-radius: 50%;
   background: #fff; border: 1px solid var(--border-strong);
-  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.28); cursor: grab;
+  box-shadow: 0 1px 3px rgba(16, 18, 24, 0.28);
 }
+.range.dragging { cursor: grabbing; }
 .range input[type="range"]::-moz-range-track { background: transparent; border: none; }
+.range input[type="range"]:focus { outline: none; box-shadow: none; } /* ring only on the thumb (below) */
 .range input[type="range"]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 3px var(--ring); }
 .range input[type="range"]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 3px var(--ring); }
 #spamMin { z-index: 2; }
@@ -349,11 +356,37 @@ thead th.c-act { z-index: 3; }
   color: var(--muted); cursor: pointer;
   transition: opacity 0.12s, background 0.12s, color 0.12s;
 }
-.wltoggle { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 26px; height: 26px; border-radius: 7px; opacity: 0; }
+/* vertically centred via inset + margin:auto – NOT transform, which button:active overrides (made it jump) */
+.wltoggle { position: absolute; right: 5px; top: 0; bottom: 0; margin: auto 0; width: 26px; height: 26px; border-radius: 7px; opacity: 0; }
 tbody tr:hover .wltoggle, tbody tr.focus .wltoggle { opacity: 0.8; }
 .wltoggle:hover:not(:disabled) { opacity: 1; color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, transparent); }
 .wltoggle.active { opacity: 1; color: var(--ok); }
 .wltoggle:focus-visible { opacity: 1; }
+
+/* Filter funnel next to the shield (sender / domain cell) – visible on hover or when active */
+.cellfilter {
+  position: absolute; right: 33px; top: 0; bottom: 0; margin: auto 0;
+  width: 26px; height: 26px; padding: 0; border-radius: 7px; opacity: 0;
+  background: var(--raised); border: 1px solid var(--border); box-shadow: var(--shadow-sm); color: var(--muted);
+}
+tbody tr:hover .cellfilter, tbody tr.focus .cellfilter { opacity: 0.9; }
+.cellfilter:hover:not(:disabled) { opacity: 1; color: var(--accent-text); background: var(--raised); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.cellfilter.active { opacity: 1; color: var(--accent-ink); background: var(--accent); border-color: transparent; }
+.cellfilter:focus-visible { opacity: 1; }
+
+/* Active list filter (sender / domain) in the sub bar */
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px; max-width: 320px; height: 28px; padding: 0 2px 0 9px;
+  border-radius: 999px; background: var(--accent-soft); color: var(--accent-text);
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); font-size: 12.5px; font-weight: 600;
+}
+.filter-chip #filterChipText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filter-chip .btn-icon.sm { width: 22px; height: 22px; color: inherit; }
+
+/* Settings: stored data */
+.cache-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.cache-row .hint { margin: 0; }
+.mswitch-tight { margin-bottom: 4px; }
 
 .cell-subj { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .pv-btn { width: 26px; height: 26px; border-radius: 7px; opacity: 0.55; flex-shrink: 0; }
@@ -485,7 +518,18 @@ tbody tr:hover .rowdel, tbody tr.focus .rowdel { opacity: 1; }
 
 /* Einstellungen */
 .modal-settings { width: 600px; }
-.prov-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 8px; }
+.prov-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 8px; }
+.src-hint {
+  display: flex; gap: 10px; margin-top: 8px; padding: 10px 12px; border-radius: 10px;
+  background: var(--surface-2); color: var(--text-2); font-size: 12px; line-height: 1.55;
+}
+.src-hint-ico { flex-shrink: 0; color: var(--muted); padding-top: 1px; }
+.src-hint-body { min-width: 0; }
+.src-hint p { margin: 0; overflow-wrap: anywhere; }
+.src-hint code { font-size: 11.5px; }
+.src-links { display: flex; flex-wrap: wrap; gap: 4px 14px; margin-top: 6px; }
+.src-links:empty { display: none; }
+.src-links .linkbtn { font-size: 12px; }
 .prov {
   height: auto; padding: 12px 12px 11px; flex-direction: column; align-items: flex-start; gap: 3px;
   border-radius: 12px; text-align: left; white-space: normal; box-shadow: none;
@@ -530,6 +574,7 @@ details.adv summary { cursor: pointer; font-size: 12.5px; font-weight: 650; colo
 .pill.free { color: #166534; background: #dcfce7; }
 .pill.paid { color: #92400e; background: #fef3c7; }
 .pill.local { color: var(--accent); background: var(--accent-soft); }
+.pill.json { color: var(--accent-text); background: var(--accent-soft); cursor: help; }
 
 /* Modell-Auswahl */
 .modal-picker { width: 860px; height: min(84vh, 860px); }

@@ -26,6 +26,9 @@
   "allSendersTrusted": {
     "message": "Alle Absender sind bereits vertraut"
   },
+  "allowAccess": {
+    "message": "Zugriff erlauben"
+  },
   "apiKey": {
     "message": "API-Schlüssel"
   },
@@ -46,6 +49,12 @@
   },
   "batchSize": {
     "message": "Mails pro Anfrage"
+  },
+  "cacheCleared": {
+    "message": "Cache geleert – die Mails können neu gescannt werden."
+  },
+  "cacheInfo": {
+    "message": "$1 gespeicherte Bewertungen · $2 Newsletter-Prüfungen"
   },
   "cancel": {
     "message": "Abbrechen"
@@ -113,6 +122,15 @@
   "chooseModelTitle": {
     "message": "Modell wählen"
   },
+  "clearCache": {
+    "message": "Cache leeren"
+  },
+  "clearCacheBody": {
+    "message": "Löscht $1 gespeicherte Bewertungen und $2 Newsletter-Prüfungen. Die Mails gelten dann als unbewertet und können neu gescannt werden – bei bezahlten Modellen kostet das erneut."
+  },
+  "clearCacheTitle": {
+    "message": "Cache leeren?"
+  },
   "clearGroupFilter": {
     "message": "Gruppenfilter aufheben"
   },
@@ -179,6 +197,9 @@
   "creatingFolder": {
     "message": "Lege „$1“ an …"
   },
+  "ctxAlsoSent": {
+    "message": "Außerdem: ob der Absender in deinem Adressbuch steht und wie viele seiner Mails in diesem Ordner du geöffnet hast (das Adressbuch selbst bleibt lokal)."
+  },
   "ctxK": {
     "message": "$1k Kontext"
   },
@@ -193,6 +214,12 @@
   },
   "ctxNotSpamN_other": {
     "message": "$1 Mails als „kein Spam“ markieren"
+  },
+  "ctxRescoreN_one": {
+    "message": "$1 Mail neu bewerten"
+  },
+  "ctxRescoreN_other": {
+    "message": "$1 Mails neu bewerten"
   },
   "ctxSelectAllFrom": {
     "message": "Alle von $1 auswählen"
@@ -216,7 +243,10 @@
     "message": "Aktueller Ordner"
   },
   "customUrl": {
-    "message": "Eigene URL (unter „Erweitert“)"
+    "message": "Eigene URL …"
+  },
+  "dateRange": {
+    "message": "Vom $1 bis $2"
   },
   "deleteFailed": {
     "message": "Löschen fehlgeschlagen: $1"
@@ -275,11 +305,26 @@
   "errBadJson": {
     "message": "Die Antwort war kein gültiges JSON."
   },
+  "errDecisionViaChat": {
+    "message": "„$1“ ist ein Decision-Modell – es kann nicht chatten, als Sprachmodell liefert es nur sinnlosen Text. Stattdessen „Decision-Modell“ wählen, mit Anbieter Ollama, „LM Studio (Jev-Style 2B v1)“ oder „Jev-Style-Server“."
+  },
+  "errEmptyReply": {
+    "message": "Das Modell hat leer geantwortet (ist es ein Text-Modell?)."
+  },
+  "errLocalOrigin": {
+    "message": "Der lokale Server unter $1 lehnt Anfragen von Thunderbird ab (neuere jev-style-Versionen tun das standardmäßig). Mit der Option --allow-any-host starten."
+  },
   "errNoBaseUrl": {
     "message": "Keine API-Basis-URL konfiguriert."
   },
   "errNoConn": {
     "message": "Keine Verbindung zu $1."
+  },
+  "errNoLetters": {
+    "message": "Das Modell antwortet nicht im Entscheidungs-Format (es wollte $1 sagen). In LM Studio funktioniert nur Jev-Style 2B v1."
+  },
+  "errNoLogprobs": {
+    "message": "Der Server liefert keine Token-Wahrscheinlichkeiten (logprobs) – LM Studio aktualisieren oder llama-server verwenden."
   },
   "errNoScore": {
     "message": "Keine Bewertung in der Antwort."
@@ -293,14 +338,23 @@
   "errNotFound": {
     "message": "Modell „$1“ wurde beim Anbieter nicht gefunden."
   },
-  "errOllama403": {
-    "message": "Ollama lehnt die Anfrage ab (403). Ollama mit OLLAMA_ORIGINS=moz-extension://* starten und erneut versuchen."
+  "errOllama403Manual": {
+    "message": "Ollama lehnt Anfragen aus Thunderbird weiterhin ab (403). Thunderbird in Ollama erlauben – im Terminal: $1 – und Ollama beenden und neu starten."
   },
-  "errOllamaDown": {
-    "message": "Ollama ist nicht erreichbar – läuft „ollama serve“?"
+  "errOllaya403": {
+    "message": "Ollaya lehnt Anfragen aus Thunderbird ab (403). Ollaya beenden und mit zugelassenem Thunderbird starten: $1 – oder mit „Zugriff erlauben“ spricht das Add-on Ollaya wie eine lokale App an."
   },
-  "errOllamaOriginsShort": {
-    "message": "Ollama blockiert Thunderbird – mit OLLAMA_ORIGINS=moz-extension://* starten."
+  "errOllaya403Manual": {
+    "message": "Ollaya lehnt Anfragen aus Thunderbird weiterhin ab (403). Das laufende Ollaya beenden und im Terminal so starten: $1"
+  },
+  "errOllayaPull": {
+    "message": "Ollaya hat das Modell „$1“ noch nicht. Einmal im Terminal herunterladen: $2"
+  },
+  "errOrigin403": {
+    "message": "$1 lehnt Anfragen aus Thunderbird ab (403). Mit „Zugriff erlauben“ spricht das Add-on $1 wie eine lokale App an."
+  },
+  "errOriginShort": {
+    "message": "$1 blockiert Thunderbird (403) – den Zugriff erlauben, wenn Thunderbird fragt, dann erneut testen."
   },
   "errParse": {
     "message": "Das Modell liefert keine verwertbaren Antworten – bitte ein anderes Modell wählen."
@@ -310,6 +364,15 @@
   },
   "errScan": {
     "message": "Scan-Fehler: $1"
+  },
+  "errServerDown": {
+    "message": "$1 ist nicht erreichbar. Im Terminal starten: $2"
+  },
+  "errSlotModelViaLm": {
+    "message": "„$1“ (Jev-Style 0.8B v3 / 2B v4) lässt sich über LM Studio nicht auslesen – die Bewertung steckt im Inneren des Modells. In LM Studio Jev-Style 2B v1 laden, oder dieses Modell mit „jev-style serve“ starten und Anbieter „Jev-Style-Server“ wählen."
+  },
+  "errUnreadable": {
+    "message": "Antwort nicht lesbar: „$1“"
   },
   "etaLeft": {
     "message": "noch ca. $1"
@@ -324,13 +387,28 @@
     "message": "Aufklappen"
   },
   "extDescription": {
-    "message": "Spam-Wahrscheinlichkeit für jede Mail – per Decision-Modell, KI-Anbieter oder lokal mit Ollama. Newsletter erkennen, filtern, aufräumen."
+    "message": "Spam-Wahrscheinlichkeit für jede Mail – per Decision-Modell oder KI-Anbieter, in der Cloud oder lokal. Newsletter erkennen, filtern, aufräumen."
   },
   "extName": {
     "message": "AI Mail Cleaner"
   },
   "failed": {
     "message": "Fehlgeschlagen: $1"
+  },
+  "filterByDomain": {
+    "message": "Nur Mails der Domain $1 zeigen"
+  },
+  "filterBySender": {
+    "message": "Nur Mails von $1 zeigen"
+  },
+  "filterChipDomain": {
+    "message": "Domain: $1"
+  },
+  "filterChipSender": {
+    "message": "Absender: $1"
+  },
+  "filterClear": {
+    "message": "Filter aufheben"
   },
   "folderCreated": {
     "message": "„$1“ angelegt."
@@ -368,6 +446,12 @@
   "fromCache": {
     "message": "$1 Bewertungen aus dem Speicher."
   },
+  "groupCloud": {
+    "message": "Cloud"
+  },
+  "groupLocal": {
+    "message": "Auf diesem Computer"
+  },
   "groups": {
     "message": "Gruppen"
   },
@@ -385,6 +469,9 @@
   },
   "helpEsc": {
     "message": "Dialog schließen · Auswahl aufheben"
+  },
+  "helpFilter": {
+    "message": "Trichter neben Absender/Domain: nur deren Mails zeigen (Esc hebt auf)"
   },
   "helpHelp": {
     "message": "Diese Hilfe"
@@ -431,23 +518,23 @@
   "includeSubTitle": {
     "message": "Beim Laden & Scannen die Unterordner einbeziehen"
   },
+  "jevHint": {
+    "message": "Einmal installieren: `pip install \"jev-style[mlx]\"` (Apple Silicon) oder `pip install \"jev-style[torch]\"`, dann starten: `$2`. Führt das aktuelle Jev-Style 0.8B v3 aus (mit `--release 2b` das 2B v4). Das Add-on erwartet ihn unter $1 – ein anderer Port gehört unter „Erweitert“ (z. B. `http://127.0.0.1:8766`)."
+  },
+  "keepThem": {
+    "message": "Behalten"
+  },
   "keyDel": {
     "message": "Entf"
   },
   "keyEnter": {
     "message": "Enter"
   },
-  "keyInheritedPh": {
-    "message": "•••••••••••• (von „$1“)"
-  },
-  "keyInheritedState": {
-    "message": "✓ Schlüssel von „$1“ wird mitgenutzt"
-  },
   "keySavedPh": {
     "message": "•••••••••••• (gespeichert)"
   },
   "keySavedState": {
-    "message": "✓ gespeichert – nur lokal, verschleiert"
+    "message": "✓ gespeichert für $1 – nur lokal, verschleiert"
   },
   "keySpace": {
     "message": "Leertaste"
@@ -467,14 +554,38 @@
   "keysTrash": {
     "message": "Papierkorb"
   },
+  "kindLabel": {
+    "message": "Art des Modells"
+  },
   "linkDisabled": {
     "message": "Link deaktiviert: $1"
+  },
+  "linkGuide": {
+    "message": "jev-style auf GitHub"
   },
   "linkLeadsTo": {
     "message": "⚠ führt zu $1"
   },
+  "linkLmStudio": {
+    "message": "LM Studio herunterladen"
+  },
+  "linkModel": {
+    "message": "Modell auf Hugging Face"
+  },
+  "linkModels": {
+    "message": "Modelle ansehen"
+  },
+  "linkOllama": {
+    "message": "Ollama herunterladen"
+  },
+  "linkWebsite": {
+    "message": "Website"
+  },
   "linksDisabled": {
     "message": "Links deaktiviert"
+  },
+  "lmDecisionHint": {
+    "message": "In LM Studio `Jev-Style-Qwen3.5-2B-Decision` (v1) laden und den lokalen Server starten. Das Add-on fragt ein einziges Token ab und liest die Wahrscheinlichkeiten von „ja“/„nein“ – dieselbe kalibrierte Bewertung. Neuere Jev-Style-Modelle (0.8B v3, 2B v4) lassen sich über LM Studio nicht auslesen – dafür „Jev-Style-Server“ nehmen."
   },
   "loadError": {
     "message": "Fehler beim Laden: $1"
@@ -689,11 +800,20 @@
   "pillFreeRate": {
     "message": "~20 Mails/Min."
   },
+  "pillJson": {
+    "message": "JSON"
+  },
+  "pillJsonTitle": {
+    "message": "Unterstützt ein JSON-Antwortformat – Antworten werden zuverlässiger gelesen"
+  },
   "pillLocal": {
     "message": "Lokal"
   },
   "pillPaid": {
     "message": "Bezahlt"
+  },
+  "pkJevDown": {
+    "message": "Unter $1 läuft kein Decision-Server. Im Terminal starten:"
   },
   "pkLoadFailed": {
     "message": "Modell-Liste konnte nicht geladen werden: $1"
@@ -704,20 +824,32 @@
   "pkNoHits": {
     "message": "Keine Treffer für diese Suche."
   },
+  "pkNoLmDecision": {
+    "message": "LM Studio hat kein Decision-Modell, das sich auslesen lässt. Jev-Style 2B v1 herunterladen und laden:"
+  },
   "pkNoModels": {
     "message": "Der Anbieter hat keine Modelle gemeldet. Den Modellnamen kannst du auch direkt eintippen."
   },
   "pkNoOllamaModels": {
     "message": "Noch keine Modelle installiert. Ein kleines, gutes Modell holen:"
   },
-  "pkOllamaDown": {
-    "message": "Ollama ist nicht erreichbar. Läuft es? Im Terminal starten:"
+  "pkNoOllayaModels": {
+    "message": "Ollaya hat noch keine Modelle. Das empfohlene holen (≈ 850 MB):"
   },
-  "pkOllamaOrigins": {
-    "message": "Ollama blockiert Anfragen aus Thunderbird. Ollama so starten:"
+  "pkOllayaOrigins": {
+    "message": "Ollaya blockiert Anfragen aus Thunderbird. Ollaya beenden, so starten und dann auf ↻ klicken:"
   },
-  "presetLmStudio": {
-    "message": "LM Studio (lokal)"
+  "pkOriginBlocked": {
+    "message": "$1 blockiert Anfragen aus Thunderbird. Auf ↻ klicken und den Zugriff erlauben, wenn Thunderbird fragt – oder Thunderbird in $1 erlauben und es neu starten:"
+  },
+  "pkServerDown": {
+    "message": "$1 ist nicht erreichbar. Läuft es? Im Terminal starten:"
+  },
+  "presetJevStyle": {
+    "message": "Jev-Style-Server"
+  },
+  "presetLmStudioDecision": {
+    "message": "LM Studio (Jev-Style 2B v1)"
   },
   "prevMail": {
     "message": "Vorherige Mail"
@@ -747,40 +879,28 @@
     "message": "Gesendet an $1: Absender und Betreff."
   },
   "provDecisionDesc": {
-    "message": "Nicht-generativer Klassifizierer (z. B. Jev, Span-01) über die OpenRouter-Decisions-API. Schnell, günstig, kalibrierte Wahrscheinlichkeit – kein LLM."
+    "message": "Ein Klassifizierer, der keinen Text schreibt: eine kalibrierte Spam-Wahrscheinlichkeit pro Mail. Schnell, günstig, verlässlich – kein LLM."
   },
   "provDecisionLabel": {
     "message": "Decision-Modell"
   },
   "provDecisionSub": {
-    "message": "empfohlen · OpenRouter"
+    "message": "empfohlen · kalibriert"
   },
   "provDecisionTitle": {
     "message": "Decision-Modell"
   },
-  "provOllamaDesc": {
-    "message": "Läuft komplett auf deinem Rechner – kein Schlüssel, keine Kosten, keine Mail verlässt den Rechner. Benötigt Ollama (ollama.com)."
+  "provLlmDesc": {
+    "message": "Ein Sprachmodell liest mehrere Mails pro Anfrage und bewertet sie. Flexibel, aber langsamer – die Kosten hängen vom Modell ab."
   },
-  "provOllamaLabel": {
-    "message": "Ollama (lokal)"
+  "provLlmLabel": {
+    "message": "LLM"
   },
-  "provOllamaSub": {
-    "message": "Ollama · offline"
+  "provLlmSub": {
+    "message": "Cloud oder lokal"
   },
-  "provOllamaTitle": {
-    "message": "Lokal"
-  },
-  "provOpenaiDesc": {
-    "message": "Beliebiger Anbieter mit OpenAI-kompatibler API (OpenRouter, OpenAI, Groq, Mistral …) oder lokal (LM Studio). Nutzt ein Sprachmodell (LLM)."
-  },
-  "provOpenaiLabel": {
-    "message": "OpenAI-kompatibel"
-  },
-  "provOpenaiSub": {
-    "message": "OpenAI-kompatibel"
-  },
-  "provOpenaiTitle": {
-    "message": "KI-Anbieter"
+  "provLlmTitle": {
+    "message": "Sprachmodell (LLM)"
   },
   "providerLabel": {
     "message": "Anbieter"
@@ -818,11 +938,23 @@
   "removeX": {
     "message": "„$1“ entfernen"
   },
+  "rescore": {
+    "message": "Neu bewerten"
+  },
   "resetFilters": {
     "message": "Filter zurücksetzen"
   },
   "retry": {
     "message": "Erneut versuchen"
+  },
+  "retryN_one": {
+    "message": "$1 fehlgeschlagene erneut scannen"
+  },
+  "retryN_other": {
+    "message": "$1 fehlgeschlagene erneut scannen"
+  },
+  "retryTitle": {
+    "message": "Die beim letzten Mal fehlgeschlagenen Mails erneut bewerten"
   },
   "runsLocally": {
     "message": "läuft lokal"
@@ -837,7 +969,7 @@
     "message": "Alle $1 scannen"
   },
   "scanBtnTitle": {
-    "message": "Unbewertete sichtbare Mails bewerten"
+    "message": "Alle unbewerteten Mails der aktuellen Ansicht bewerten (Filter gelten)"
   },
   "scanDone": {
     "message": "Scan fertig: $1 bewertet"
@@ -850,6 +982,9 @@
   },
   "scanN_other": {
     "message": "$1 Mails scannen"
+  },
+  "scanRunning": {
+    "message": "Es läuft bereits ein Scan."
   },
   "scanStopped": {
     "message": "Scan gestoppt: $1 bewertet"
@@ -895,6 +1030,9 @@
   },
   "selectedSuffix": {
     "message": "ausgewählt"
+  },
+  "sendContext": {
+    "message": "Kontext mitsenden: Absender im Adressbuch, wie viele Mails von ihm hier liegen und wie viele ich geöffnet habe"
   },
   "sendExcerpt": {
     "message": "Textausschnitt an das Modell senden"
@@ -968,6 +1106,42 @@
   "spamProbTitle": {
     "message": "Spam-Wahrscheinlichkeit $1"
   },
+  "srcHintCustom": {
+    "message": "Jeder Server mit OpenAI-kompatibler Chat-API (z. B. llama-server, vLLM) – Adresse unter „Erweitert“ eintragen."
+  },
+  "srcHintCustomDecision": {
+    "message": "Ein anderer Server mit der Decisions-API von OpenRouter oder dem Jev-kompatiblen `/v1/systemone` – Adresse unter „Erweitert“ eintragen."
+  },
+  "srcHintDeepSeek": {
+    "message": "Die eigenen Modelle von DeepSeek zu niedrigen Preisen."
+  },
+  "srcHintGroq": {
+    "message": "Offene Modelle (Llama, Qwen …) auf sehr schneller Hardware. Kostenloser Zugang mit Ratenlimits."
+  },
+  "srcHintLmStudio": {
+    "message": "LM Studio installieren, ein Modell herunterladen (z. B. Qwen3 4B oder Llama 3.2 3B) und den lokalen Server starten (Reiter „Developer“ oder `lms server start`). Verlangt LM Studio ein API-Token, dieses als Schlüssel eintragen. Nichts verlässt den Rechner."
+  },
+  "srcHintMistral": {
+    "message": "Modelle von Mistral AI (Frankreich)."
+  },
+  "srcHintOllama": {
+    "message": "Ollama installieren, dann im Terminal `ollama pull llama3.2:3b` ausführen. Kein Schlüssel, keine Kosten, nichts verlässt den Rechner. Thunderbird fragt einmal nach dem Zugriff, damit das Add-on Ollama erreicht."
+  },
+  "srcHintOllaya": {
+    "message": "Ollaya führt offene Decision-Modelle auf deinem Rechner aus – so wie Ollama LLMs. Einmal installieren: `curl -fsSL https://ollaya.dev/install.sh | sh` (macOS mit Apple Silicon, Linux; Windows: siehe Website), dann `ollaya pull laya:en` (≈ 850 MB; kommt auch mit deutschen Mails gut zurecht) und so starten, dass Thunderbird zugelassen ist: `OLLAYA_ORIGINS='moz-extension://*' ollaya serve` (ohne das lehnt Ollaya Add-ons mit 403 ab). Kein Schlüssel nötig, nichts verlässt den Rechner; Thunderbird fragt einmal nach dem Zugriff."
+  },
+  "srcHintOpenAI": {
+    "message": "Die GPT-Modelle von OpenAI. Kostenpflichtig – das API-Konto braucht Guthaben (unabhängig von einem ChatGPT-Abo)."
+  },
+  "srcHintOpenRouter": {
+    "message": "Ein Schlüssel für Hunderte Modelle vieler Anbieter, einige davon kostenlos. „Modell wählen…“ zeigt den Preis jedes Modells."
+  },
+  "srcHintOrDecision": {
+    "message": "Decision-Modelle über die Decisions-API von OpenRouter. `respan/span-01-lite:free` ist kostenlos (etwa 20 Mails pro Minute), `typesafe/jev-1.14` ist schneller und kostenpflichtig. Der OpenRouter-Schlüssel gilt auch für Sprachmodelle."
+  },
+  "srcHintTogether": {
+    "message": "Viele offene Modelle, abgerechnet pro Token."
+  },
   "statusMoving_one": {
     "message": "Verschiebe $1 Mail …"
   },
@@ -997,6 +1171,9 @@
   },
   "stopping": {
     "message": "Scan wird gestoppt …"
+  },
+  "storedData": {
+    "message": "Gespeicherte Daten"
   },
   "subfolders": {
     "message": "Unterordner"
@@ -1147,6 +1324,12 @@
   },
   "unsubAnyway": {
     "message": "Trotzdem abmelden"
+  },
+  "unsubCleanupTitle_one": {
+    "message": "Diese Newsletter-Mail auch in den Papierkorb?"
+  },
+  "unsubCleanupTitle_other": {
+    "message": "Auch die $1 Mails dieses Newsletters in den Papierkorb?"
   },
   "unsubDraftFailed": {
     "message": "Entwurf konnte nicht geöffnet werden: $1"

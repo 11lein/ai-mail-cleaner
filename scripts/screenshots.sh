@@ -28,6 +28,6 @@ shot 02-spam-filter  "n=60&shot=select"
 shot 03-newsletter   "shot=newsletter"
 shot 04-preview      "shot=preview"
 shot 05-model-picker "shot=picker"
-shot 06-ollama       "shot=ollama"
-shot 07-scan-dialog  "n=300&shot=scan"
+shot 06-ollaya       "shot=ollaya"
+shot 07-scanning     "n=300&shot=scan"
 shot 08-dark         "n=60&shot=main" --force-dark-mode --blink-settings=preferredColorScheme=0

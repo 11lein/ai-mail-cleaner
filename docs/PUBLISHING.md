@@ -7,17 +7,19 @@ Two complementary channels: **GitHub** (source code and releases) and
 
 1. Bump the version in **`src/manifest.json`** and **`package.json`** (e.g. `2.1.1`).
 2. Add an entry to **`CHANGELOG.md`**.
-3. Check translations (fails if a key is missing in any language):
+3. Check translations (fails if a key is missing in any language), syntax and versions:
    ```bash
-   node scripts/i18n/build.mjs
+   npm ci --ignore-scripts      # once: the pinned build tools
+   npm run i18n
+   npm run check
    ```
 4. Build the package:
    ```bash
-   sh scripts/build.sh          # → dist/ai-mail-cleaner-<version>.xpi
+   npm run build                # → dist/ai-mail-cleaner-<version>.xpi
    ```
-5. Optional but recommended – Mozilla's validator (the same one ATN uses):
+5. Mozilla's validator (the same one ATN uses) – CI runs it on every push, too:
    ```bash
-   npx --yes addons-linter dist/ai-mail-cleaner-<version>.xpi
+   npm run lint
    ```
    Errors must be fixed. Expected warnings: the Thunderbird-only permissions (`accountsRead`,
    `messagesRead`, `compose` …) are reported as “Invalid permissions” by the Firefox-oriented
@@ -35,13 +37,16 @@ git commit -m "AI Mail Cleaner 2.1.0"
 gh repo create ai-mail-cleaner --public --source . --push
 ```
 
-One release per version, with the `.xpi` as download:
+One release per version, with the `.xpi` as download (wait for the green CI run of the commit):
 
 ```bash
-git tag v2.1.0 && git push --tags
-gh release create v2.1.0 dist/ai-mail-cleaner-2.1.0.xpi \
-  --title "AI Mail Cleaner 2.1.0" --notes-file CHANGELOG.md
+V=2.5.0
+git tag -a v$V -m "AI Mail Cleaner $V" && git push origin v$V
+gh release create v$V dist/ai-mail-cleaner-$V.xpi --title "AI Mail Cleaner $V" --notes-file notes.md
 ```
+
+`notes.md` = the version's section of `CHANGELOG.md` (plus earlier versions not released on
+GitHub yet).
 
 > `dist/` is in `.gitignore` – the built package belongs in releases, not in the repository.
 > `homepage_url` in the manifest points to `github.com/11lein/ai-mail-cleaner`; adjust it if the
@@ -67,13 +72,18 @@ gh release create v2.1.0 dist/ai-mail-cleaner-2.1.0.xpi \
 6. **Notes to reviewer**, e.g.:
    > Mail data (sender, subject, optional text excerpt) is sent only when the user starts a scan,
    > only to the AI provider the user configured (default openrouter.ai; other hosts via optional
-   > permissions requested at first use; Ollama on localhost keeps everything local). No developer
+   > permissions requested at first use; Ollaya or Ollama on localhost keep everything local). No developer
    > server, no telemetry. Newsletter detection reads headers/text locally via messages.getFull.
    > `compose` is used only to open an unsubscribe draft (compose.beginNew) when the user clicks
-   > the Newsletter tag – nothing is sent automatically. Delete = move to trash. HTML previews are
+   > the Newsletter tag – nothing is sent automatically. `addressBooks` is read locally only to tell
+   > the model whether the sender is a known contact (yes/no); the address book is never sent.
+   > Delete = move to trash. HTML previews are
    > rendered in a sandboxed iframe with a strict CSP and a sanitizer; links and remote content are
-   > disabled. To test: install, open the tab, choose “Local (Ollama)” or enter an OpenRouter key;
-   > the free model `respan/span-01-lite:free` works without credit.
+   > disabled. The optional `webRequest` permission is requested only for a local Ollama/Ollaya
+   > server and only rewrites the `Origin` header of the add-on's own requests to that server.
+   > To test: install, open the tab, *Set up* → *Decision model* → *OpenRouter* with an OpenRouter
+   > key – the preselected free model `respan/span-01-lite:free` works without credit – or
+   > *Language model (LLM)* → *Ollama* with a local Ollama.
 7. Submit. Human review usually takes a few days. After that, all users get new versions
    automatically.
 
@@ -83,7 +93,12 @@ gh release create v2.1.0 dist/ai-mail-cleaner-2.1.0.xpi \
 
 - **Permissions:** only `https://openrouter.ai/*` is granted up front. All other hosts go through
   `optional_permissions` and are requested on first use – reviewers prefer this to a blanket
-  `<all_urls>`.
+  `<all_urls>`. `webRequest` + `webRequestBlocking` are optional too and requested only with an
+  Ollama address, or for Ollaya after it answered 403 and the user clicked *Allow access*: one
+  `onBeforeSendHeaders` listener, filtered to that host, that only
+  touches requests whose `originUrl` is the add-on itself and sets their `Origin` header to the
+  server's own origin (Ollama's CORS check – and Ollaya's, which mirrors it – rejects
+  `moz-extension://` origins by default).
 - **No remote code**, no `eval`, no assignments to `innerHTML`. Icons are created from static
   constants via `DOMParser`.
 - **Data transfer:** the manifest declares

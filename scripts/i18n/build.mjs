@@ -24,7 +24,9 @@ for (const f of readdirSync(uiDir)) {
   if (f.endsWith(".js")) {
     for (const m of src.matchAll(/\bt\(\s*"([A-Za-z0-9_]+)"/g)) used.add(m[1]);
     for (const m of src.matchAll(/\btn\(\s*"([A-Za-z0-9_]+)"/g)) plural.add(m[1]);
-    for (const m of src.matchAll(/(?:labelKey|descKey):\s*"([A-Za-z0-9_]+)"/g)) used.add(m[1]);
+    for (const m of src.matchAll(/(?:labelKey|descKey|hintKey):\s*"([A-Za-z0-9_]+)"/g)) used.add(m[1]);
+    // provider links in settings.js: ["linkWebsite", "https://…"]
+    for (const m of src.matchAll(/\[\s*"(link[A-Za-z0-9_]+)"\s*,/g)) used.add(m[1]);
     for (const m of src.matchAll(/\?\s*"([A-Za-z0-9_]+)"\s*:\s*"([A-Za-z0-9_]+)"/g)) {
       // t(cond ? "a" : "b") – only count when it sits inside t(...)
       const before = src.slice(Math.max(0, m.index - 60), m.index);

@@ -1,0 +1,34 @@
+# Keeps the build tools (npm) and the GitHub Actions used by the workflows up to date.
+# The add-on itself ships no third-party code – everything in src/ is our own.
+# Security updates (Dependabot alerts) come right away; version updates weekly, after a cooldown
+# so that a freshly published, possibly compromised release isn't picked up on day one.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    open-pull-requests-limit: 5
+    groups:
+      dev-tools:
+        patterns: ["*"]
+    commit-message:
+      prefix: deps
+    labels: [dependencies]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    cooldown:
+      default-days: 7
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: ci
+    labels: [dependencies]
