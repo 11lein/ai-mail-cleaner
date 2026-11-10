@@ -10,7 +10,8 @@
   const params = new URLSearchParams(location.search);
   const EXTRA = Math.min(Number(params.get("n")) || 0, 50000);
   const FRESH = params.has("fresh");
-  const LANG = params.get("lang") || "en";
+  // only the shipped locales – the value ends up in a request path
+  const LANG = ["en", "de", "es"].includes(params.get("lang")) ? params.get("lang") : "en";
   const H = 3600000, D = 86400000, now = Date.now();
   let nextId = 1;
   const bodies = {};

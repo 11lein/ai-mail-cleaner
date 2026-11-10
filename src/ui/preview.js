@@ -22,21 +22,13 @@ export function collectText(part, acc, depth = 0) {
   }
 }
 
-export function stripHtml(html) {
-  return html
-    .replace(/<style[\s\S]*?<\/style>/gi, " ")
-    .replace(/<script[\s\S]*?<\/script>/gi, " ")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"').replace(/&#0?39;|&apos;/gi, "'");
-}
-
-/** Plain-text excerpt of a getFull() result (for scoring). */
+/** Plain-text excerpt of a getFull() result (for scoring). HTML is turned into text by the
+ *  browser's parser (inert, like the preview) – not by regexes, which miss odd markup. */
 export function snippetFrom(full, maxChars) {
   const acc = { plain: [], html: [] };
   collectText(full, acc);
   let text = acc.plain.join("\n").trim();
-  if (!text && acc.html.length) text = stripHtml(acc.html.join("\n").slice(0, 400000));
+  if (!text && acc.html.length) text = htmlToText(acc.html.join("\n").slice(0, 400000));
   text = text.replace(/\s+/g, " ").trim();
   return maxChars ? text.slice(0, maxChars) : text;
 }

@@ -2423,16 +2423,19 @@ function previewNotSpam() {
 /* Settings                                                            */
 /* ================================================================== */
 let draft = null;
+// matched against the server's host name only (anchored), not the whole URL
 const KEY_URLS = [
-  [/openrouter\.ai/, "https://openrouter.ai/keys"],
-  [/api\.openai\.com/, "https://platform.openai.com/api-keys"],
-  [/groq\.com/, "https://console.groq.com/keys"],
-  [/mistral\.ai/, "https://console.mistral.ai/api-keys"],
-  [/together\.(xyz|ai)/, "https://api.together.ai/settings/api-keys"],
-  [/deepseek\.com/, "https://platform.deepseek.com/api_keys"]
+  [/(^|\.)openrouter\.ai$/, "https://openrouter.ai/keys"],
+  [/^api\.openai\.com$/, "https://platform.openai.com/api-keys"],
+  [/(^|\.)groq\.com$/, "https://console.groq.com/keys"],
+  [/(^|\.)mistral\.ai$/, "https://console.mistral.ai/api-keys"],
+  [/(^|\.)together\.(xyz|ai)$/, "https://api.together.ai/settings/api-keys"],
+  [/(^|\.)deepseek\.com$/, "https://platform.deepseek.com/api_keys"]
 ];
 function keyUrlFor(base) {
-  for (const [re, url] of KEY_URLS) if (re.test(base || "")) return url;
+  let host = "";
+  try { host = new URL(base).hostname.toLowerCase(); } catch (_) { return null; }
+  for (const [re, url] of KEY_URLS) if (re.test(host)) return url;
   return null;
 }
 function openSettings(msg) {
