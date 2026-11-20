@@ -103,8 +103,9 @@ GitHub yet).
 
 ### Review notes
 
-- **Permissions:** only `https://openrouter.ai/*` is granted up front. All other hosts go through
-  `optional_permissions` and are requested on first use – reviewers prefer this to a blanket
+- **Permissions:** no host permission is granted up front. Every provider's host – OpenRouter
+  too – goes through `optional_permissions` and is requested on first use; `addressBooks` is
+  optional as well (only for the “known contact” signal) – reviewers prefer this to a blanket
   `<all_urls>`. `webRequest` + `webRequestBlocking` are optional too and requested only with an
   Ollama address, or for Ollaya after it answered 403 and the user clicked *Allow access*: one
   `onBeforeSendHeaders` listener, filtered to that host, that only

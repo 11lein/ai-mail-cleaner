@@ -200,6 +200,15 @@
   "creatingFolder": {
     "message": "Creating “$1” …"
   },
+  "ctxAccessDenied": {
+    "message": "No address book access – scans run without this signal."
+  },
+  "ctxAccessGranted": {
+    "message": "Address book access allowed – the next scan takes known contacts into account."
+  },
+  "ctxAccessMissing": {
+    "message": "No access to the address book – the “sender is a known contact” signal is left out."
+  },
   "ctxAlsoSent": {
     "message": "Also sent: whether the sender is in your address book and how many of their mails in this folder you opened (the address book itself stays local)."
   },
@@ -556,6 +565,9 @@
   },
   "hiddenKeepVisible": {
     "message": "$1 hidden – keep only visible"
+  },
+  "hostPermDenied": {
+    "message": "Access to $1 not allowed – without it the add-on sends nothing there. Thunderbird asks again next time."
   },
   "imagesBlocked_one": {
     "message": "$1 image blocked"

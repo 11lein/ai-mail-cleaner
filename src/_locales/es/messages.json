@@ -200,6 +200,15 @@
   "creatingFolder": {
     "message": "Creando «$1» …"
   },
+  "ctxAccessDenied": {
+    "message": "Sin acceso a la libreta: se analiza sin esta señal."
+  },
+  "ctxAccessGranted": {
+    "message": "Acceso a la libreta permitido: el próximo análisis tiene en cuenta los contactos conocidos."
+  },
+  "ctxAccessMissing": {
+    "message": "Sin acceso a la libreta de direcciones: falta la señal «el remitente es un contacto conocido»."
+  },
   "ctxAlsoSent": {
     "message": "Además: si el remitente está en tu libreta de direcciones y cuántos de sus correos de esta carpeta abriste (la libreta en sí se queda en local)."
   },
@@ -556,6 +565,9 @@
   },
   "hiddenKeepVisible": {
     "message": "$1 ocultos: conservar solo los visibles"
+  },
+  "hostPermDenied": {
+    "message": "Acceso a $1 no permitido: sin él, el complemento no envía nada allí. Thunderbird volverá a preguntar la próxima vez."
   },
   "imagesBlocked_one": {
     "message": "$1 imagen bloqueada"

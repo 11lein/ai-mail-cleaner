@@ -754,9 +754,12 @@ function showMenu(items, x, y) {
 /* ================================================================== */
 /* Permissions                                                         */
 /* ================================================================== */
-/* Only openrouter.ai is granted up front. Other providers (or localhost for
- * Ollama/LM Studio) are requested on first use.
+/* No website is granted up front: each provider's address – OpenRouter too, localhost for local
+ * servers – is requested on first use (save, test, model list, scan). If the user says no, nothing
+ * is sent there (see hostDenied).
  * IMPORTANT: must be called synchronously in the click handler (before any await). */
+/** Access to the provider was refused: say so (nothing is sent without it) */
+function hostDenied(url) { return t("hostPermDenied", hostOf(url)); }
 function hostPattern(url) {
   try {
     const u = new URL(url);
@@ -771,7 +774,7 @@ function hostPattern(url) {
  *  so the add-on can fix the Origin header (see below). */
 function requestHostPermission(url, provider, originFixToo) {
   const pat = hostPattern(url);
-  if (!pat || pat === "https://openrouter.ai/*") return Promise.resolve(true);
+  if (!pat) return Promise.resolve(true);
   const api = typeof messenger !== "undefined" && messenger.permissions;
   if (!api || typeof api.request !== "function") return Promise.resolve(true);
   const guarded = provider === "ollama" || Boolean(originFixToo);
@@ -2360,8 +2363,10 @@ async function confirmScan(n) {
 
 function onScanClick() {
   if (!isConfigured(settings)) { openSettings(); return; }
-  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
-  startScan(perm);
+  // both synchronously in the click (permission prompts need the user's gesture)
+  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider);
+  const contacts = contactsAccessOnScan();
+  startScan(Promise.all([perm, contacts]).then(([ok]) => ok));
 }
 async function startScan(perm) {
   if (scanning || loading) return;
@@ -2373,7 +2378,7 @@ async function startScan(perm) {
     if (!choice) return;
     if (choice === "50") todo = todoAll.slice().sort((a, b) => b.dateMs - a.dateMs).slice(0, 50);
   }
-  await perm;
+  if (!(await perm)) { showBanner(hostDenied(settings.aiBaseUrl), [], "info"); return; }
   runScan(todo);
 }
 // Decision models (fast, fractions of a cent) and local models scan right away;
@@ -2383,7 +2388,42 @@ function needsScanConfirm(n) {
 }
 
 /* ----- context for the model: address book, mails from the sender, open rate ----- */
+/* Address book access is an optional permission, used only for the "known contact" signal: asked
+ * once at the first scan with context (a "no" is remembered), offered again in the settings, and
+ * given back when context is switched off. Without it the signal is left out, not sent as "no". */
+const CONTACT_PERMS = { permissions: ["addressBooks"] };
+let contactsReady = false;         // address books read for this scan
+let contactsAccess = null;         // granted? (null = not checked yet) – for the settings dialog
+function permissionsApi() { return typeof messenger !== "undefined" && messenger.permissions; }
+async function hasContactsAccess() {
+  const api = permissionsApi();
+  if (!api || typeof api.contains !== "function") return false;
+  try { return Boolean(await api.contains(CONTACT_PERMS)); } catch (_) { return false; }
+}
+/** Ask for address book access – call synchronously in a click. Resolves true / false. */
+function requestContactsAccess() {
+  const api = permissionsApi();
+  if (!api || typeof api.request !== "function") return Promise.resolve(false);
+  try { return Promise.resolve(api.request(CONTACT_PERMS)).catch(() => false); } catch (_) { return Promise.resolve(false); }
+}
+/** At a scan click: ask once while context is on (no prompt if access is already granted). */
+function contactsAccessOnScan() {
+  if (settings.sendContext === false || settings.contactsAsked) return Promise.resolve();
+  return requestContactsAccess().then(async (ok) => {
+    contactsAccess = ok;
+    settings = await saveSettings({ contactsAsked: true });
+  });
+}
+function releaseContactsAccess() {
+  const api = permissionsApi();
+  contactsAccess = false;
+  if (!api || typeof api.remove !== "function") return Promise.resolve();
+  return Promise.resolve(api.remove(CONTACT_PERMS)).catch(() => {});
+}
 async function loadContacts() {
+  contactsReady = false;
+  contactSet = new Set();
+  if (!(await hasContactsAccess())) return;
   const ab = typeof messenger !== "undefined" && messenger.addressBooks;
   if (!ab || typeof ab.list !== "function") return;
   try {
@@ -2396,6 +2436,7 @@ async function loadContacts() {
     };
     for (const book of await ab.list(true)) for (const c of book.contacts || []) if (!c.type || c.type === "contact") addFrom(c);
     contactSet = set;
+    contactsReady = true;
   } catch (e) {
     console.warn("Address books not available:", e);
   }
@@ -2416,7 +2457,7 @@ function contextFor(r, st) {
   const a = st.byAddr.get(r.fromAddress.toLowerCase()) || { n: 0, read: 0 };
   const d = st.byDom.get(r.fromDomain) || { n: 0, read: 0 };
   return {
-    known: contactSet.has(r.fromAddress.toLowerCase()),
+    known: contactsReady ? contactSet.has(r.fromAddress.toLowerCase()) : null, // null: no access
     senderCount: a.n, senderReadPct: a.n ? Math.round((a.read / a.n) * 100) : null,
     domainCount: d.n, domainReadPct: d.n ? Math.round((d.read / d.n) * 100) : null,
     junk: Boolean(r.junk)
@@ -2427,7 +2468,10 @@ function contextFor(r, st) {
 function rescore(ids) {
   if (scanning || loading) { toast(t("scanRunning")); return; }
   if (!isConfigured(settings)) { openSettings(); return; }
-  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
+  const perm = Promise.all([
+    requestHostPermission(settings.aiBaseUrl, settings.provider), // synchronously in the click
+    contactsAccessOnScan()
+  ]).then(([ok]) => ok);
   const items = ids.map(byId).filter(Boolean);
   for (const r of items) {
     scores.delete(r.id);
@@ -2437,7 +2481,7 @@ function rescore(ids) {
   scoresVersion++;
   scheduleScoreCacheSave();
   render();
-  perm.then(() => runScan(items));
+  perm.then((ok) => { if (ok) runScan(items); else showBanner(hostDenied(settings.aiBaseUrl), [], "info"); });
 }
 
 async function runScan(todo) {
@@ -2900,6 +2944,7 @@ function openSettings(msg) {
   $("mChars").value = settings.bodyChars;
   $("wlInput").value = "";
   renderSettings();
+  hasContactsAccess().then((ok) => { contactsAccess = ok; if (draft) renderCtxAccess(); });
   $("settingsBackdrop").querySelector(".modal-body").scrollTop = 0;
   settingsStatus(msg || "", msg ? "warn" : "");
   const p = draft.profiles[draft.provider];
@@ -3043,6 +3088,7 @@ function renderSettings() {
     ? t("allLocal")
     : ($("mScanBody").checked ? t("privacyBody", host, fmtInt(Number($("mChars").value) || 0)) : t("privacyNoBody", host)) +
       ($("mSendCtx").checked ? " " + t("ctxAlsoSent") : "");
+  renderCtxAccess();
 
   renderWlChips();
 }
@@ -3156,6 +3202,17 @@ async function clearCache() {
   renderCacheInfo();
   settingsStatus(t("cacheCleared"), "ok");
 }
+/** "No address book access – Allow access" under the context switch (only while it is on) */
+function renderCtxAccess() {
+  $("ctxAccess").classList.toggle("hidden", !($("mSendCtx").checked && contactsAccess === false));
+}
+function allowContactsAccess() {
+  requestContactsAccess().then((ok) => { // synchronously in the click
+    contactsAccess = ok;
+    renderCtxAccess();
+    settingsStatus(ok ? t("ctxAccessGranted") : t("ctxAccessDenied"), ok ? "ok" : "warn");
+  });
+}
 function draftSettingsLite() {
   return { ...settings, provider: draft.provider, aiBaseUrl: draft.profiles[draft.provider].baseUrl, aiModel: draft.profiles[draft.provider].model, scanBody: $("mScanBody").checked, bodyChars: Number($("mChars").value) || 1500, aiBatchSize: Number($("mBatch").value) || 8 };
 }
@@ -3222,16 +3279,20 @@ async function saveSettingsDialog(perm) {
     whitelist: draft.whitelist,
     scanBody: s.scanBody,
     sendContext: $("mSendCtx").checked,
+    // context off: give address book access back; switched on again, the next scan asks again
+    contactsAsked: $("mSendCtx").checked ? settings.contactsAsked : false,
     detectNewsletters: $("mNlDetect").checked,
     aiConcurrency: s.aiConcurrency ? Math.max(1, Math.min(10, Math.round(s.aiConcurrency))) : 0,
     aiBatchSize: Math.max(1, Math.min(25, s.aiBatchSize)),
     bodyChars: Math.max(0, Math.min(20000, s.bodyChars)),
     loadLimit: Math.max(100, Math.min(100000, Number($("mLimit").value) || 5000))
   });
-  await perm;
+  const allowed = await perm;
+  if (!settings.sendContext) releaseContactsAccess();
   wlVersion++;
   closeSettings();
-  toast(t("settingsSaved"));
+  // saved either way; without access the next scan asks again
+  if (allowed) toast(t("settingsSaved")); else showBanner(hostDenied(settings.aiBaseUrl), [], "info");
   if (!nlEnabled()) nlOnly = false;
   if (settings.loadLimit !== prevLimit) loadMessages(); else render();
   if (!nlBefore && settings.detectNewsletters) scheduleProbe();
@@ -3241,7 +3302,7 @@ async function testSettings(perm) {
   if (!s.aiBaseUrl || !s.aiModel) { settingsStatus(t("pickModelFirst"), "err"); return; }
   if (!isConfigured(s)) { settingsStatus(t("enterApiKey"), "err"); return; }
   settingsStatus(t("testing"));
-  await perm;
+  if (!(await perm)) { settingsStatus(hostDenied(s.aiBaseUrl), "err"); return; }
   try {
     const r = await testConnection(s);
     // a jev-style server runs exactly one model – take over its real name (not Ollaya: there the
@@ -3278,7 +3339,12 @@ function openPicker() {
   $("pkFree").checked = false;
   renderPicker();
   openDialog("pickerBackdrop", "#pkSearch");
-  perm.then(loadPickerModels);
+  perm.then((ok) => (ok ? loadPickerModels() : pickerDenied()));
+}
+function pickerDenied() {
+  pk.loading = false;
+  pk.error = { kind: "denied", message: hostDenied(pk.s.aiBaseUrl) };
+  renderPicker();
 }
 function closePicker() { closeDialog("pickerBackdrop"); }
 async function loadPickerModels() {
@@ -3357,7 +3423,8 @@ function renderPicker() {
   if (pk.error) {
     const e = pk.error;
     const srv = guardedServer(pk.s);
-    if (srv && e.kind === "network") pickerMsg(t("pkServerDown", srv), serveCmd(srv));
+    if (e.kind === "denied") pickerMsg(e.message);
+    else if (srv && e.kind === "network") pickerMsg(t("pkServerDown", srv), serveCmd(srv));
     else if (originBlocked(pk.s, e)) pickerMsg(t(srv === "Ollaya" ? "pkOllayaOrigins" : "pkOriginBlocked", srv), originsCmd(srv));
     else if (e.kind === "origin") pickerMsg(e.message, jevServeCmd(pk.s.aiBaseUrl, "--allow-any-host"));
     else if (jevDown(pk.s, e)) pickerMsg(t("pkJevDown", hostOf(pk.s.aiBaseUrl)), jevServeCmd(pk.s.aiBaseUrl));
@@ -3772,6 +3839,7 @@ function wireEvents() {
   $("mModel").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mScanBody").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mSendCtx").addEventListener("change", () => { stashFields(); renderSettings(); });
+  $("ctxAccessBtn").addEventListener("click", allowContactsAccess);
   $("mClearCache").addEventListener("click", clearCache);
   $("mChars").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("wlAdd").addEventListener("click", addWlFromInput);
@@ -3784,7 +3852,7 @@ function wireEvents() {
   $("pkClose").addEventListener("click", closePicker);
   $("pkCancel").addEventListener("click", closePicker);
   $("pkApply").addEventListener("click", applyPicker);
-  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl, pk.s.provider); perm.then(loadPickerModels); });
+  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl, pk.s.provider); perm.then((ok) => (ok ? loadPickerModels() : pickerDenied())); });
   bindBackdropClose($("pickerBackdrop"), closePicker);
   let pkTimer = 0;
   $("pkSearch").addEventListener("input", () => { clearTimeout(pkTimer); pkTimer = setTimeout(renderPicker, 100); });

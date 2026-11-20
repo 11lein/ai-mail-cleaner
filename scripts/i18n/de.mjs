@@ -547,5 +547,13 @@ export default {
   helpMove: "In einen Ordner verschieben (der zuletzt benutzte ist vorausgewählt)",
 
   // 2.6 – encrypted connections only
-  errInsecureUrl: "Unverschlüsselt (http://) nur zu diesem Rechner (localhost) – für $1 bitte https:// eintragen."
+  errInsecureUrl: "Unverschlüsselt (http://) nur zu diesem Rechner (localhost) – für $1 bitte https:// eintragen.",
+
+  // 2.6 – address book access optional
+  ctxAccessMissing: "Kein Zugriff aufs Adressbuch – das Signal „Absender ist bekannter Kontakt“ fehlt.",
+  ctxAccessGranted: "Zugriff aufs Adressbuch erlaubt – der nächste Scan berücksichtigt bekannte Kontakte.",
+  ctxAccessDenied: "Kein Zugriff aufs Adressbuch – gescannt wird ohne dieses Signal.",
+
+  // 2.6 – provider access asked on use (OpenRouter too)
+  hostPermDenied: "Kein Zugriff auf $1 erlaubt – ohne ihn sendet das Add-on nichts dorthin. Thunderbird fragt beim nächsten Versuch wieder."
 };

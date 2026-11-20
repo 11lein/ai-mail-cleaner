@@ -120,6 +120,7 @@ export const DEFAULT_SETTINGS = {
   loadLimit: 5000,
   scanBody: true,                // zusätzlich einen Mail-Textausschnitt mitbewerten
   sendContext: true,             // Kontext mitsenden: Adressbuch, Anzahl Mails vom Absender, Öffnungsquote
+  contactsAsked: false,          // optionaler Adressbuch-Zugriff beim ersten Scan mit Kontext schon erfragt?
   bodyChars: 1500,               // max. Zeichen des Ausschnitts pro Mail
   detectNewsletters: true,       // sichtbare Mails auf List-Unsubscribe prüfen (lokal)
   includeSubfolders: false,      // Ordner inkl. Unterordner laden/scannen

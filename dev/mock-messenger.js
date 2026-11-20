@@ -10,6 +10,8 @@
   const params = new URLSearchParams(location.search);
   const EXTRA = Math.min(Number(params.get("n")) || 0, 50000);
   const FRESH = params.has("fresh");
+  // granted optional permissions (address book access is optional since 2.6)
+  const granted = new Set(params.get("ab") === "0" ? [] : ["addressBooks"]);
   // only the shipped locales, as constants – the value ends up in a request path
   const LANG = (() => {
     switch (params.get("lang")) {
@@ -188,7 +190,20 @@
     compose: { beginNew: async (d) => { window.__mock.compose.push(d); return { id: 99 }; } },
     windows: { openDefaultBrowser: async (u) => { window.__mock.openedUrl = u; } },
     messageDisplay: { open: async (o) => { window.__mock.opened = o; } },
-    permissions: { request: async (p) => { window.__mock.permReq = (window.__mock.permReq || []).concat([p]); return true; }, contains: async () => true },
+    // optional permissions: ?ab=0 → address book access not granted yet, ?abdeny=1 → that prompt is
+    // refused, ?hostdeny=1 → website access (the provider's address) is refused
+    permissions: {
+      request: async (p) => {
+        window.__mock.permReq = (window.__mock.permReq || []).concat([p]);
+        const perms = (p && p.permissions) || [];
+        if (params.get("abdeny") === "1" && perms.includes("addressBooks")) return false;
+        if (params.get("hostdeny") === "1" && ((p && p.origins) || []).length) return false;
+        for (const x of perms) granted.add(x);
+        return true;
+      },
+      contains: async (p) => ((p && p.permissions) || []).every((x) => granted.has(x)),
+      remove: async (p) => { for (const x of (p && p.permissions) || []) granted.delete(x); return true; }
+    },
     runtime: { openOptionsPage: async () => {}, sendMessage: async () => {}, getURL: (p) => "moz-extension://0a1b2c3d/" + (p || "") },
     // ?wr=0 → no webRequest (permission missing / API unavailable)
     webRequest: params.get("wr") === "0" ? undefined : { onBeforeSendHeaders: {

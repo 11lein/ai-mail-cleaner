@@ -54,10 +54,14 @@ Thunderbird deletes this data when the add-on is removed.
 
 - **Read accounts, folders and messages / move / delete:** to show, score and clean up. Delete
   moves to the trash.
-- **Address books (read):** only to check whether a sender is a known contact (see above).
-- **`https://openrouter.ai/*`:** default provider.
-- **Optional: access to other websites:** requested only when you use another provider (or
-  `localhost` / `127.0.0.1` for Ollaya, Ollama …), and only for that address.
+- **Optional: address books (read):** only to check whether a sender is a known contact (see
+  above). Thunderbird asks at the first scan with *Send context* on (or via *Allow access* in the
+  settings); without it that signal is simply left out. Switching *Send context* off gives the
+  access back.
+- **Optional: access to the provider's address:** none at installation. Thunderbird asks when you
+  first use a provider (saving the settings, testing, loading the model list or scanning) – for
+  OpenRouter as for any other provider, `localhost` / `127.0.0.1` for Ollaya, Ollama … – and only
+  for that address. If you say no, nothing is sent there.
 - **Optional: `webRequest` (Ollaya and Ollama only):** requested together with Ollama's address,
   and for Ollaya only when it refuses Thunderbird and you click *Allow access*. Both reject
   requests from add-ons by default; the add-on therefore sets the `Origin` header of its own
@@ -89,7 +93,9 @@ oder es öffnet sich ein Entwurf, den du selbst prüfst und sendest.
 (verschleiert, keine echte Verschlüsselung), Spam-Bewertungen und Newsletter-Infos je Message-ID, die Zeiten des letzten Scans (Anzahlen und Dauer, kein Mailinhalt).
 
 **Berechtigungen:** Konten/Ordner/Nachrichten lesen, verschieben, löschen (= Papierkorb);
-`openrouter.ai`; andere Hosts erst bei Benutzung; nur für
+optional Adressbücher lesen (nur für „bekannter Kontakt“, erfragt beim ersten Scan mit Kontext,
+zurückgegeben wenn Kontext aus ist); Zugriff auf die Adresse des Anbieters (auch openrouter.ai)
+erst bei Benutzung – lehnst du ab, wird dorthin nichts gesendet; nur für
 Ollaya und Ollama optional `webRequest`, um bei den eigenen Anfragen an sie den `Origin`-Header auf
 die Adresse des Servers zu setzen (sonst lehnen beide Add-ons ab) – sonst wird nichts gelesen oder geändert.
 
@@ -114,6 +120,8 @@ revisas y envías tú mismo.
 cifrado real), puntuaciones de spam e información de boletines por Message-ID, y los tiempos del último análisis (cantidades y duraciones, sin contenido de correos).
 
 **Permisos:** leer cuentas/carpetas/mensajes, mover, eliminar (= papelera);
-`openrouter.ai`; otros hosts solo al usarlos; solo para Ollaya y Ollama,
+leer libretas de direcciones de forma opcional (solo para «contacto conocido», se pide en el primer
+análisis con contexto y se devuelve al desactivar el contexto); acceso a la dirección del proveedor
+(también openrouter.ai) solo al usarlo; si lo rechazas, no se envía nada allí; solo para Ollaya y Ollama,
 `webRequest` opcional para fijar la cabecera `Origin` de las propias solicitudes a ellos en la
 dirección del servidor (si no, ambos rechazan los complementos); no se lee ni se cambia nada más.

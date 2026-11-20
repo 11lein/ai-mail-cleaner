@@ -200,6 +200,15 @@
   "creatingFolder": {
     "message": "Lege „$1“ an …"
   },
+  "ctxAccessDenied": {
+    "message": "Kein Zugriff aufs Adressbuch – gescannt wird ohne dieses Signal."
+  },
+  "ctxAccessGranted": {
+    "message": "Zugriff aufs Adressbuch erlaubt – der nächste Scan berücksichtigt bekannte Kontakte."
+  },
+  "ctxAccessMissing": {
+    "message": "Kein Zugriff aufs Adressbuch – das Signal „Absender ist bekannter Kontakt“ fehlt."
+  },
   "ctxAlsoSent": {
     "message": "Außerdem: ob der Absender in deinem Adressbuch steht und wie viele seiner Mails in diesem Ordner du geöffnet hast (das Adressbuch selbst bleibt lokal)."
   },
@@ -556,6 +565,9 @@
   },
   "hiddenKeepVisible": {
     "message": "$1 ausgeblendet – nur sichtbare behalten"
+  },
+  "hostPermDenied": {
+    "message": "Kein Zugriff auf $1 erlaubt – ohne ihn sendet das Add-on nichts dorthin. Thunderbird fragt beim nächsten Versuch wieder."
   },
   "imagesBlocked_one": {
     "message": "$1 Bild blockiert"

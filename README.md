@@ -159,9 +159,11 @@ as they are. Newer versions refuse requests from other origins such as Thunderbi
   encryption** – Thunderbird add-ons have no access to the system keychain. For real protection,
   secure your OS account or set a Thunderbird primary password. Saved keys are never loaded back
   into the input field.
-- **Permissions:** only `openrouter.ai` is granted up front. Other providers (including `localhost`)
-  are requested individually on first use. `addressBooks` (read-only) is used only for the “known
-  contact” signal, the optional `webRequest` only for Ollama and Ollaya (see above). Unsubscribe
+- **Permissions:** no website access is granted up front. Each provider's address – OpenRouter too,
+  `localhost` for local servers – is requested on first use (save, test, model list, scan); if the
+  user says no, nothing is sent there. `addressBooks` (read-only) is optional too and only
+  feeds the “known contact” signal: asked at the first scan with *Send context* on, given back when
+  it is switched off. The optional `webRequest` is only for Ollama and Ollaya (see above). Unsubscribe
   drafts open via `compose.beginNew`, which needs no permission.
 - **HTTPS only:** every request goes to an `https://` address. Plain `http://` is accepted only for
   a server on this computer (`localhost`, `127.0.0.1`, `::1`); any other `http://` address is

@@ -198,7 +198,9 @@ function fromField(m) {
 function contextLines(meta) {
   if (!meta) return [];
   const pct = (v) => (v == null ? "" : ` (${v}% opened)`);
-  const out = ["Sender in the recipient's address book: " + (meta.known ? "yes" : "no")];
+  const out = [];
+  // known is null without address book access: then say nothing rather than "no"
+  if (meta.known != null) out.push("Sender in the recipient's address book: " + (meta.known ? "yes" : "no"));
   if (meta.senderCount) out.push(`Emails from this sender in the folder: ${meta.senderCount}${pct(meta.senderReadPct)}`);
   if (meta.domainCount && meta.domainCount !== meta.senderCount) out.push(`Emails from this domain in the folder: ${meta.domainCount}${pct(meta.domainReadPct)}`);
   if (meta.junk) out.push("Flagged as junk by Thunderbird's own filter: yes");
@@ -224,7 +226,8 @@ function decisionState(m, snippet, contextFirst) {
 
 function contextFields(meta) {
   if (!meta) return {};
-  const o = { known: Boolean(meta.known) };
+  const o = {};
+  if (meta.known != null) o.known = Boolean(meta.known);
   if (meta.senderCount) { o.sender_mails = meta.senderCount; if (meta.senderReadPct != null) o.sender_opened_pct = meta.senderReadPct; }
   if (meta.domainCount) { o.domain_mails = meta.domainCount; if (meta.domainReadPct != null) o.domain_opened_pct = meta.domainReadPct; }
   if (meta.junk) o.tb_junk = true;

@@ -547,5 +547,13 @@ export default {
   helpMove: "Mover a una carpeta (la última que usaste ya viene marcada)",
 
   // 2.6 – encrypted connections only
-  errInsecureUrl: "http:// sin cifrar solo funciona en este ordenador (localhost); para $1 usa https://."
+  errInsecureUrl: "http:// sin cifrar solo funciona en este ordenador (localhost); para $1 usa https://.",
+
+  // 2.6 – address book access optional
+  ctxAccessMissing: "Sin acceso a la libreta de direcciones: falta la señal «el remitente es un contacto conocido».",
+  ctxAccessGranted: "Acceso a la libreta permitido: el próximo análisis tiene en cuenta los contactos conocidos.",
+  ctxAccessDenied: "Sin acceso a la libreta: se analiza sin esta señal.",
+
+  // 2.6 – provider access asked on use (OpenRouter too)
+  hostPermDenied: "Acceso a $1 no permitido: sin él, el complemento no envía nada allí. Thunderbird volverá a preguntar la próxima vez."
 };

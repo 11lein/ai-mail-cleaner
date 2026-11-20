@@ -17,15 +17,14 @@
   },
   "permissions": [
     "accountsRead",
-    "addressBooks",
     "accountsFolders",
     "messagesRead",
     "messagesMove",
     "messagesDelete",
-    "storage",
-    "https://openrouter.ai/*"
+    "storage"
   ],
   "optional_permissions": [
+    "addressBooks",
     "<all_urls>",
     "webRequest",
     "webRequestBlocking"

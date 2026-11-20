@@ -548,5 +548,13 @@ export default {
   helpMove: "Move to a folder (the one you used last is preselected)",
 
   // 2.6 – encrypted connections only
-  errInsecureUrl: "Unencrypted http:// only works for this computer (localhost) – please use https:// for $1."
+  errInsecureUrl: "Unencrypted http:// only works for this computer (localhost) – please use https:// for $1.",
+
+  // 2.6 – address book access optional
+  ctxAccessMissing: "No access to the address book – the “sender is a known contact” signal is left out.",
+  ctxAccessGranted: "Address book access allowed – the next scan takes known contacts into account.",
+  ctxAccessDenied: "No address book access – scans run without this signal.",
+
+  // 2.6 – provider access asked on use (OpenRouter too)
+  hostPermDenied: "Access to $1 not allowed – without it the add-on sends nothing there. Thunderbird asks again next time."
 };

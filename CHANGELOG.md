@@ -46,6 +46,13 @@
   settings refuse any other `http://` address, and an older saved one is refused before anything
   is sent, with a message saying why. A server elsewhere in your network now needs HTTPS.
 - The `compose` permission is gone – opening an unsubscribe draft does not need it.
+- **No website access at installation:** OpenRouter's address is now requested on first use
+  (saving, testing, model list or scan) like every other provider. If you decline, nothing is
+  sent there and a message says why, instead of a scan that fails with “no connection”.
+- **Address book access is optional:** Thunderbird no longer asks for it at installation, but at
+  the first scan with *Send context* on (or via *Allow access* in the settings). Without it the
+  “known contact” signal is left out instead of being sent as “not a contact”. Switching *Send
+  context* off gives the access back.
 - The package no longer contains the icon source `icons/icon.svg`.
 
 ### Fixed
