@@ -24,17 +24,21 @@ English · Deutsch · Español – the UI follows Thunderbird's language.
   in your address book, how many of their mails are in the folder and how many you opened, and
   whether Thunderbird's junk filter flagged the mail – strong signals that a text-only check misses.
 - **Newsletter detection**: a *Newsletter* tag after the subject (from the `List-Unsubscribe`
-  header or an unsubscribe note in the text). Clicking it unsubscribes – it opens the unsubscribe
-  page in your browser, or a **ready-made unsubscribe draft** if the newsletter asks for an email –
-  and then offers to **move all mails of that newsletter to the trash**. For likely spam it warns
-  you first (unsubscribing would only confirm your address).
+  header or an unsubscribe note in the text). Clicking it opens one dialog: the unsubscribe page in
+  your browser or a **ready-made unsubscribe draft** (your choice when the newsletter offers both),
+  and a box to **move all mails of that newsletter to the trash** afterwards. For likely spam it
+  warns you (unsubscribing would only confirm your address).
 - **Filter by sender or domain** right in the list (funnel on hover or context menu).
 - **Clear cache** to scan everything again, or **Score again** for selected mails.
 - **Model picker** with search and sorting, price per 1M tokens, estimated cost per 1,000 mails,
   context length, parameter size, quantization and download size.
 - **Scan dialog** before large scans (duration, cost, data sent, “only 50 newest”), progress with
-  time left, **stop** at any time. Scores are remembered locally.
-- **Filter chips** “Spam ≥ 80 %”, “Unsure”, “Unscored”, a range slider and search.
+  time left, **stop** at any time. Scores are remembered locally. Mail texts are loaded ahead
+  while the model works; the clock next to the model shows how long the last scan took and what
+  slowed it down.
+- **Newsletters only**, the **spam filter** (“All” / “Spam ≥ 80 %” in one click; “Unsure”,
+  “Unscored” and your own range in its dropdown) and a **date filter** (last 24 hours, week, month,
+  year or a custom range), plus search – all combined; a scan then covers just the filtered mails.
 - **Groups** by domain or sender with the average spam score – select or trash whole groups.
 - **Trash with undo**, move to folders (including newly created ones).
 - 📎 **Attachment icon**, **safe preview** (sandboxed, no remote images or trackers, link targets
@@ -147,17 +151,23 @@ as they are. Newer versions refuse requests from other origins such as Thunderbi
   optionally, a shortened text excerpt and the context signals (contact yes/no, counts, open rate –
   never the address book itself). With Ollaya, Ollama, LM Studio or a local Jev-Style server
   everything stays local. See [PRIVACY.md](PRIVACY.md).
-- **Newsletter detection** reads the visible mails from your own mail server – nothing is sent.
+- **Newsletter detection** reads the visible mails (with *newsletters only* on: all mails in range)
+  from your own mail server – nothing is sent.
   Unsubscribing only happens when you click: the page opens in your browser, or a draft opens
   that you check and send yourself.
 - **API keys** (one per provider server) are stored only in `storage.local` (not synced) and obfuscated. That is **not real
   encryption** – Thunderbird add-ons have no access to the system keychain. For real protection,
   secure your OS account or set a Thunderbird primary password. Saved keys are never loaded back
   into the input field.
-- **Permissions:** only `openrouter.ai` is granted up front. Other providers (including `localhost`)
-  are requested individually on first use. `compose` is used only to open unsubscribe drafts,
-  `addressBooks` (read-only) only for the “known contact” signal, the optional `webRequest` only
-  for Ollama and Ollaya (see above).
+- **Permissions:** no website access is granted up front. Each provider's address – OpenRouter too,
+  `localhost` for local servers – is requested on first use (save, test, model list, scan); if the
+  user says no, nothing is sent there. `addressBooks` (read-only) is optional too and only
+  feeds the “known contact” signal: asked at the first scan with *Send context* on, given back when
+  it is switched off. The optional `webRequest` is only for Ollama and Ollaya (see above). Unsubscribe
+  drafts open via `compose.beginNew`, which needs no permission.
+- **HTTPS only:** every request goes to an `https://` address. Plain `http://` is accepted only for
+  a server on this computer (`localhost`, `127.0.0.1`, `::1`); any other `http://` address is
+  refused in the settings and before each request.
 - **Delete** always moves to the trash (`messages.delete(ids, false)`).
 - **HTML preview** in an `<iframe sandbox>` without permissions, with a strict CSP and a sanitizer:
   no scripts, forms, remote images, trackers or navigation.
@@ -169,7 +179,7 @@ src/                   the extension (gets packaged)
   manifest.json        manifest (MV2, Thunderbird ≥ 115)
   _locales/            en (default), de, es – generated, see scripts/i18n
   background.js        toolbar button, first start, add-on options → cleaner tab
-  icons/               icon (SVG + PNG 16–128)
+  icons/               icon (PNG 16–128; the SVG source is not packaged)
   ui/cleaner.*         UI: table, dialogs, scan
   ui/ai.js             providers: Decisions API (OpenRouter, Ollaya, jev-style, LM Studio), OpenAI-compatible, Ollama; model list; costs
   ui/newsletter.js     newsletter detection, unsubscribe targets (List-Unsubscribe, text)
@@ -178,7 +188,7 @@ src/                   the extension (gets packaged)
   ui/i18n.js           translations and locale-aware formatting
   ui/icons.js          SVG icon set
 dev/mock-messenger.js  mock of the Thunderbird API for the browser preview (not packaged)
-scripts/               dev.sh · build.sh · check.sh · icons.sh · screenshots.sh · i18n/
+scripts/               dev.sh · build.sh · check.sh · tb-lint.sh · icons.sh · screenshots.sh · i18n/
 .github/               CI, CodeQL and Dependabot configuration
 store/                 store listings (en/de/es) and screenshots (sample data only)
 docs/PUBLISHING.md     GitHub releases and addons.thunderbird.net
@@ -191,10 +201,19 @@ npm run dev                     # browser preview with sample data: http://127.0
 npm run i18n                    # texts: scripts/i18n/<lang>.mjs → src/_locales (+ completeness check)
 npm run check                   # syntax of all scripts, manifest/package version match
 npm run build                   # → dist/ai-mail-cleaner-<version>.xpi
-npm run lint                    # Mozilla's addons-linter on that package
+npm run lint                    # both linters on that package:
+npm run lint:moz                #   Mozilla's addons-linter
+npm run lint:tb                 #   Thunderbird's webext-linter – the review linter ATN runs
 ```
 
-**CI and updates** (`.github/`): every push and pull request runs the steps above plus
+`lint:tb` fetches [webext-linter](https://github.com/thunderbird/webext-linter) (not on npm) at a
+pinned commit into `.cache/` and installs its dependencies without install scripts. It fails on
+anything that would reject the review (unused permissions or files, missing permissions,
+Thunderbird API misuse, cleartext transmission, unsafe code), lists the spots a reviewer checks by
+hand, and shows hints such as ESLint findings. Full report: `.cache/tb-lint-report.txt`.
+
+**CI and updates** (`.github/`): every push and pull request runs the steps above (both
+linters; the webext-linter summary appears on the run's page, the full report as an artifact) plus
 `npm audit`; pull requests also get a dependency review, and CodeQL scans the code and the
 workflows (results under *Security → Code scanning*). Dependabot proposes updates for the build
 tools and the GitHub Actions weekly, which are pinned to commit SHAs. The add-on itself has no

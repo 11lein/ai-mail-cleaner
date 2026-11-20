@@ -1,14 +1,15 @@
 import {
   loadSettings, saveSettings, isConfigured, isLocalUrl, PROVIDERS, SOURCES, kindOf, sourceFor, keyHost, keyFor, modelSlot, isOllamaUrl,
-  isOllayaUrl, OLLAYA, matchesWhitelist, parseWhitelist, loadScoreCache, saveScoreCache, loadListCache, saveListCache
+  isOllayaUrl, isInsecureUrl, OLLAYA, matchesWhitelist, parseWhitelist, loadScoreCache, saveScoreCache, loadListCache, saveListCache
 } from "./settings.js";
 import {
   testConnection, scoreMessages, listModels, estimateCost, estimateRate, isFreeModel, hostOf, decisionApi, isOllamaServer,
-  isOllayaServer
+  isOllayaServer, autoConcurrency
 } from "./ai.js";
 import { icon, hydrateIcons } from "./icons.js";
 import {
-  t, tn, localizeDocument, fmtInt, fmtPct, fmtUsd, fmtSize, fmtDate, fmtDateLong, fmtDateMedium, fmtDateSmart, fmtDuration
+  t, tn, localizeDocument, fmtInt, fmtPct, fmtUsd, fmtSize, fmtDate, fmtDateLong, fmtDateSmart, fmtDuration,
+  fmtDay, fmtDayRange, fmtSecs, fmtDec
 } from "./i18n.js";
 import { collectText, snippetFrom, buildPreviewDoc, htmlToText } from "./preview.js";
 import { extractListInfo, parseMailto, packList, unpackList } from "./newsletter.js";
@@ -24,6 +25,8 @@ let currentNode = null;
 let currentFolder = null;
 let moveTargetNode = null;
 let moveIds = [];
+let moveDone = null;             // called after a successful move (preview: show the next mail)
+let lastMoveTarget = null;       // { account, path } of the last move, preselected next time
 const expandedState = new Map();
 
 let rows = [];                   // all loaded mails (see buildRow)
@@ -53,9 +56,14 @@ let groupMode = "domain";
 let activeGroup = null;
 let searchText = "";
 let spamFilter = { mode: "all", lo: 0, hi: 100 }; // all | range | unscored
+let dateFilter = { mode: "all", from: "", to: "" }; // all | 24h | 7d | 1m | 1y | custom (from/to: "YYYY-MM-DD", inclusive)
+let nlOnly = false;              // show only mails detected as newsletters
+let nlBase = [];                 // rows after group/search/date filter, before the newsletter filter (for its count)
+let nlVersion = 0;               // bumped when a mail's newsletter check finishes
 let scanning = false;
 let scanAbort = null;
 let firstScanDone = false;
+let scanStats = null;            // timings of the running/last scan (filled by scoreMessages; persisted)
 
 let columnOrder = [];
 let columnWidths = {};
@@ -140,7 +148,7 @@ function engineLabel(s) {
 function openExternal(url) {
   try {
     if (messenger.windows && messenger.windows.openDefaultBrowser) return messenger.windows.openDefaultBrowser(url);
-  } catch (_) {}
+  } catch (_) { /* no openDefaultBrowser: window.open below */ }
   window.open(url, "_blank", "noopener");
 }
 
@@ -294,6 +302,7 @@ function markNotSpam(ids) {
  * nothing is sent anywhere). Scans and the preview reuse the same getFull result. */
 const PROBE_MAX_SIZE = 3 * 1024 * 1024;
 const PROBE_CONCURRENCY = 2;
+const SWEEP_CONCURRENCY = 4;     // newsletter filter on: all unchecked mails in range, not only the visible ones
 const probing = new Set();
 const probeSkip = new Set();
 const probeQueue = [];
@@ -313,27 +322,35 @@ function noteListInfo(id, full) {
   let info = null;
   try { info = extractListInfo(full, acc.html, acc.plain, ownAddresses(r)); } catch (e) { console.warn(e); }
   r.list = info;
+  nlVersion++;
   if (r.msgId) { listCache[r.msgId] = packList(info); scheduleListCacheSave(); }
   updateSubjectCell(id);
   if (id === pvId) renderPreviewHeader();
+  scheduleNlRefresh();
 }
+function nlEnabled() { return Boolean(settings) && settings.detectNewsletters !== false; }
+function unchecked(r) { return r.list === undefined && !probeSkip.has(r.id); }
 function scheduleProbe() {
-  if (!settings || settings.detectNewsletters === false) return;
+  if (!nlEnabled()) return;
   clearTimeout(probeTimer);
   probeTimer = setTimeout(probeVisible, 350);
 }
 function probeVisible() {
   probeQueue.length = 0;
-  if (winStart < 0) return;
-  for (let i = winStart; i < winEnd; i++) {
-    const r = view[i];
-    if (r && r.list === undefined && !probing.has(r.id) && !probeSkip.has(r.id)) probeQueue.push(r);
+  if (nlOnly) {
+    // the filter can only show what was checked: queue every unchecked mail in range, in table order
+    probeQueue.push(...sortRows(nlBase.filter((r) => unchecked(r) && !probing.has(r.id))));
+  } else if (winStart >= 0) {
+    for (let i = winStart; i < winEnd; i++) {
+      const r = view[i];
+      if (r && unchecked(r) && !probing.has(r.id)) probeQueue.push(r);
+    }
   }
   pumpProbe();
 }
 function pumpProbe() {
   const token = loadToken;
-  while (probeActive < PROBE_CONCURRENCY && probeQueue.length) {
+  while (probeActive < (nlOnly ? SWEEP_CONCURRENCY : PROBE_CONCURRENCY) && probeQueue.length) {
     const r = probeQueue.shift();
     if (r.list !== undefined || probing.has(r.id)) continue;
     if (r.size && r.size > PROBE_MAX_SIZE) { probeSkip.add(r.id); continue; }
@@ -342,8 +359,40 @@ function pumpProbe() {
     messenger.messages.getFull(r.id)
       .then((full) => { if (token === loadToken) noteListInfo(r.id, full); })
       .catch(() => probeSkip.add(r.id))
-      .finally(() => { probing.delete(r.id); probeActive--; pumpProbe(); });
+      .finally(() => { probing.delete(r.id); probeActive--; pumpProbe(); scheduleNlRefresh(); });
   }
+}
+/* New newsletter results: with the filter on, show them (throttled); otherwise only the count changes */
+let nlTimer = 0;
+function scheduleNlRefresh() {
+  if (nlTimer) return;
+  nlTimer = setTimeout(() => {
+    nlTimer = 0;
+    if (nlOnly) render(); else updateNlChip();
+  }, nlOnly ? 500 : 300);
+}
+function nlPending() {
+  if (!nlEnabled()) return 0;
+  let n = 0;
+  for (const r of nlBase) if (unchecked(r)) n++;
+  return n;
+}
+function updateNlChip() {
+  const b = $("nlBtn");
+  b.classList.toggle("hidden", !nlEnabled());
+  let n = 0;
+  for (const r of nlBase) if (r.list) n++;
+  $("cntNl").textContent = fmtInt(n);
+  const pending = nlOnly ? nlPending() : 0;
+  b.classList.toggle("active", nlOnly);
+  b.classList.toggle("busy", pending > 0);
+  b.setAttribute("aria-pressed", nlOnly ? "true" : "false");
+  b.title = pending ? tn("nlChecking", pending) : t(nlOnly ? "nlOnlyOffTitle" : "nlOnlyTitle");
+}
+function setNlOnly(on) {
+  nlOnly = Boolean(on) && nlEnabled();
+  $("tableWrap").scrollTop = 0;
+  render();
 }
 function unsubTip(info) {
   if (!info.url && !info.mail) return t("unsubTipNone");
@@ -364,35 +413,103 @@ function makeNlTag(r) {
   b.appendChild(label);
   b.title = unsubTip(info);
   b.setAttribute("aria-label", b.title);
-  b.addEventListener("click", (e) => { e.stopPropagation(); if (can) unsubscribe(r, b); });
+  b.addEventListener("click", (e) => { e.stopPropagation(); if (can) unsubscribe(r); });
   return b;
 }
-async function unsubscribe(r, anchor) {
+/* One dialog for unsubscribing: who it is and how many of their mails are here, a warning for
+ * likely spam, the way (web page or mail – a choice when the newsletter offers both) and whether
+ * to move the newsletter's mails to the trash afterwards. */
+async function unsubscribe(r) {
   const info = r && r.list;
   if (!info || (!info.url && !info.mail)) return;
-  const s = effectiveScore(r);
-  if (s >= 80) {
-    // Unsubscribing from spam usually just confirms that the address is alive.
-    const choice = await confirmDialog(t("unsubSpamTitle"), t("unsubSpamBody", fmtPct(s)), [
-      { label: t("unsubAnyway"), value: "go", cls: "ghost" },
-      { label: t("cancel"), value: false },
-      { label: t("trashInstead"), value: "trash", cls: "danger-solid", icon: "trash" }
-    ]);
-    if (choice === "trash") { deleteIds([r.id]); return; }
-    if (choice !== "go") return;
+  const score = effectiveScore(r);
+  const spam = score >= 80;   // unsubscribing from spam usually just confirms that the address is alive
+  const related = relatedNewsletterRows(r);
+  const found = info.fromBody ? " " + t("unsubFromBody") : "";
+  const mailTo = info.mail ? ((parseMailto(info.mail) || { to: [] }).to[0] || "") : "";
+  const ways = [];
+  if (info.url) ways.push({ value: "web", icon: "globe", label: t("unsubWayWeb"), sub: t("unsubWayWebSub", hostOf(info.url)) + found });
+  if (mailTo) ways.push({ value: "mail", icon: "mail", label: t("unsubWayMail"), sub: t("unsubWayMailSub", mailTo) + found });
+  if (!ways.length) return;
+
+  const body = document.createElement("div");
+  const sender = r.fromName && r.fromName !== r.fromAddress ? `${r.fromName} <${r.fromAddress}>` : (r.fromAddress || r.fromName);
+  const dates = related.map((x) => x.dateMs).filter(Boolean).sort((a, b) => a - b);
+  body.appendChild(cfList([
+    { icon: "user", text: sender },
+    { icon: "newspaper", text: dates.length > 1
+      ? tn("unsubMailsRange", related.length, fmtDayRange(dates[0], dates[dates.length - 1]))
+      : tn("unsubMails", related.length) },
+    spam ? { icon: "alert", text: t("unsubSpamBody", fmtPct(score)), warn: true } : null
+  ]));
+  const wayBox = document.createElement("div");
+  wayBox.className = "unsub-ways";
+  if (ways.length > 1) {
+    wayBox.setAttribute("role", "radiogroup");
+    wayBox.setAttribute("aria-label", t("unsubWayLabel"));
   }
-  const viaWeb = () => { unsubWeb(info.url); offerCleanup(r); };
-  const viaMail = async () => { if (await unsubMail(r, info.mail)) offerCleanup(r); };
-  if (info.url && info.mail) {
-    const rect = (anchor && document.contains(anchor)) ? anchor.getBoundingClientRect() : null;
-    showMenu([
-      { icon: "globe", label: t("unsubViaWeb", hostOf(info.url)), run: viaWeb },
-      { icon: "mail", label: t("unsubViaMail", parseMailto(info.mail).to[0]), run: viaMail }
-    ], rect ? rect.left : window.innerWidth / 2 - 150, rect ? rect.bottom + 4 : window.innerHeight / 3);
-    return;
+  ways.forEach((w, i) => {
+    const row = document.createElement("label");
+    row.className = "unsub-way";
+    if (ways.length > 1) {
+      const rb = document.createElement("input");
+      rb.type = "radio";
+      rb.name = "unsubWay";
+      rb.value = w.value;
+      rb.checked = i === 0;
+      row.appendChild(rb);
+    }
+    row.appendChild(icon(w.icon, 16));
+    const txt = document.createElement("span");
+    txt.className = "uw-text";
+    const b = document.createElement("b");
+    b.textContent = w.label;
+    const sub = document.createElement("span");
+    sub.className = "uw-sub";
+    sub.textContent = w.sub;
+    txt.append(b, sub);
+    row.appendChild(txt);
+    row.classList.toggle("on", i === 0);
+    wayBox.appendChild(row);
+  });
+  wayBox.addEventListener("change", () => {
+    for (const row of wayBox.children) row.classList.toggle("on", Boolean(row.querySelector("input:checked")));
+  });
+  body.appendChild(wayBox);
+  const cleanRow = document.createElement("label");
+  cleanRow.className = "cf-check";
+  const clean = document.createElement("input");
+  clean.type = "checkbox";
+  cleanRow.append(clean, textSpan(tn("unsubAlsoTrash", related.length)));
+  // likely spam, just this one mail: "rather the trash" already says it all
+  if (!(spam && related.length < 2)) body.appendChild(cleanRow);
+
+  const buttons = spam
+    ? [{ label: t("cancel"), value: false },
+       { label: t("unsubAnyway"), value: "go", cls: "ghost" },
+       { label: t("trashInstead"), value: "trash", cls: "danger-solid", icon: "trash" }]
+    : [{ label: t("cancel"), value: false },
+       { label: t("unsubscribe"), value: "go", cls: "primary", icon: "log-out" }];
+  const answer = confirmDialog(spam ? t("unsubSpamTitle") : t("unsubTitle", r.fromName || r.fromAddress), body, buttons);
+  if (spam) {
+    // "rather the trash": this mail – or, with the box ticked, all of the newsletter's mails
+    const trashBtn = $("cfButtons").lastElementChild;
+    const trashLabel = trashBtn.querySelector("span:last-child");
+    clean.addEventListener("change", () => {
+      trashLabel.textContent = clean.checked && related.length > 1 ? tn("ctxTrashN", related.length) : t("trashInstead");
+    });
   }
-  if (info.url) viaWeb();
-  else viaMail();
+  const choice = await answer;
+  if (!choice) return;
+  const ids = (clean.checked ? related.map((x) => x.id) : [r.id]).filter((id) => rowIndex.has(id));
+  const trash = () => {
+    if (pvId != null && ids.includes(pvId)) closePreview();
+    deleteIds(ids, { skipConfirm: true });   // confirmed in this dialog; the toast offers Undo
+  };
+  if (choice === "trash") { trash(); return; }
+  const way = ways.length > 1 ? (wayBox.querySelector("input:checked") || { value: ways[0].value }).value : ways[0].value;
+  const ok = way === "web" ? (unsubWeb(info.url), true) : await unsubMail(r, info.mail);
+  if (ok && clean.checked) trash();
 }
 function unsubWeb(url) {
   openExternal(url);
@@ -404,26 +521,6 @@ function relatedNewsletterRows(r) {
   const lid = r.list && r.list.listId;
   return rows.filter((x) => (addr && (x.fromAddress || "").toLowerCase() === addr) ||
     (lid && x.list && x.list.listId === lid));
-}
-// After unsubscribing: offer to move the newsletter's mails to the trash
-async function offerCleanup(r) {
-  const related = relatedNewsletterRows(r);
-  if (!related.length) return;
-  const dates = related.map((x) => x.dateMs).filter(Boolean).sort((a, b) => a - b);
-  const sender = r.fromName && r.fromName !== r.fromAddress ? `${r.fromName} <${r.fromAddress}>` : (r.fromAddress || r.fromName);
-  const body = cfList([
-    { icon: "user", text: sender },
-    dates.length > 1 ? { icon: "clock", text: t("dateRange", fmtDateMedium(dates[0]), fmtDateMedium(dates[dates.length - 1])) } : null,
-    { icon: "undo", text: t("cfUndoHint") }
-  ]);
-  const ok = await confirmDialog(tn("unsubCleanupTitle", related.length), body, [
-    { label: t("keepThem"), value: false },
-    { label: tn("ctxTrashN", related.length), value: true, cls: "danger-solid", icon: "trash" }
-  ]);
-  if (!ok) return;
-  const ids = related.map((x) => x.id).filter((id) => rowIndex.has(id));
-  if (pvId != null && ids.includes(pvId)) closePreview();
-  deleteIds(ids, { skipConfirm: true });
 }
 function identityFor(r) {
   const ids = accountIdentities.get(r.account) || [];
@@ -657,9 +754,12 @@ function showMenu(items, x, y) {
 /* ================================================================== */
 /* Permissions                                                         */
 /* ================================================================== */
-/* Only openrouter.ai is granted up front. Other providers (or localhost for
- * Ollama/LM Studio) are requested on first use.
+/* No website is granted up front: each provider's address – OpenRouter too, localhost for local
+ * servers – is requested on first use (save, test, model list, scan). If the user says no, nothing
+ * is sent there (see hostDenied).
  * IMPORTANT: must be called synchronously in the click handler (before any await). */
+/** Access to the provider was refused: say so (nothing is sent without it) */
+function hostDenied(url) { return t("hostPermDenied", hostOf(url)); }
 function hostPattern(url) {
   try {
     const u = new URL(url);
@@ -674,7 +774,7 @@ function hostPattern(url) {
  *  so the add-on can fix the Origin header (see below). */
 function requestHostPermission(url, provider, originFixToo) {
   const pat = hostPattern(url);
-  if (!pat || pat === "https://openrouter.ai/*") return Promise.resolve(true);
+  if (!pat) return Promise.resolve(true);
   const api = typeof messenger !== "undefined" && messenger.permissions;
   if (!api || typeof api.request !== "function") return Promise.resolve(true);
   const guarded = provider === "ollama" || Boolean(originFixToo);
@@ -795,6 +895,18 @@ async function loadAccountsAndFolders() {
   renderFolderTree();
   updateCrumb();
 }
+/* Reload button: the folder list too (folders created, renamed or deleted in Thunderbird meanwhile),
+ * then the mails – the current folder stays selected; if it's gone, the inbox takes over */
+async function reloadAll() {
+  try {
+    await loadAccountsAndFolders();
+  } catch (err) {
+    showBanner(t("accountsFailed", err.message));
+    console.error(err);
+    return;
+  }
+  loadMessages();
+}
 function expandToNode(node) {
   const parts = node.path.split("/").filter(Boolean);
   let acc = "";
@@ -824,7 +936,14 @@ function updateCrumb() {
 }
 
 function renderFolderTree() { renderTreeInto($("folderTree"), "nav"); }
-function renderMoveTree() { renderTreeInto($("moveTree"), "move"); }
+const treeNodeOf = new WeakMap(); // tree <li> -> folder node
+function renderMoveTree() {
+  // keep keyboard focus on the same row (expanding or collapsing never shifts the rows above it)
+  const ul = $("moveTree");
+  const at = ul.contains(document.activeElement) ? [...ul.children].indexOf(document.activeElement) : -1;
+  renderTreeInto(ul, "move");
+  if (at >= 0 && ul.children[at]) ul.children[at].focus({ preventScroll: true });
+}
 function renderTreeInto(ul, mode) {
   ul.textContent = "";
   if (!folderTree.length) {
@@ -842,6 +961,7 @@ function renderNode(node, ul, depth, mode) {
   li.style.paddingLeft = (4 + depth * 14) + "px";
   li.tabIndex = 0;
   li.setAttribute("role", "treeitem");
+  treeNodeOf.set(li, node);
   const hasChildren = node.children.length > 0;
   const open = hasChildren && isExpanded(node);
   if (hasChildren) li.setAttribute("aria-expanded", open ? "true" : "false");
@@ -875,7 +995,9 @@ function renderNode(node, ul, depth, mode) {
   };
   li.addEventListener("click", activate);
   li.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); }
+    // Enter on the folder that is already the target moves right away
+    if (e.key === "Enter" && mode === "move" && node === moveTargetNode && !$("moveConfirm").disabled) { e.preventDefault(); performMove(); }
+    else if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); }
     else if (e.key === "ArrowRight" && hasChildren && !open) { e.preventDefault(); setExpanded(node, true); (mode === "move" ? renderMoveTree : renderFolderTree)(); }
     else if (e.key === "ArrowLeft" && open) { e.preventDefault(); setExpanded(node, false); (mode === "move" ? renderMoveTree : renderFolderTree)(); }
   });
@@ -929,6 +1051,9 @@ function buildRow(msg, node, includeSub) {
 
 async function loadMessages() {
   if (!currentNode) return;
+  // a running scan belongs to the mails shown so far – stop it (scores so far are kept); left
+  // running it would lose its progress display and Stop would wait behind the reload
+  if (scanAbort) scanAbort.abort();
   const token = ++loadToken;
   const includeSub = Boolean($("includeSub").checked);
   const nodes = gatherNodes(currentNode, includeSub);
@@ -1021,14 +1146,176 @@ function matchesSearch(x, q) {
   return x.fromName.toLowerCase().includes(q) || x.fromAddress.toLowerCase().includes(q) ||
     x.fromDomain.toLowerCase().includes(q) || x.subject.toLowerCase().includes(q);
 }
-function baseRows() {
+/* Rows the group list counts: search, date and newsletter filter – not the group itself, not spam */
+function groupScopeRows() {
+  let r = rows;
+  if (searchText) {
+    const q = searchText.toLowerCase();
+    r = r.filter((x) => matchesSearch(x, q));
+  }
+  const b = dateBounds(dateFilter);
+  if (b) r = r.filter((x) => x.dateMs >= b[0] && x.dateMs < b[1]);
+  if (nlOnly) r = r.filter((x) => x.list);
+  return r;
+}
+/* Rows after group and search (and the newsletter filter if wanted) – before the date filter */
+function preDateRows(withNl) {
   let r = rows;
   if (activeGroup) r = r.filter((x) => groupKeyOf(x) === activeGroup);
   if (searchText) {
     const q = searchText.toLowerCase();
     r = r.filter((x) => matchesSearch(x, q));
   }
+  if (withNl && nlOnly) r = r.filter((x) => x.list);
   return r;
+}
+function baseRows() {
+  let r = preDateRows(false);
+  const b = dateBounds(dateFilter);
+  if (b) r = r.filter((x) => x.dateMs >= b[0] && x.dateMs < b[1]);
+  nlBase = r;
+  if (nlOnly) r = r.filter((x) => x.list);
+  return r;
+}
+
+/* ----- date filter ----- */
+const DAY = 86400000;
+/** "YYYY-MM-DD" → local midnight (ms); "" → null */
+function dayStart(s) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || "");
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])).getTime() : null;
+}
+/** local midnight (ms) → "YYYY-MM-DD" */
+function dayKey(ms) {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+/** [from, to) in ms for a date filter, or null for "any time". Rolling presets end "now" (open). */
+function dateBounds(f) {
+  const now = new Date();
+  switch (f.mode) {
+    case "24h": return [now.getTime() - DAY, Infinity];
+    case "7d": return [now.getTime() - 7 * DAY, Infinity];
+    case "1m": { const d = new Date(now); d.setMonth(d.getMonth() - 1); return [d.getTime(), Infinity]; }
+    case "1y": { const d = new Date(now); d.setFullYear(d.getFullYear() - 1); return [d.getTime(), Infinity]; }
+    case "custom": {
+      let a = dayStart(f.from), b = dayStart(f.to);
+      if (a == null && b == null) return null;
+      if (a != null && b != null && a > b) [a, b] = [b, a];
+      // the end day counts in full (new Date(y, m, d + 1) stays right across DST changes)
+      const end = b == null ? Infinity : (() => { const d = new Date(b); d.setDate(d.getDate() + 1); return d.getTime(); })();
+      return [a == null ? -Infinity : a, end];
+    }
+    default: return null;
+  }
+}
+const DATE_LABELS = { all: "dateAll", "24h": "dateLast24h", "7d": "dateLastWeek", "1m": "dateLastMonth", "1y": "dateLastYear" };
+function dateLabel(f) {
+  if (f.mode !== "custom") return t(DATE_LABELS[f.mode] || "dateAll");
+  const a = dayStart(f.from), b = dayStart(f.to);
+  if (a != null && b != null) return a === b ? fmtDay(a) : fmtDayRange(Math.min(a, b), Math.max(a, b));
+  if (a != null) return t("dateSince", fmtDay(a));
+  if (b != null) return t("dateUntil", fmtDay(b));
+  return t("dateAll");
+}
+function updateDateChip() {
+  const on = dateBounds(dateFilter) !== null;
+  const b = $("dateBtn");
+  b.classList.toggle("active", on);
+  const label = dateLabel(dateFilter);
+  $("dateLabel").textContent = label;
+  b.title = on ? `${t("dateTitle")}: ${label}` : t("dateTitle");
+}
+function setDateFilter(f) {
+  dateFilter = { mode: "all", from: "", to: "", ...f };
+  $("tableWrap").scrollTop = 0;
+  render();
+}
+
+/* ----- filter dropdowns (spam filter, date): one open at a time, anchored under their chip ----- */
+const POPS = {
+  spamPop: { btn: "spamMenuBtn", anchor: "spamSplit" },
+  datePop: { btn: "dateBtn", anchor: "dateBtn" },
+  statsPop: { btn: "statsBtn", anchor: "modelSplit" }
+};
+let openPopId = null;
+function isPopOpen(id) { return openPopId === id; }
+function showPop(id) {
+  closePop(false);
+  hideCtx();
+  const pop = $(id);
+  pop.classList.remove("hidden");
+  $(POPS[id].btn).setAttribute("aria-expanded", "true");
+  openPopId = id;
+  // placed once – the popup must not move under the mouse while e.g. the range slider changes the
+  // chip's width (the scan statistics re-place it as their content grows)
+  placePop(id);
+  const cur = pop.querySelector('[role="radio"].active') || pop.querySelector('[role="radio"]');
+  (cur || pop).focus({ preventScroll: true });
+}
+function placePop(id) {
+  const pop = $(id);
+  const r = $(POPS[id].anchor).getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  // right edges aligned (the filters sit at the right end)
+  pop.style.left = Math.max(8, Math.min(r.right - w, window.innerWidth - w - 8)) + "px";
+  // below the anchor; above it when there's no room (the scan statistics sit in the status bar)
+  let top = r.bottom + 6;
+  if (top + h > window.innerHeight - 8 && r.top - 6 - h >= 8) top = r.top - 6 - h;
+  pop.style.top = Math.max(8, Math.min(top, window.innerHeight - h - 8)) + "px";
+}
+function closePop(focusBtn) {
+  if (!openPopId) return;
+  const id = openPopId;
+  openPopId = null;
+  $(id).classList.add("hidden");
+  $(POPS[id].btn).setAttribute("aria-expanded", "false");
+  if (focusBtn) $(POPS[id].btn).focus({ preventScroll: true });
+}
+function togglePop(id, open) { if (isPopOpen(id)) closePop(false); else open(); }
+
+function syncDatePop() {
+  const pre = preDateRows(true);
+  for (const b of $("datePop").querySelectorAll("button[data-range]")) {
+    const mode = b.dataset.range;
+    const on = mode === dateFilter.mode;
+    b.classList.toggle("active", on);
+    b.setAttribute("aria-checked", on ? "true" : "false");
+    const cnt = b.querySelector(".dp-count");
+    if (mode === "custom" && !on) { cnt.textContent = ""; continue; }
+    const bd = dateBounds(mode === "custom" ? dateFilter : { mode });
+    let n = 0;
+    if (!bd) n = pre.length; else for (const x of pre) if (x.dateMs >= bd[0] && x.dateMs < bd[1]) n++;
+    cnt.textContent = fmtInt(n);
+  }
+  const from = $("dateFrom"), to = $("dateTo");
+  // never while a field has focus: setting .value would wipe a half-typed date
+  const typing = document.activeElement === from || document.activeElement === to;
+  if (dateFilter.mode === "custom" && !typing) {
+    from.value = dateFilter.from;
+    to.value = dateFilter.to;
+  }
+  from.max = to.value || "";
+  to.min = from.value || "";
+}
+function openDatePop() {
+  // custom fields start from the current preset, so "last month" → custom is a small step
+  if (dateFilter.mode !== "custom") {
+    const bd = dateBounds(dateFilter);
+    $("dateFrom").value = bd ? dayKey(bd[0]) : "";
+    $("dateTo").value = bd ? dayKey(Date.now()) : "";
+  }
+  syncDatePop();
+  showPop("datePop");
+}
+function applyCustomDates() {
+  let from = $("dateFrom").value, to = $("dateTo").value;
+  if (from && to && from > to) {
+    [from, to] = [to, from];
+    $("dateFrom").value = from;
+    $("dateTo").value = to;
+  }
+  setDateFilter({ mode: "custom", from, to });
 }
 function applySpamFilter(r) {
   if (spamFilter.mode === "unscored") return r.filter((x) => effectiveScore(x) < 0);
@@ -1096,6 +1383,10 @@ function render() {
   renderGroups();
   updateChips(base);
   updateFilterChip();
+  updateDateChip();
+  updateNlChip();
+  if (isPopOpen("datePop")) syncDatePop();
+  if (nlOnly) scheduleProbe();
   updateSelectionUI();
   updateChrome();
 }
@@ -1180,6 +1471,7 @@ function renderTable() {
     winStart = winEnd = -1;
     body.textContent = "";
     if (loading) { empty.classList.add("hidden"); renderSkeleton(body); }
+    else if (nlOnly && nlPending()) showEmpty("newspaper", t("nlCheckingTitle"), tn("nlCheckingHint", nlPending()));
     else if (rows.length) showEmpty("funnel", t("emptyNoMatchTitle"), t("emptyNoMatchHint"), { label: t("resetFilters"), onClick: resetFilters });
     else if (currentFolder) showEmpty("inbox", t("emptyFolderTitle"), t("emptyFolderHint"));
     else showEmpty("folder", t("noFolderTitle"), t("noFolderHint"));
@@ -1465,12 +1757,13 @@ function buildRowEl(r) {
 /* ----- groups (only redrawn when something changed) ----- */
 let groupsSig = "";
 function renderGroups() {
-  const sig = [groupMode, activeGroup, searchText, rowsVersion, scoresVersion, wlVersion].join("|");
+  const sig = [groupMode, activeGroup, searchText, rowsVersion, scoresVersion, wlVersion,
+    JSON.stringify(dateFilter), nlOnly ? "nl" + nlVersion : ""].join("|");
   if (sig === groupsSig) return;
   groupsSig = sig;
   const ul = $("groupList");
   ul.textContent = "";
-  const groups = computeGroups(searchText ? rows.filter((x) => matchesSearch(x, searchText.toLowerCase())) : rows);
+  const groups = computeGroups(groupScopeRows());
   const frag = document.createDocumentFragment();
   if (activeGroup) {
     const li = document.createElement("li");
@@ -1530,6 +1823,8 @@ const PRESETS = {
   unsure: { mode: "range", lo: 40, hi: 79 },
   unscored: { mode: "unscored", lo: 0, hi: 100 }
 };
+const SPAM_LABELS = { spam: "chipSpam", unsure: "chipUnsure", unscored: "chipUnscored" };
+const SPAM_DOTS = { spam: "d-high", unsure: "d-mid", unscored: "d-none", custom: "d-range" };
 function activePreset() {
   for (const [k, p] of Object.entries(PRESETS)) {
     if (p.mode === spamFilter.mode && (p.mode !== "range" || (p.lo === spamFilter.lo && p.hi === spamFilter.hi))) return k;
@@ -1544,16 +1839,32 @@ function updateChips(base) {
     else if (s >= 80) spam++;
     else if (s >= 40) unsure++;
   }
+  const counts = { spam, unsure, unscored };
   $("cntSpam").textContent = fmtInt(spam);
   $("cntUnsure").textContent = fmtInt(unsure);
   $("cntUnscored").textContent = fmtInt(unscored);
-  const ap = activePreset();
-  document.querySelectorAll(".chip").forEach((c) => {
-    const on = c.dataset.preset === ap;
-    c.classList.toggle("active", on);
-    c.setAttribute("aria-pressed", on ? "true" : "false");
-  });
-  const filtered = spamFilter.mode !== "all";
+  const ap = activePreset();               // null = own range from the slider
+  const all = document.querySelector('.chip[data-preset="all"]');
+  all.classList.toggle("active", ap === "all");
+  all.setAttribute("aria-pressed", ap === "all" ? "true" : "false");
+  // the second chip shows the chosen filter; with "All" it offers spam ≥ 80 %
+  const key = ap === "all" ? "spam" : ap || "custom";
+  const on = ap !== "all";
+  const chip = $("spamChip");
+  chip.dataset.preset = key;
+  $("spamSplit").classList.toggle("active", on);
+  chip.setAttribute("aria-pressed", on ? "true" : "false");
+  $("spamChipDot").className = "dot " + SPAM_DOTS[key];
+  $("spamChipLabel").textContent = key === "custom" ? t("spamRangeChip", fmtInt(spamFilter.lo), fmtInt(spamFilter.hi)) : t(SPAM_LABELS[key]);
+  $("spamChipCount").textContent = fmtInt(key === "custom" ? view.length : counts[key]);
+  const pop = $("spamPop");
+  for (const b of pop.querySelectorAll('[role="radio"]')) {
+    const sel = b.dataset.preset === (ap || "custom");
+    b.classList.toggle("active", sel);
+    b.setAttribute("aria-checked", sel ? "true" : "false");
+  }
+  $("cntRange").textContent = ap ? "" : fmtInt(view.length);
+  const filtered = spamFilter.mode !== "all" || nlOnly || dateBounds(dateFilter) !== null;
   $("selectFilteredBtn").classList.toggle("hidden", !filtered || !view.length);
   $("selectFilteredLabel").textContent = t("selectAllCount", fmtInt(view.length));
   const isSpam = ap === "spam" || (spamFilter.mode === "range" && spamFilter.lo >= 80);
@@ -1573,7 +1884,16 @@ function updateRangeUI() {
   const fill = $("rangeFill");
   fill.style.left = lo + "%";
   fill.style.width = (hi - lo) + "%";
-  fill.style.backgroundPosition = `-${(lo / 100) * 104}px 0`;
+  // the gradient spans the whole track, the fill shows its part of it (track width only known while visible)
+  const tw = fill.parentElement.offsetWidth;
+  if (tw) {
+    fill.style.backgroundSize = `${tw}px 4px`;
+    fill.style.backgroundPosition = `-${(lo / 100) * tw}px 0`;
+  }
+}
+function openSpamPop() {
+  showPop("spamPop");
+  updateRangeUI();
 }
 /* Double slider: pick and drag the thumb nearest to the pointer ourselves (see cleaner.css .range).
  * The inputs keep their keyboard handling; here we only set their value and fire "input". */
@@ -1603,7 +1923,7 @@ function wireRangePointer() {
     drag = dA < dB ? lo : dB < dA ? hi : (v < a ? lo : hi);
     drag.focus({ preventScroll: true, focusVisible: false }); // arrow keys then move this thumb
     range.classList.add("dragging");
-    try { range.setPointerCapture(e.pointerId); } catch (_) {}
+    try { range.setPointerCapture(e.pointerId); } catch (_) { /* dragging still works without capture */ }
     apply(v);
   });
   range.addEventListener("pointermove", (e) => { if (drag) apply(valueAt(e.clientX)); });
@@ -1611,7 +1931,7 @@ function wireRangePointer() {
     if (!drag) return;
     drag = null;
     range.classList.remove("dragging");
-    try { range.releasePointerCapture(e.pointerId); } catch (_) {}
+    try { range.releasePointerCapture(e.pointerId); } catch (_) { /* capture already gone */ }
   };
   range.addEventListener("pointerup", end);
   range.addEventListener("pointercancel", end);
@@ -1621,6 +1941,8 @@ function resetFilters() {
   activeGroup = null;
   searchText = "";
   $("searchBox").value = "";
+  nlOnly = false;
+  dateFilter = { mode: "all", from: "", to: "" };
   setSpamFilter(PRESETS.all);
 }
 
@@ -1865,7 +2187,8 @@ async function undoDelete(items, savedScores) {
   if (missing) showBanner(tn("undoMissing", missing), [], "info");
 }
 
-function rowsInGroup(key) { return rows.filter((x) => groupKeyOf(x) === key); }
+// same scope as the group list counts, so "trash all N" really means those N
+function rowsInGroup(key) { return groupScopeRows().filter((x) => groupKeyOf(x) === key); }
 function selectIds(ids, label) {
   for (const id of ids) selected.add(id);
   anchorId = null;
@@ -1883,16 +2206,19 @@ function moveStatus(msg, kind) {
   el.textContent = msg || "";
   el.style.color = kind === "ok" ? "var(--ok)" : kind === "err" ? "var(--danger-text)" : "var(--muted)";
 }
-function openMoveModal(ids) {
+function openMoveModal(ids, onDone) {
   moveIds = (ids && ids.length ? ids : [...selected]).filter((id) => rowIndex.has(id));
   if (!moveIds.length) return;
-  moveTargetNode = currentNode && !currentNode.isAccount ? currentNode : null;
+  moveDone = onDone || null;
+  const last = lastMoveTarget && folderNodes.find((n) => n.accountName === lastMoveTarget.account && n.path === lastMoveTarget.path);
+  moveTargetNode = last || (currentNode && !currentNode.isAccount ? currentNode : null);
   $("moveSub").textContent = tn("moveSub", moveIds.length);
   $("newFolderName").value = "";
   if (moveTargetNode) expandToNode(moveTargetNode);
   renderMoveTree();
   refreshMoveButtons();
-  openDialog("moveBackdrop", "#moveTree .active, #moveTree li");
+  openDialog("moveBackdrop", "#moveTree .active"); // without a target: the first row
+  requestAnimationFrame(() => { const a = $("moveTree").querySelector(".active"); if (a) a.scrollIntoView({ block: "nearest" }); });
 }
 function closeMoveModal() { closeDialog("moveBackdrop"); }
 function refreshMoveButtons() {
@@ -1901,7 +2227,16 @@ function refreshMoveButtons() {
   else if (moveTargetNode.isAccount) moveStatus(t("moveAccountHint", moveTargetNode.name));
   else moveStatus(t("moveTarget", moveTargetNode.path));
 }
-function pickMoveTarget(node) { moveTargetNode = node; renderMoveTree(); refreshMoveButtons(); }
+function pickMoveTarget(node) {
+  moveTargetNode = node;
+  // mark in place instead of re-rendering: keeps focus, and a double-click still lands on the same row
+  for (const li of $("moveTree").children) {
+    const on = treeNodeOf.get(li) === node;
+    li.classList.toggle("active", on);
+    if (on) li.setAttribute("aria-selected", "true"); else li.removeAttribute("aria-selected");
+  }
+  refreshMoveButtons();
+}
 async function performMove() {
   const ids = moveIds.filter((id) => rowIndex.has(id));
   if (!ids.length || !moveTargetNode || moveTargetNode.isAccount) return;
@@ -1910,10 +2245,14 @@ async function performMove() {
   $("moveConfirm").disabled = true;
   try {
     await messenger.messages.move(ids, target.folder);
+    lastMoveTarget = { account: target.accountName, path: target.path };
+    const done = moveDone;
+    moveDone = null;
     removeRows(ids);
     closeMoveModal();
     render();
     toast(tn("toastMoved", ids.length, target.name));
+    if (done) done();
   } catch (err) {
     moveStatus(t("moveFailed", err.message), "err");
     refreshMoveButtons();
@@ -1957,7 +2296,7 @@ function openCtx(e, r) {
   showMenu([
     { icon: "search", label: t("preview"), run: () => openPreview(r.id) },
     { icon: "external", label: t("openInTb"), run: () => openMessage(r.id) },
-    canUnsub ? { icon: "log-out", label: t("unsubscribeEllipsis"), run: () => unsubscribe(r, null) } : null,
+    canUnsub ? { icon: "log-out", label: t("unsubscribeEllipsis"), run: () => unsubscribe(r) } : null,
     "sep",
     { icon: "check-circle", label: multi ? tn("ctxNotSpamN", ids.length) : t("notSpam"), run: () => markNotSpam(ids) },
     r.fromAddress ? { icon: "shield-check", label: addressWhitelisted(r) ? t("ctxUntrust", r.fromAddress) : t("ctxTrustSender", r.fromAddress), run: () => toggleWhitelistValue(r.fromAddress) } : null,
@@ -2024,8 +2363,10 @@ async function confirmScan(n) {
 
 function onScanClick() {
   if (!isConfigured(settings)) { openSettings(); return; }
-  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
-  startScan(perm);
+  // both synchronously in the click (permission prompts need the user's gesture)
+  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider);
+  const contacts = contactsAccessOnScan();
+  startScan(Promise.all([perm, contacts]).then(([ok]) => ok));
 }
 async function startScan(perm) {
   if (scanning || loading) return;
@@ -2037,7 +2378,7 @@ async function startScan(perm) {
     if (!choice) return;
     if (choice === "50") todo = todoAll.slice().sort((a, b) => b.dateMs - a.dateMs).slice(0, 50);
   }
-  await perm;
+  if (!(await perm)) { showBanner(hostDenied(settings.aiBaseUrl), [], "info"); return; }
   runScan(todo);
 }
 // Decision models (fast, fractions of a cent) and local models scan right away;
@@ -2047,7 +2388,42 @@ function needsScanConfirm(n) {
 }
 
 /* ----- context for the model: address book, mails from the sender, open rate ----- */
+/* Address book access is an optional permission, used only for the "known contact" signal: asked
+ * once at the first scan with context (a "no" is remembered), offered again in the settings, and
+ * given back when context is switched off. Without it the signal is left out, not sent as "no". */
+const CONTACT_PERMS = { permissions: ["addressBooks"] };
+let contactsReady = false;         // address books read for this scan
+let contactsAccess = null;         // granted? (null = not checked yet) – for the settings dialog
+function permissionsApi() { return typeof messenger !== "undefined" && messenger.permissions; }
+async function hasContactsAccess() {
+  const api = permissionsApi();
+  if (!api || typeof api.contains !== "function") return false;
+  try { return Boolean(await api.contains(CONTACT_PERMS)); } catch (_) { return false; }
+}
+/** Ask for address book access – call synchronously in a click. Resolves true / false. */
+function requestContactsAccess() {
+  const api = permissionsApi();
+  if (!api || typeof api.request !== "function") return Promise.resolve(false);
+  try { return Promise.resolve(api.request(CONTACT_PERMS)).catch(() => false); } catch (_) { return Promise.resolve(false); }
+}
+/** At a scan click: ask once while context is on (no prompt if access is already granted). */
+function contactsAccessOnScan() {
+  if (settings.sendContext === false || settings.contactsAsked) return Promise.resolve();
+  return requestContactsAccess().then(async (ok) => {
+    contactsAccess = ok;
+    settings = await saveSettings({ contactsAsked: true });
+  });
+}
+function releaseContactsAccess() {
+  const api = permissionsApi();
+  contactsAccess = false;
+  if (!api || typeof api.remove !== "function") return Promise.resolve();
+  return Promise.resolve(api.remove(CONTACT_PERMS)).catch(() => {});
+}
 async function loadContacts() {
+  contactsReady = false;
+  contactSet = new Set();
+  if (!(await hasContactsAccess())) return;
   const ab = typeof messenger !== "undefined" && messenger.addressBooks;
   if (!ab || typeof ab.list !== "function") return;
   try {
@@ -2060,6 +2436,7 @@ async function loadContacts() {
     };
     for (const book of await ab.list(true)) for (const c of book.contacts || []) if (!c.type || c.type === "contact") addFrom(c);
     contactSet = set;
+    contactsReady = true;
   } catch (e) {
     console.warn("Address books not available:", e);
   }
@@ -2080,7 +2457,7 @@ function contextFor(r, st) {
   const a = st.byAddr.get(r.fromAddress.toLowerCase()) || { n: 0, read: 0 };
   const d = st.byDom.get(r.fromDomain) || { n: 0, read: 0 };
   return {
-    known: contactSet.has(r.fromAddress.toLowerCase()),
+    known: contactsReady ? contactSet.has(r.fromAddress.toLowerCase()) : null, // null: no access
     senderCount: a.n, senderReadPct: a.n ? Math.round((a.read / a.n) * 100) : null,
     domainCount: d.n, domainReadPct: d.n ? Math.round((d.read / d.n) * 100) : null,
     junk: Boolean(r.junk)
@@ -2091,7 +2468,10 @@ function contextFor(r, st) {
 function rescore(ids) {
   if (scanning || loading) { toast(t("scanRunning")); return; }
   if (!isConfigured(settings)) { openSettings(); return; }
-  const perm = requestHostPermission(settings.aiBaseUrl, settings.provider); // synchronously in the click
+  const perm = Promise.all([
+    requestHostPermission(settings.aiBaseUrl, settings.provider), // synchronously in the click
+    contactsAccessOnScan()
+  ]).then(([ok]) => ok);
   const items = ids.map(byId).filter(Boolean);
   for (const r of items) {
     scores.delete(r.id);
@@ -2101,7 +2481,7 @@ function rescore(ids) {
   scoresVersion++;
   scheduleScoreCacheSave();
   render();
-  perm.then(() => runScan(items));
+  perm.then((ok) => { if (ok) runScan(items); else showBanner(hostDenied(settings.aiBaseUrl), [], "info"); });
 }
 
 async function runScan(todo) {
@@ -2123,6 +2503,11 @@ async function runScan(todo) {
   const t0 = Date.now();
   const fetchSnippet = settings.scanBody ? (id) => getBodySnippet(id, settings.bodyChars) : undefined;
   let res = { scored: 0, failed: 0, stopped: false, lastError: null };
+  // timings for the statistics next to the model (scoreMessages fills in the rest, live)
+  const prevStats = scanStats;
+  const scanLoad = loadToken;    // a folder reload stops the scan – its status line wins then
+  const timing = { model: settings.aiModel, server: serverLabel(settings) };
+  scanStats = timing;
   try {
     res = await scoreMessages(batch, settings, {
       onProgress: (done, total) => {
@@ -2134,11 +2519,13 @@ async function runScan(todo) {
           eta = " · " + (left < 1 ? t("etaSoon") : t("etaLeft", fmtDuration(left)));
         }
         $("progressText").textContent = `${fmtInt(done)} / ${fmtInt(total)}${eta}`;
+        if (isPopOpen("statsPop")) renderStats();
       },
       onResult: (id, p) => setScore(id, p),
       onFail: (id, err) => { queuedIds.delete(id); failedIds.set(id, err.message); updateSpamCell(id); },
       fetchSnippet,
-      signal: scanAbort.signal
+      signal: scanAbort.signal,
+      stats: timing
     });
   } catch (err) {
     res.lastError = err;
@@ -2148,10 +2535,16 @@ async function runScan(todo) {
     scanAbort = null;
     setScanningUI(false);
     flushScoreCache();
-    setTimeout(hideProgress, 1200);
+    setTimeout(() => { if (!loading) hideProgress(); }, 1200);   // a folder reload shows its own progress
+    // refused before the first request (e.g. wrong model type): keep the last real statistics
+    if (!timing.started) scanStats = prevStats;
+    else { if (!timing.ended) timing.ended = Date.now(); saveScanStats(); }
+    if (isPopOpen("statsPop")) renderStats();
   }
-  setStatus(t(res.stopped ? "scanStopped" : "scanDone", tn("mails", res.scored)) +
-    (res.failed ? t("scanFailedPart", fmtInt(res.failed)) : ""));
+  if (loadToken === scanLoad) {
+    setStatus(t(res.stopped ? "scanStopped" : "scanDone", tn("mails", res.scored)) +
+      (res.failed ? t("scanFailedPart", fmtInt(res.failed)) : ""));
+  }
   if (res.lastError) showScanError(res.lastError, todo);
   if (!firstScanDone && res.scored) {
     firstScanDone = true;
@@ -2162,6 +2555,89 @@ async function runScan(todo) {
 }
 function stopScan() {
   if (scanAbort) { scanAbort.abort(); setStatus(t("stopping")); }
+}
+
+/* ----- scan statistics: the clock next to the model in the status bar ----- */
+/* Where a scan's time went: loading mail texts from the mail server, the model's answers, or the
+ * limit for free models. Only timings and counts – kept in storage.local for the next session. */
+function serverLabel(s) {
+  const src = currentSource(s.provider, s.aiBaseUrl);
+  return src ? sourceLabel(src) : hostOf(s.aiBaseUrl);
+}
+async function loadScanStats() {
+  try {
+    const got = await messenger.storage.local.get("scanStats");
+    if (got.scanStats && got.scanStats.started && !scanStats) scanStats = got.scanStats;
+  } catch (_) { /* no statistics yet */ }
+}
+function saveScanStats() {
+  if (scanStats) messenger.storage.local.set({ scanStats }).catch(() => {});
+}
+function fmtRate(perSec) {
+  if (!(perSec > 0)) return "";
+  return perSec >= 1 ? t("statsPerSec", fmtDec(perSec, perSec < 10 ? 1 : 0)) : t("statsPerMin", fmtInt(Math.max(1, Math.round(perSec * 60))));
+}
+/** what slowed the scan down – null while there's too little to say */
+function statsVerdict(st) {
+  const slot = st.reqMs + st.waitMs + st.throttleMs;
+  if (st.done < 3 || slot <= 0) return null;
+  if (st.throttleMs / slot > 0.3) return t("statsSlowFree");
+  if (st.waitMs / slot > 0.3) return t("statsSlowMail", fmtPct(Math.round((st.waitMs / slot) * 100)));
+  if (st.local) return t("statsSlowLocal");
+  return t(st.concurrency < 10 ? "statsSlowModel" : "statsSlowModelMax");
+}
+function renderStats() {
+  const st = scanStats && scanStats.started ? scanStats : null;
+  const body = $("stBody");
+  body.textContent = "";
+  $("stWhen").textContent = !st ? "" : st.ended ? fmtDateSmart(st.ended) : t("statsRunning");
+  if (!st) {
+    const p = document.createElement("p");
+    p.className = "st-empty";
+    p.textContent = t("statsEmpty");
+    body.appendChild(p);
+    return;
+  }
+  const secs = Math.max(0.001, ((st.ended || Date.now()) - st.started) / 1000);
+  const avg = (ms, n) => (n ? t("statsAvg", fmtSecs(ms / n / 1000)) : "–");
+  let mails = st.ended ? tn("statsScored", st.scored) : `${fmtInt(st.done)} / ${fmtInt(st.total)}`;
+  if (st.failed) mails += " · " + tn("statsFailed", st.failed);
+  if (st.stopped) mails += " · " + t("statsStopped");
+  let text = st.withText ? avg(st.textMs, st.texts) : t("statsNoText");
+  if (st.big) text += " · " + tn("statsBig", st.big);
+  let req = avg(st.reqMs, st.reqs);
+  if (st.reqs && st.batchSize > 1) req += " · " + tn("statsPerReq", st.batchSize);
+  const lines = [
+    [t("statsModelLbl"), `${st.server} · ${st.model}`],
+    [t("statsMailsLbl"), mails],
+    [t("statsTimeLbl"), [fmtSecs(secs), st.done ? fmtRate(st.done / secs) : ""].filter(Boolean).join(" · ")],
+    [t("statsParallelLbl"), fmtInt(st.concurrency) + (st.auto ? " " + t("statsAuto") : "")],
+    [t("statsReqLbl"), req],
+    [t("statsTextLbl"), text]
+  ];
+  const dl = document.createElement("dl");
+  dl.className = "st-grid";
+  for (const [k, v] of lines) {
+    const dt = document.createElement("dt");
+    dt.textContent = k;
+    const dd = document.createElement("dd");
+    dd.textContent = v;
+    dl.append(dt, dd);
+  }
+  body.appendChild(dl);
+  const verdict = statsVerdict(st);
+  if (verdict) {
+    const v = document.createElement("div");
+    v.className = "st-verdict";
+    v.appendChild(icon("info", 14));
+    v.appendChild(textSpan(verdict));
+    body.appendChild(v);
+  }
+  if (isPopOpen("statsPop")) placePop("statsPop");
+}
+function openStatsPop() {
+  renderStats();
+  showPop("statsPop");
 }
 function showScanError(err, todo) {
   const retry = { label: t("retry"), onClick: () => { const again = todo.filter((r) => failedIds.has(r.id) && rowIndex.has(r.id)); if (again.length) runScan(again); } };
@@ -2407,6 +2883,15 @@ async function previewDelete() {
   if (!view.length) { closePreview(); return; }
   openPreview(view[Math.min(Math.max(i, 0), view.length - 1)].id);
 }
+function previewMove() {
+  if (pvId == null) return;
+  const i = view.findIndex((x) => x.id === pvId);
+  openMoveModal([pvId], () => {
+    if (!isPreviewOpen()) return;
+    if (!view.length) { closePreview(); return; }
+    openPreview(view[Math.min(Math.max(i, 0), view.length - 1)].id);
+  });
+}
 function previewNotSpam() {
   if (pvId == null) return;
   const id = pvId;
@@ -2453,12 +2938,13 @@ function openSettings(msg) {
   $("mSendCtx").checked = settings.sendContext !== false;
   $("mNlDetect").checked = settings.detectNewsletters !== false;
   renderCacheInfo();
-  $("mConc").value = settings.aiConcurrency;
+  $("mConc").value = settings.aiConcurrency || "";   // empty = automatic (placeholder shows the number)
   $("mBatch").value = settings.aiBatchSize;
   $("mLimit").value = settings.loadLimit;
   $("mChars").value = settings.bodyChars;
   $("wlInput").value = "";
   renderSettings();
+  hasContactsAccess().then((ok) => { contactsAccess = ok; if (draft) renderCtxAccess(); });
   $("settingsBackdrop").querySelector(".modal-body").scrollTop = 0;
   settingsStatus(msg || "", msg ? "warn" : "");
   const p = draft.profiles[draft.provider];
@@ -2470,6 +2956,15 @@ function settingsStatus(msg, kind) {
   const el = $("mStatus");
   el.textContent = msg || "";
   el.style.color = kind === "ok" ? "var(--ok)" : kind === "err" ? "var(--danger-text)" : kind === "warn" ? "var(--warn)" : "var(--muted)";
+}
+/** http:// to another computer: say so and keep the dialog open (nothing is saved or sent) */
+function refuseInsecureUrl() {
+  const url = draft && draft.profiles[draft.provider].baseUrl;
+  if (!url || !isInsecureUrl(url)) return false;
+  settingsStatus(t("errInsecureUrl", hostOf(url)), "err");
+  $("settingsBackdrop").querySelector("details.adv").open = true;
+  $("mBaseUrl").focus();
+  return true;
 }
 function stashFields() {
   if (!draft) return;
@@ -2504,7 +2999,7 @@ function draftSettings() {
     aiApiKey: draftKeyFor(p.baseUrl),
     scanBody: $("mScanBody").checked,
     sendContext: $("mSendCtx").checked,
-    aiConcurrency: Number($("mConc").value) || 3,
+    aiConcurrency: Number($("mConc").value) || 0,
     aiBatchSize: Number($("mBatch").value) || 8,
     bodyChars: Number($("mChars").value) || 1500,
     modelInfo: draft.modelInfo
@@ -2578,7 +3073,14 @@ function renderSettings() {
   $("mModel").value = p.model;
   $("mModel").placeholder = meta.model || t("chooseModelPh");
   const info = draft.modelInfo[prov];
-  modelInfoPills(info && info.id === p.model ? info : null, draftSettingsLite(), $("mModelInfo"));
+  const lite = draftSettingsLite();
+  modelInfoPills(info && info.id === p.model ? info : null, lite, $("mModelInfo"));
+  // parallel requests: empty = automatic, the placeholder says what that means for this model
+  const auto = autoConcurrency(lite);
+  $("mConc").placeholder = t("concAutoPh", fmtInt(auto));
+  $("mConc").title = t("concAutoTitle", fmtInt(auto));
+  // mails per request: only language models take several – a decision API scores one at a time
+  $("batchField").classList.toggle("hidden", kind === "decision");
 
   // privacy
   const host = hostOf(p.baseUrl);
@@ -2586,6 +3088,7 @@ function renderSettings() {
     ? t("allLocal")
     : ($("mScanBody").checked ? t("privacyBody", host, fmtInt(Number($("mChars").value) || 0)) : t("privacyNoBody", host)) +
       ($("mSendCtx").checked ? " " + t("ctxAlsoSent") : "");
+  renderCtxAccess();
 
   renderWlChips();
 }
@@ -2699,6 +3202,17 @@ async function clearCache() {
   renderCacheInfo();
   settingsStatus(t("cacheCleared"), "ok");
 }
+/** "No address book access – Allow access" under the context switch (only while it is on) */
+function renderCtxAccess() {
+  $("ctxAccess").classList.toggle("hidden", !($("mSendCtx").checked && contactsAccess === false));
+}
+function allowContactsAccess() {
+  requestContactsAccess().then((ok) => { // synchronously in the click
+    contactsAccess = ok;
+    renderCtxAccess();
+    settingsStatus(ok ? t("ctxAccessGranted") : t("ctxAccessDenied"), ok ? "ok" : "warn");
+  });
+}
 function draftSettingsLite() {
   return { ...settings, provider: draft.provider, aiBaseUrl: draft.profiles[draft.provider].baseUrl, aiModel: draft.profiles[draft.provider].model, scanBody: $("mScanBody").checked, bodyChars: Number($("mChars").value) || 1500, aiBatchSize: Number($("mBatch").value) || 8 };
 }
@@ -2765,16 +3279,21 @@ async function saveSettingsDialog(perm) {
     whitelist: draft.whitelist,
     scanBody: s.scanBody,
     sendContext: $("mSendCtx").checked,
+    // context off: give address book access back; switched on again, the next scan asks again
+    contactsAsked: $("mSendCtx").checked ? settings.contactsAsked : false,
     detectNewsletters: $("mNlDetect").checked,
-    aiConcurrency: Math.max(1, Math.min(10, s.aiConcurrency)),
+    aiConcurrency: s.aiConcurrency ? Math.max(1, Math.min(10, Math.round(s.aiConcurrency))) : 0,
     aiBatchSize: Math.max(1, Math.min(25, s.aiBatchSize)),
     bodyChars: Math.max(0, Math.min(20000, s.bodyChars)),
     loadLimit: Math.max(100, Math.min(100000, Number($("mLimit").value) || 5000))
   });
-  await perm;
+  const allowed = await perm;
+  if (!settings.sendContext) releaseContactsAccess();
   wlVersion++;
   closeSettings();
-  toast(t("settingsSaved"));
+  // saved either way; without access the next scan asks again
+  if (allowed) toast(t("settingsSaved")); else showBanner(hostDenied(settings.aiBaseUrl), [], "info");
+  if (!nlEnabled()) nlOnly = false;
   if (settings.loadLimit !== prevLimit) loadMessages(); else render();
   if (!nlBefore && settings.detectNewsletters) scheduleProbe();
 }
@@ -2783,7 +3302,7 @@ async function testSettings(perm) {
   if (!s.aiBaseUrl || !s.aiModel) { settingsStatus(t("pickModelFirst"), "err"); return; }
   if (!isConfigured(s)) { settingsStatus(t("enterApiKey"), "err"); return; }
   settingsStatus(t("testing"));
-  await perm;
+  if (!(await perm)) { settingsStatus(hostDenied(s.aiBaseUrl), "err"); return; }
   try {
     const r = await testConnection(s);
     // a jev-style server runs exactly one model – take over its real name (not Ollaya: there the
@@ -2820,7 +3339,12 @@ function openPicker() {
   $("pkFree").checked = false;
   renderPicker();
   openDialog("pickerBackdrop", "#pkSearch");
-  perm.then(loadPickerModels);
+  perm.then((ok) => (ok ? loadPickerModels() : pickerDenied()));
+}
+function pickerDenied() {
+  pk.loading = false;
+  pk.error = { kind: "denied", message: hostDenied(pk.s.aiBaseUrl) };
+  renderPicker();
 }
 function closePicker() { closeDialog("pickerBackdrop"); }
 async function loadPickerModels() {
@@ -2899,7 +3423,8 @@ function renderPicker() {
   if (pk.error) {
     const e = pk.error;
     const srv = guardedServer(pk.s);
-    if (srv && e.kind === "network") pickerMsg(t("pkServerDown", srv), serveCmd(srv));
+    if (e.kind === "denied") pickerMsg(e.message);
+    else if (srv && e.kind === "network") pickerMsg(t("pkServerDown", srv), serveCmd(srv));
     else if (originBlocked(pk.s, e)) pickerMsg(t(srv === "Ollaya" ? "pkOllayaOrigins" : "pkOriginBlocked", srv), originsCmd(srv));
     else if (e.kind === "origin") pickerMsg(e.message, jevServeCmd(pk.s.aiBaseUrl, "--allow-any-host"));
     else if (jevDown(pk.s, e)) pickerMsg(t("pkJevDown", hostOf(pk.s.aiBaseUrl)), jevServeCmd(pk.s.aiBaseUrl));
@@ -3036,7 +3561,7 @@ function onColDragStart(e, key, th) {
   dragCol = key;
   th.classList.add("dragging");
   e.dataTransfer.effectAllowed = "move";
-  try { e.dataTransfer.setData("text/plain", key); } catch (_) {}
+  try { e.dataTransfer.setData("text/plain", key); } catch (_) { /* the drag works without data */ }
 }
 function onColDragOver(e, key, th) {
   if (!dragCol || dragCol === key) return;
@@ -3099,6 +3624,17 @@ function onKeyDown(e) {
   const top = topDialog();
 
   if (e.key === "Tab" && top) { trapTab(e); return; }
+  if (openPopId && tg && tg.closest && $(openPopId).contains(tg)) {
+    if (e.key === "Escape") { closePop(true); e.preventDefault(); }
+    else if ((e.key === "ArrowDown" || e.key === "ArrowUp") && tg.matches('[role="radio"]')) {
+      const items = [...$(openPopId).querySelectorAll('[role="radio"]')];
+      const i = (items.indexOf(tg) + (e.key === "ArrowDown" ? 1 : -1) + items.length) % items.length;
+      items[i].focus();
+      e.preventDefault();
+    }
+    return; // no list shortcuts inside a filter popup (arrow keys move the slider / date fields)
+  }
+  if (e.key === "Escape" && openPopId) { closePop(true); e.preventDefault(); return; }
   if (!$("ctxMenu").classList.contains("hidden")) {
     if (e.key === "Escape") { hideCtx(); e.preventDefault(); }
     else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
@@ -3127,7 +3663,8 @@ function onKeyDown(e) {
     else if (e.key === "ArrowUp") { $("pvBody").scrollBy({ top: -60 }); e.preventDefault(); }
     else if (e.key === "Delete" || e.key === "Backspace") { previewDelete(); e.preventDefault(); }
     else if (e.key === "n" || e.key === "N") { previewNotSpam(); e.preventDefault(); }
-    else if (e.key === "u" || e.key === "U") { unsubscribe(byId(pvId), $("pvUnsub")); e.preventDefault(); }
+    else if (e.key === "u" || e.key === "U") { unsubscribe(byId(pvId)); e.preventDefault(); }
+    else if (e.key === "m" || e.key === "M") { previewMove(); e.preventDefault(); }
     else if (e.key === " " && !onButton) { closePreview(); e.preventDefault(); }
     return;
   }
@@ -3152,7 +3689,12 @@ function onKeyDown(e) {
     case "End": if (!inSidebar && view.length) { moveFocus(view.length, e.shiftKey); e.preventDefault(); } break;
     case "x": case "X": if (focusId != null) { toggleSelect(focusId, !selected.has(focusId)); anchorId = focusId; e.preventDefault(); } break;
     case "u": case "U":
-      if (focusId != null) { const tr = rowEl(focusId); unsubscribe(byId(focusId), tr && tr.querySelector(".nl-tag")); e.preventDefault(); }
+      if (focusId != null) { unsubscribe(byId(focusId)); e.preventDefault(); }
+      break;
+    case "m": case "M":
+      if (inSidebar) break;
+      if (selected.size) openMoveModal(); else if (focusId != null) openMoveModal([focusId]);
+      e.preventDefault();
       break;
     case "Enter": case " ":
       if (onButton || inSidebar) break;
@@ -3171,7 +3713,7 @@ function onKeyDown(e) {
 /* ================================================================== */
 function wireEvents() {
   $("sidebarToggle").addEventListener("click", toggleSidebar);
-  $("reloadBtn").addEventListener("click", loadMessages);
+  $("reloadBtn").addEventListener("click", reloadAll);
   $("includeSub").addEventListener("change", async (e) => {
     settings = await saveSettings({ includeSubfolders: e.target.checked });
     loadMessages();
@@ -3195,7 +3737,32 @@ function wireEvents() {
   });
 
   // filter
-  document.querySelectorAll(".chip").forEach((c) => c.addEventListener("click", () => setSpamFilter(PRESETS[c.dataset.preset])));
+  document.querySelector('.chip[data-preset="all"]').addEventListener("click", () => setSpamFilter(PRESETS.all));
+  // main part of the split chip: switch on what it shows (custom: the range is already active)
+  $("spamChip").addEventListener("click", () => { const p = PRESETS[$("spamChip").dataset.preset]; if (p) setSpamFilter(p); });
+  $("spamMenuBtn").addEventListener("click", () => togglePop("spamPop", openSpamPop));
+  $("spamPop").querySelectorAll('[role="radio"]').forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.preset === "custom") { $("spamMin").focus(); return; } // the slider below sets it
+    setSpamFilter(PRESETS[b.dataset.preset]);
+    closePop(true);
+  }));
+  $("unsureHint").textContent = t("rangeFmt", fmtInt(PRESETS.unsure.lo), fmtInt(PRESETS.unsure.hi));
+  $("nlBtn").addEventListener("click", () => setNlOnly(!nlOnly));
+  $("dateBtn").addEventListener("click", () => togglePop("datePop", openDatePop));
+  $("datePop").querySelectorAll("button[data-range]").forEach((b) => b.addEventListener("click", () => {
+    if (b.dataset.range === "custom") { applyCustomDates(); $("dateFrom").focus(); return; }
+    setDateFilter({ mode: b.dataset.range });
+    closePop(true);
+  }));
+  $("dateFrom").addEventListener("change", applyCustomDates);
+  $("dateTo").addEventListener("change", applyCustomDates);
+  // Tab out of a popup closes it (relatedTarget null = date picker / window switch: stay open)
+  for (const id of Object.keys(POPS)) {
+    $(id).addEventListener("focusout", (e) => {
+      const to = e.relatedTarget;
+      if (isPopOpen(id) && to && !$(id).contains(to) && to.id !== POPS[id].btn) closePop(false);
+    });
+  }
   const onRange = (which) => () => {
     let lo = Number($("spamMin").value), hi = Number($("spamMax").value);
     if (lo > hi) { if (which === "min") hi = lo; else lo = hi; $("spamMin").value = lo; $("spamMax").value = hi; }
@@ -3246,6 +3813,7 @@ function wireEvents() {
   $("hpClose").addEventListener("click", () => closeDialog("helpBackdrop"));
   bindBackdropClose($("helpBackdrop"), () => closeDialog("helpBackdrop"));
   $("modelChip").addEventListener("click", () => openSettings());
+  $("statsBtn").addEventListener("click", () => togglePop("statsPop", openStatsPop));
 
   // settings
   $("settingsBtn").addEventListener("click", () => openSettings());
@@ -3267,23 +3835,24 @@ function wireEvents() {
     renderSettings();
   });
   $("mKeyLink").addEventListener("click", () => { const u = $("mKeyLink").dataset.url; if (u) openExternal(u); });
-  $("mBaseUrl").addEventListener("change", () => { stashFields(); renderSettings(); });
+  $("mBaseUrl").addEventListener("change", () => { stashFields(); renderSettings(); refuseInsecureUrl(); });
   $("mModel").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mScanBody").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("mSendCtx").addEventListener("change", () => { stashFields(); renderSettings(); });
+  $("ctxAccessBtn").addEventListener("click", allowContactsAccess);
   $("mClearCache").addEventListener("click", clearCache);
   $("mChars").addEventListener("change", () => { stashFields(); renderSettings(); });
   $("wlAdd").addEventListener("click", addWlFromInput);
   $("wlInput").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); addWlFromInput(); } });
   $("mPick").addEventListener("click", openPicker);
-  $("mSave").addEventListener("click", () => { stashFields(); saveSettingsDialog(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
-  $("mTest").addEventListener("click", () => { stashFields(); testSettings(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
+  $("mSave").addEventListener("click", () => { stashFields(); if (!refuseInsecureUrl()) saveSettingsDialog(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
+  $("mTest").addEventListener("click", () => { stashFields(); if (!refuseInsecureUrl()) testSettings(requestHostPermission(draft.profiles[draft.provider].baseUrl, draft.provider)); });
 
   // model picker
   $("pkClose").addEventListener("click", closePicker);
   $("pkCancel").addEventListener("click", closePicker);
   $("pkApply").addEventListener("click", applyPicker);
-  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl, pk.s.provider); perm.then(loadPickerModels); });
+  $("pkReload").addEventListener("click", () => { const perm = requestHostPermission(pk.s.aiBaseUrl, pk.s.provider); perm.then((ok) => (ok ? loadPickerModels() : pickerDenied())); });
   bindBackdropClose($("pickerBackdrop"), closePicker);
   let pkTimer = 0;
   $("pkSearch").addEventListener("input", () => { clearTimeout(pkTimer); pkTimer = setTimeout(renderPicker, 100); });
@@ -3294,6 +3863,10 @@ function wireEvents() {
   $("moveClose").addEventListener("click", closeMoveModal);
   $("moveCancel").addEventListener("click", closeMoveModal);
   $("moveConfirm").addEventListener("click", performMove);
+  // double-click on a folder = pick it and move
+  $("moveTree").addEventListener("dblclick", (e) => {
+    if (e.target.closest(".tree-item") && !e.target.closest(".tw-toggle") && !$("moveConfirm").disabled) performMove();
+  });
   $("newFolderBtn").addEventListener("click", createFolder);
   $("newFolderName").addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); createFolder(); } });
   bindBackdropClose($("moveBackdrop"), closeMoveModal);
@@ -3307,8 +3880,9 @@ function wireEvents() {
   $("pvPrev").addEventListener("click", () => navPreview(-1));
   $("pvNext").addEventListener("click", () => navPreview(1));
   $("pvDelete").addEventListener("click", previewDelete);
+  $("pvMove").addEventListener("click", previewMove);
   $("pvNotSpam").addEventListener("click", previewNotSpam);
-  $("pvUnsub").addEventListener("click", () => unsubscribe(byId(pvId), $("pvUnsub")));
+  $("pvUnsub").addEventListener("click", () => unsubscribe(byId(pvId)));
   $("pvTrust").addEventListener("click", () => { const r = byId(pvId); if (r && r.fromAddress) toggleWhitelistValue(r.fromAddress); });
   $("pvOpen").addEventListener("click", () => { const id = pvId; closePreview(); if (id != null) openMessage(id); });
   $("pvMode").querySelectorAll(".seg-btn").forEach((b) => b.addEventListener("click", () => { pvMode = b.dataset.mode; renderPreviewBody(); }));
@@ -3325,7 +3899,10 @@ function wireEvents() {
   else window.addEventListener("resize", () => renderWindow(true));
 
   document.addEventListener("keydown", onKeyDown);
-  document.addEventListener("mousedown", (e) => { if (!e.target.closest("#ctxMenu")) hideCtx(); });
+  document.addEventListener("mousedown", (e) => {
+    if (!e.target.closest("#ctxMenu")) hideCtx();
+    if (openPopId && !$(openPopId).contains(e.target) && !e.target.closest("#" + POPS[openPopId].btn)) closePop(false);
+  });
   window.addEventListener("blur", hideCtx);
 }
 
@@ -3337,6 +3914,7 @@ async function init() {
   hydrateIcons();
   settings = await loadSettings();
   [scoreCache, listCache] = await Promise.all([loadScoreCache(), loadListCache()]);
+  loadScanStats();
   columnOrder = sanitizeOrder(settings.columnOrder);
   columnWidths = { ...(settings.columnWidths || {}) };
   wireEvents();

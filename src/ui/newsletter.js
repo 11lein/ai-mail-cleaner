@@ -30,7 +30,7 @@ export function safeHttpUrl(v) {
   try {
     const u = new URL(String(v || "").trim());
     if ((u.protocol === "https:" || u.protocol === "http:") && u.href.length <= MAX_URL) return u.href;
-  } catch (_) {}
+  } catch (_) { /* not a URL */ }
   return "";
 }
 
@@ -55,7 +55,7 @@ export function parseMailto(v) {
       const eq = pair.indexOf("=");
       const key = (eq >= 0 ? pair.slice(0, eq) : pair).toLowerCase();
       let val = eq >= 0 ? pair.slice(eq + 1) : "";
-      try { val = decodeURIComponent(val); } catch (_) {}
+      try { val = decodeURIComponent(val); } catch (_) { /* malformed escape: keep it as it is */ }
       if (key === "subject") subject = val;
       else if (key === "body") body = val;
       else if (key === "to") addAddrs(val);

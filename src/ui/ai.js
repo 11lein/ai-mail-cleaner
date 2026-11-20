@@ -7,7 +7,7 @@
  *  - "ollama":   lokales Ollama (/api/chat, /api/tags).
  * LLM-Anbieter bewerten mehrere Mails pro Anfrage (Batch) und antworten mit JSON.
  */
-import { isLocalUrl, isOllayaUrl } from "./settings.js";
+import { isLocalUrl, isOllayaUrl, isInsecureUrl } from "./settings.js";
 import { t } from "./i18n.js";
 
 const DECISION_INSTRUCTIONS =
@@ -139,15 +139,18 @@ export class ApiError extends Error {
 
 function sleep(ms, signal) {
   return new Promise((resolve, reject) => {
-    const t = setTimeout(resolve, ms);
+    const timer = setTimeout(resolve, ms);
     if (signal) {
-      if (signal.aborted) { clearTimeout(t); reject(Object.assign(new Error("aborted"), { name: "AbortError" })); return; }
-      signal.addEventListener("abort", () => { clearTimeout(t); reject(Object.assign(new Error("aborted"), { name: "AbortError" })); }, { once: true });
+      if (signal.aborted) { clearTimeout(timer); reject(Object.assign(new Error("aborted"), { name: "AbortError" })); return; }
+      signal.addEventListener("abort", () => { clearTimeout(timer); reject(Object.assign(new Error("aborted"), { name: "AbortError" })); }, { once: true });
     }
   });
 }
 
 async function request(url, opts = {}) {
+  // every request of the add-on goes through here: never send mail data or a key unencrypted
+  // (http:// only to this computer). Also catches an http:// address saved by an older version.
+  if (isInsecureUrl(url)) throw new ApiError(t("errInsecureUrl", hostOf(url)), 0, "config");
   let res;
   try {
     res = await fetch(url, opts);
@@ -163,7 +166,7 @@ async function request(url, opts = {}) {
       detail = (j.error && (j.error.message || j.error)) || j.message || text;
       // {error: {code, message}} (OpenRouter, jev-style) or {error: "…", code: "…"} (Ollaya)
       code = String(j.code || (j.error && typeof j.error === "object" ? j.error.code : j.error) || "");
-    } catch (_) {}
+    } catch (_) { /* not JSON: the raw text is the detail */ }
     const st = res.status;
     // jev-style serve (and similar local servers) answer 403 to requests from other origins
     if (st === 403 && /^forbidden_(origin|host)$/.test(code)) {
@@ -195,7 +198,9 @@ function fromField(m) {
 function contextLines(meta) {
   if (!meta) return [];
   const pct = (v) => (v == null ? "" : ` (${v}% opened)`);
-  const out = ["Sender in the recipient's address book: " + (meta.known ? "yes" : "no")];
+  const out = [];
+  // known is null without address book access: then say nothing rather than "no"
+  if (meta.known != null) out.push("Sender in the recipient's address book: " + (meta.known ? "yes" : "no"));
   if (meta.senderCount) out.push(`Emails from this sender in the folder: ${meta.senderCount}${pct(meta.senderReadPct)}`);
   if (meta.domainCount && meta.domainCount !== meta.senderCount) out.push(`Emails from this domain in the folder: ${meta.domainCount}${pct(meta.domainReadPct)}`);
   if (meta.junk) out.push("Flagged as junk by Thunderbird's own filter: yes");
@@ -221,7 +226,8 @@ function decisionState(m, snippet, contextFirst) {
 
 function contextFields(meta) {
   if (!meta) return {};
-  const o = { known: Boolean(meta.known) };
+  const o = {};
+  if (meta.known != null) o.known = Boolean(meta.known);
   if (meta.senderCount) { o.sender_mails = meta.senderCount; if (meta.senderReadPct != null) o.sender_opened_pct = meta.senderReadPct; }
   if (meta.domainCount) { o.domain_mails = meta.domainCount; if (meta.domainReadPct != null) o.domain_opened_pct = meta.domainReadPct; }
   if (meta.junk) o.tb_junk = true;
@@ -317,19 +323,23 @@ function contentFrom(d) {
   return typeof r === "string" ? r : (typeof c === "string" ? c : "");
 }
 
+function tryJson(str) {
+  try { return JSON.parse(str); } catch (_) { return null; }
+}
 /** Robust: {"results":[…]}, nacktes Array, {"0":95}, Code-Fences, <think>-Blöcke. */
 export function parseScores(content) {
   const map = new Map();
   let s = String(content || "").replace(/<think>[\s\S]*?<\/think>/gi, "").trim();
   s = s.replace(/^```(?:json)?/i, "").replace(/```\s*$/, "").trim();
-  let data = null;
-  try { data = JSON.parse(s); } catch (_) {
+  // the whole answer as JSON, else the first {…} or […] in it (models like to add prose)
+  let data = tryJson(s);
+  if (!data) {
     const a = s.indexOf("{"), b = s.lastIndexOf("}");
-    if (a >= 0 && b > a) { try { data = JSON.parse(s.slice(a, b + 1)); } catch (_) {} }
-    if (!data) {
-      const c = s.indexOf("["), d = s.lastIndexOf("]");
-      if (c >= 0 && d > c) { try { data = JSON.parse(s.slice(c, d + 1)); } catch (_) {} }
-    }
+    if (a >= 0 && b > a) data = tryJson(s.slice(a, b + 1));
+  }
+  if (!data) {
+    const c = s.indexOf("["), d = s.lastIndexOf("]");
+    if (c >= 0 && d > c) data = tryJson(s.slice(c, d + 1));
   }
   let arr = Array.isArray(data) ? data : data && (data.results || data.scores || data.emails || data.data);
   if (!Array.isArray(arr) && data && typeof data === "object") {
@@ -348,13 +358,19 @@ export function parseScores(content) {
   return map;
 }
 
-async function scoreBatchChat(batch, s, fetchSnippet, signal) {
-  const payload = await Promise.all(batch.map(async (m, i) => {
+/** Runs one request and adds its time to the scan statistics (tm, optional). */
+async function timed(tm, fn) {
+  const t0 = Date.now();
+  try { return await fn(); } finally { if (tm) { tm.reqs++; tm.reqMs += Date.now() - t0; } }
+}
+
+/* snippets: mail text excerpts by batch position (already loaded), or null */
+async function scoreBatchChat(batch, s, snippets, signal, tm) {
+  const payload = batch.map((m, i) => {
     const e = { i, from: fromField(m), subject: m.subject || "" };
-    const sn = await snippetFor(m, s, fetchSnippet);
-    if (sn) e.body = sn;
+    if (snippets && snippets[i]) e.body = snippets[i];
     return { ...e, ...contextFields(m.meta) };
-  }));
+  });
   const messages = [
     { role: "system", content: LLM_SYSTEM },
     { role: "user", content: "Emails:\n" + JSON.stringify(payload) }
@@ -363,13 +379,13 @@ async function scoreBatchChat(batch, s, fetchSnippet, signal) {
   const sentPlain = plainModels.has(key);
   let data;
   try {
-    data = await postJson(endpointFor(s), headersFor(s), chatBody(s, messages, sentPlain), signal);
+    data = await timed(tm, () => postJson(endpointFor(s), headersFor(s), chatBody(s, messages, sentPlain), signal));
   } catch (e) {
     // e.g. "Unsupported value: 'temperature'" or "response_format not supported" → retry without.
     // Decided per request: parallel requests that were already sent with these fields retry too.
     if (sentPlain || !(e && e.kind === "client" && /temperature|response_format|json/i.test(e.message))) throw e;
     plainModels.add(key);
-    data = await postJson(endpointFor(s), headersFor(s), chatBody(s, messages, true), signal);
+    data = await timed(tm, () => postJson(endpointFor(s), headersFor(s), chatBody(s, messages, true), signal));
   }
   const content = contentFrom(data);
   const map = parseScores(content);
@@ -407,7 +423,7 @@ export async function testConnection(s) {
     return { model: data.model || s.aiModel, servedModel: data.model || "", reply: t("testReply", p) };
   }
   const sample = [{ fromName: "Prize Center", fromAddress: "win@lucky-prize.ru", subject: "You have won $1,000,000!" }];
-  const map = await scoreBatchChat(sample, { ...s, scanBody: false });
+  const map = await scoreBatchChat(sample, s, null);
   if (!map.has(0)) throw new ApiError(t("errNoUsableJson"), 0, "parse");
   return { model: s.aiModel, reply: t("testReplySample", map.get(0)) };
 }
@@ -516,9 +532,22 @@ export function estimateCost(info, s, n) {
   return n * (tokensPerMail(s) * info.pricePrompt + outTok * (info.priceCompletion || 0));
 }
 
+/** Parallel requests when the setting is empty ("auto"): a paid decision model on OpenRouter
+ *  answers in a few hundred ms and has no per-minute limit – more requests in flight is what makes
+ *  a scan fast. Free models are throttled anyway; a local server computes one request after the other. */
+export function autoConcurrency(s) {
+  const cloudDecision = s.provider === "decision" && decisionApi(s) === "openrouter" && !isLocalUrl(s.aiBaseUrl);
+  return cloudDecision && !isFreeModel(s) ? 8 : 3;
+}
+/** parallel requests for a scan: the setting (1–10), or automatic */
+export function concurrencyFor(s) {
+  const n = Math.round(Number(s.aiConcurrency) || 0);
+  return n >= 1 ? Math.min(10, n) : autoConcurrency(s);
+}
+
 /** grobe Mails pro Minute (null = unbekannt) */
 export function estimateRate(s) {
-  const conc = Math.max(1, Number(s.aiConcurrency) || 3);
+  const conc = concurrencyFor(s);
   if (isFreeModel(s)) return 19;                       // OpenRouter-Gratislimit ~20/Min.
   if (s.provider === "decision") return conc * 60;     // ~1 Anfrage/s je Verbindung
   const batch = Math.max(1, Number(s.aiBatchSize) || 8);
@@ -529,18 +558,21 @@ export function estimateRate(s) {
 /* ------------------------------------------------------------------ */
 /* Scan                                                                */
 /* ------------------------------------------------------------------ */
-async function snippetFor(m, s, fetchSnippet) {
-  if (!(s.scanBody && typeof fetchSnippet === "function")) return "";
-  const maxChars = Math.max(0, Number(s.bodyChars) || 0);
-  const t = await fetchSnippet(m.id).catch(() => "");
-  return (t || "").slice(0, maxChars);
-}
+/* Mail texts come from Thunderbird (getFull – from the IMAP server unless the folder is offline).
+ * They're loaded ahead in their own queue, so a request slot never waits for the mail server.
+ * getFull always loads the whole message: bigger mails are scored by sender, subject and context
+ * only instead of downloading their attachments (the newsletter check skips them the same way). */
+export const SCAN_TEXT_MAX_SIZE = 3 * 1024 * 1024;
+// mail texts loaded ahead at once (Thunderbird keeps few IMAP connections); a request slot that
+// catches up with the queue loads its own text on top, as before
+const TEXT_CONCURRENCY = 4;
 
 /**
  * Nachrichten bewerten.
- * @param messages Array von { id, fromName, fromAddress, subject }
+ * @param messages Array von { id, fromName, fromAddress, subject, size }
  * @param s        Einstellungen (aktives Profil)
- * @param o        { onProgress(done,total), onResult(id,percent), onFail(id,err), fetchSnippet, signal }
+ * @param o        { onProgress(done,total), onResult(id,percent), onFail(id,err), fetchSnippet, signal,
+ *                   stats – object filled with the scan's timings (live, see below) }
  * @returns { scored, failed, stopped, lastError }
  */
 export async function scoreMessages(messages, s, o = {}) {
@@ -549,10 +581,24 @@ export async function scoreMessages(messages, s, o = {}) {
   const ollaya = isOllayaServer(s);
   assertChatModel(s);
   const batchSize = decision ? 1 : Math.max(1, Math.min(25, Number(s.aiBatchSize) || 8));
-  const concurrency = Math.max(1, Math.min(10, Number(s.aiConcurrency) || 3));
+  const concurrency = concurrencyFor(s);
   const minInterval = isFreeModel(s) ? 3100 : 0;      // Gratis-Modelle: Limit einhalten statt 429
   const url = endpointFor(s);
   const headers = headersFor(s);
+  const wantText = Boolean(s.scanBody) && typeof fetchSnippet === "function";
+  const maxChars = Math.max(0, Number(s.bodyChars) || 0);
+
+  /* Timings – all in ms. reqMs/waitMs/throttleMs add up over the request slots, so their shares
+   * show where a slot spends its time: waiting for mail texts, for the model, or for the free limit. */
+  const st = Object.assign(o.stats || {}, {
+    total: messages.length, done: 0, scored: 0, failed: 0, stopped: false,
+    concurrency, auto: !(Number(s.aiConcurrency) >= 1), batchSize,
+    local: s.provider === "ollama" || isLocalUrl(s.aiBaseUrl), free: isFreeModel(s), withText: wantText,
+    started: Date.now(), ended: 0,
+    reqs: 0, reqMs: 0,                // model requests and their time
+    texts: 0, textMs: 0, big: 0,      // mail texts loaded, their time, big mails scored without text
+    waitMs: 0, throttleMs: 0, retries: 0
+  });
 
   const batches = [];
   for (let i = 0; i < messages.length; i += batchSize) batches.push(messages.slice(i, i + batchSize));
@@ -560,7 +606,7 @@ export async function scoreMessages(messages, s, o = {}) {
   let done = 0, scored = 0, failed = 0, next = 0, stopped = false, lastError = null, hopeless = 0;
   let nextSlot = 0;
   const aborted = () => Boolean(signal && signal.aborted);
-  const local = s.provider === "ollama" || isLocalUrl(s.aiBaseUrl);
+  const local = st.local;
   const localDown = (err) => local && err && err.kind === "network";
 
   async function throttle() {
@@ -568,25 +614,77 @@ export async function scoreMessages(messages, s, o = {}) {
     const now = Date.now();
     const wait = Math.max(0, nextSlot - now);
     nextSlot = Math.max(now, nextSlot) + minInterval;
-    if (wait) await sleep(wait, signal);
+    if (wait) { st.throttleMs += wait; await sleep(wait, signal); }
+  }
+
+  /* text queue: id → Promise<excerpt>, started in scan order up to `ahead` mails past the batch the
+   * slots are working on; taken out of the map once used */
+  const texts = new Map();
+  const ahead = Math.max(8, concurrency * batchSize * 2);
+  let textPos = 0, textActive = 0, consumed = 0;
+  function startText(m) {
+    if (texts.has(m.id)) return texts.get(m.id);
+    let p;
+    if (Number(m.size) > SCAN_TEXT_MAX_SIZE) {
+      st.big++;
+      p = Promise.resolve("");
+    } else {
+      textActive++;
+      const t0 = Date.now();
+      p = Promise.resolve()
+        .then(() => fetchSnippet(m.id))
+        .catch(() => "")
+        .then((txt) => { st.texts++; st.textMs += Date.now() - t0; return String(txt || "").slice(0, maxChars); })
+        .finally(() => { textActive--; pumpTexts(); });
+    }
+    texts.set(m.id, p);
+    return p;
+  }
+  function pumpTexts() {
+    // every batch already taken fetches its own texts – nothing to load ahead once none are left
+    // (also after a stop on an auth error: next jumps to the end)
+    while (wantText && !aborted() && next < batches.length && textActive < TEXT_CONCURRENCY &&
+           textPos < messages.length && textPos < consumed + ahead) {
+      startText(messages[textPos++]);
+    }
+  }
+  /* getFull can't be cancelled – Stop must not wait for it (on a busy IMAP server, e.g. while the
+   * folder reloads, that can take long): leave the wait right away, the load finishes unused */
+  function unlessAborted(p) {
+    if (!signal) return p;
+    return new Promise((resolve, reject) => {
+      const onAbort = () => reject(Object.assign(new Error("aborted"), { name: "AbortError" }));
+      if (signal.aborted) { onAbort(); return; }
+      signal.addEventListener("abort", onAbort, { once: true });
+      p.then(resolve, reject).finally(() => signal.removeEventListener("abort", onAbort));
+    });
+  }
+  async function textsFor(batch) {
+    if (!wantText) return null;
+    const t0 = Date.now();
+    const out = await unlessAborted(Promise.all(batch.map((m) => startText(m))));
+    batch.forEach((m) => texts.delete(m.id));
+    st.waitMs += Date.now() - t0;
+    return out;
   }
 
   async function runBatch(batch) {
+    const snippets = await textsFor(batch);
     for (let attempt = 0; ; attempt++) {
       await throttle();
       try {
         if (decision) {
           const m = batch[0];
-          const snippet = await snippetFor(m, s, fetchSnippet);
-          const { p } = await askDecision(s, decisionState(m, snippet, ollaya), signal, url, headers);
+          const { p } = await timed(st, () => askDecision(s, decisionState(m, snippets ? snippets[0] : "", ollaya), signal, url, headers));
           return new Map(p === null ? [] : [[0, p]]);
         }
-        return await scoreBatchChat(batch, s, fetchSnippet, signal);
+        return await scoreBatchChat(batch, s, snippets, signal, st);
       } catch (err) {
         if (err && err.name === "AbortError") throw err;
         const retryable = err && (err.kind === "rate" || err.kind === "server" || err.kind === "network");
         // a local server that refuses the connection is simply not running – one retry is enough
         if (!retryable || attempt >= (localDown(err) ? 1 : 3)) throw err;
+        st.retries++;
         const wait = err.retryAfter ? err.retryAfter * 1000 : (err.kind === "rate" ? 8000 : 2500) * (attempt + 1);
         await sleep(Math.min(wait, 60000), signal);
       }
@@ -597,6 +695,8 @@ export async function scoreMessages(messages, s, o = {}) {
     while (next < batches.length) {
       if (aborted()) { stopped = true; return; }
       const batch = batches[next++];
+      consumed = Math.min(messages.length, next * batchSize);
+      pumpTexts();
       try {
         const res = await runBatch(batch);
         batch.forEach((m, i) => {
@@ -627,6 +727,7 @@ export async function scoreMessages(messages, s, o = {}) {
       } finally {
         if (!aborted()) {
           done += batch.length;
+          Object.assign(st, { done, scored, failed });
           if (onProgress) onProgress(done, messages.length);
         }
       }
@@ -636,5 +737,7 @@ export async function scoreMessages(messages, s, o = {}) {
   const workers = [];
   for (let i = 0; i < Math.min(concurrency, batches.length); i++) workers.push(worker());
   await Promise.all(workers);
+  texts.clear();
+  Object.assign(st, { done, scored, failed, stopped, ended: Date.now() });
   return { scored, failed, stopped, lastError };
 }

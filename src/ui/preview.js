@@ -86,7 +86,7 @@ function sanitizeMail(html) {
   for (const a of [...doc.querySelectorAll("a[href]")]) {
     const href = a.getAttribute("href") || "";
     let host = "";
-    try { const u = new URL(href); if (/^https?:$/.test(u.protocol)) host = u.hostname.replace(/^www\./, ""); } catch (_) {}
+    try { const u = new URL(href); if (/^https?:$/.test(u.protocol)) host = u.hostname.replace(/^www\./, ""); } catch (_) { /* not a URL: no host tag */ }
     a.removeAttribute("href");
     a.setAttribute("title", t("linkDisabled", href.slice(0, 300)));
     if (host) {

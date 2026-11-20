@@ -1,8 +1,8 @@
 #!/bin/sh
 # Baut das installierbare/hochladbare Paket: dist/ai-mail-cleaner-<version>.xpi
 #   sh scripts/build.sh
-# Die Version kommt aus src/manifest.json. Dev-Dateien (Mock, _dev.html) werden
-# nicht mitgepackt.
+# Die Version kommt aus src/manifest.json. Dev-Dateien (Mock, _dev.html) und die
+# Icon-Quelle icons/icon.svg (nur für scripts/icons.sh) werden nicht mitgepackt.
 set -e
 cd "$(dirname "$0")/.."
 
@@ -18,7 +18,7 @@ done
 mkdir -p dist
 rm -f "$OUT"
 (cd src && zip -q -r -X "../$OUT" . \
-  -x '*.DS_Store' -x 'ui/_dev.html' -x '*/.*' -x '.*')
+  -x '*.DS_Store' -x 'ui/_dev.html' -x 'icons/icon.svg' -x '*/.*' -x '.*')
 
 echo "Built: $OUT"
 unzip -l "$OUT" | tail -n +4 | sed '$d' | sed '$d' | awk '{print "  " $4}'

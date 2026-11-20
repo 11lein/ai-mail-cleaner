@@ -27,6 +27,7 @@ const P = {
   "chevron-down": '<path d="M6 9.5l6 6 6-6"/>',
   check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   x: '<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
   newspaper: '<path d="M4.5 5.5h11v12.5a2 2 0 0 0 2 2H6.5a2 2 0 0 1-2-2z"/><path d="M15.5 9h3.5v9a2 2 0 0 1-2 2"/><path d="M7.5 9h5M7.5 12.5h5M7.5 16h3.5"/>',
   "log-out": '<path d="M9.5 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3.5"/><path d="M15.5 16.5 20 12l-4.5-4.5M20 12H9.5"/>',
   external: '<path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18.5 14v4.5a1.5 1.5 0 0 1-1.5 1.5H5.5A1.5 1.5 0 0 1 4 18.5V7a1.5 1.5 0 0 1 1.5-1.5H10"/>',

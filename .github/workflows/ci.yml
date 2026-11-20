@@ -1,6 +1,7 @@
 # Build and checks for every push to main and every pull request:
-# syntax, versions, translations, package build, addons-linter (the same linter
-# addons.thunderbird.net runs), npm audit – and on pull requests a review of new dependencies.
+# syntax, versions, translations, package build, Mozilla's addons-linter, Thunderbird's
+# webext-linter (the review linter the ATN reviewers run), npm audit – and on pull requests a
+# review of new dependencies.
 name: CI
 
 on:
@@ -46,8 +47,16 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Mozilla's linter (manifest, JS, unsafe HTML); it doesn't know Thunderbird's own permissions
+      # (accountsRead, messagesRead …) and only warns about them
       - name: addons-linter
-        run: npm run lint
+        run: npm run lint:moz
+
+      # Thunderbird's own review linter, the one the ATN reviewers run: unused permissions and
+      # files, Thunderbird API use, cleartext transmission, ESLint code sanity. Fails on anything
+      # that would reject or hold the review; its summary lands on the run's page.
+      - name: Thunderbird add-on linter (webext-linter)
+        run: npm run lint:tb
 
       - name: npm audit (high and critical)
         run: npm audit --audit-level=high
@@ -57,6 +66,15 @@ jobs:
           name: ai-mail-cleaner-xpi
           path: dist/*.xpi
           if-no-files-found: error
+          retention-days: 14
+
+      - name: Upload linter report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: webext-linter-report
+          path: .cache/tb-lint-report.txt
+          if-no-files-found: ignore
           retention-days: 14
 
   dependency-review:

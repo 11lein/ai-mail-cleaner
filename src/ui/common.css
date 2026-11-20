@@ -197,7 +197,7 @@ button.btn-icon.sm { width: 26px; height: 26px; border-radius: 7px; }
 /* ------------------------------------------------------------------ */
 /* Eingaben                                                            */
 /* ------------------------------------------------------------------ */
-input[type="text"], input[type="password"], input[type="number"], input[type="search"],
+input[type="text"], input[type="password"], input[type="number"], input[type="search"], input[type="date"],
 select, textarea {
   height: 34px;
   padding: 0 11px;

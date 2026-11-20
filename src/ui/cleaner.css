@@ -23,8 +23,10 @@ html, body { height: 100%; }
 .tb-sep { width: 1px; height: 18px; background: var(--border-strong); margin: 0 6px; }
 
 .crumb { display: flex; align-items: center; gap: 3px; min-width: 0; overflow: hidden; font-size: 13px; }
-.crumb-part { color: var(--muted); white-space: nowrap; }
-.crumb-cur { color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* when space runs short the account/parent parts shrink first – the current folder stays readable */
+.crumb-part { color: var(--muted); white-space: nowrap; min-width: 0; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
+.crumb-cur { color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex-shrink: 0; max-width: 100%; }
+.crumb .crumb-sep { flex-shrink: 0; }
 .crumb-sep { color: var(--faint); }
 
 .search { position: relative; display: flex; align-items: center; }
@@ -87,6 +89,20 @@ html, body { height: 100%; }
   font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--text) 8%, transparent); color: var(--text-2);
 }
+/* split chip: main part switches the shown filter on, the caret opens the other spam filters */
+.chip-split { display: inline-flex; border-radius: 8px; }
+.chip-split .chip { border-radius: 8px 0 0 8px; padding-right: 8px; }
+.chip-split .chip-caret { border-radius: 0 8px 8px 0; padding: 0 7px; color: var(--muted); }
+.chip-split.active { background: var(--raised); box-shadow: var(--shadow-sm); }
+.chip-split.active .chip { color: var(--text); }
+.chip-split.active .chip-caret { box-shadow: inset 1px 0 0 var(--border); }
+.d-range { background: linear-gradient(90deg, hsl(140 60% 45%), hsl(45 90% 50%), hsl(0 75% 55%)); }
+.chip .chev { color: var(--muted); margin-left: -2px; }
+/* custom ranges ("Mar 3 – Apr 15, 2026") must not push the other filters away */
+.date-label { max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chip.active > .ico-wrap:first-child { color: var(--accent); }
+/* newsletter filter still checking mails: the icon pulses */
+.chip.busy > .ico-wrap:first-child { animation: pulse 1.2s ease-in-out infinite; }
 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .d-high { background: #e5484d; }
 .d-mid { background: #f59e0b; }
@@ -469,12 +485,15 @@ tbody tr:hover .rowdel, tbody tr.focus .rowdel { opacity: 1; }
   font-size: 11.5px; color: var(--muted); flex-shrink: 0;
 }
 #statusText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.model-split { display: inline-flex; align-items: center; gap: 1px; min-width: 0; max-width: 50%; flex-shrink: 1; }
 .model-chip {
   height: 22px; padding: 0 8px; gap: 5px; border: 0; box-shadow: none; border-radius: 6px;
-  background: transparent; color: var(--muted); font-size: 11.5px; font-weight: 500; max-width: 50%;
+  background: transparent; color: var(--muted); font-size: 11.5px; font-weight: 500; min-width: 0;
 }
 .model-chip:hover:not(:disabled) { background: var(--surface-2); color: var(--text); }
 #modelChipText { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.model-stats { flex-shrink: 0; padding: 0 6px; }
+.model-stats[aria-expanded="true"] { background: var(--surface-2); color: var(--text); }
 
 /* ================================================================== */
 /* Dialoge                                                             */
@@ -488,6 +507,7 @@ tbody tr:hover .rowdel, tbody tr.focus .rowdel { opacity: 1; }
 }
 #confirmBackdrop { z-index: 120; }
 #pickerBackdrop { z-index: 110; }
+#moveBackdrop { z-index: 110; } /* also opens on top of the preview */
 .modal-backdrop:not(.hidden) { animation: fadeIn 0.16s ease-out; }
 .modal-backdrop:not(.hidden) > .modal, .modal-backdrop:not(.hidden) > .preview { animation: popIn 0.22s var(--ease); }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -604,14 +624,31 @@ details.adv summary { cursor: pointer; font-size: 12.5px; font-weight: 650; colo
 .pk-msg code { font-size: 12px; }
 
 /* Bestätigung */
-.modal-confirm { width: 480px; }
+.modal-confirm { width: 520px; }
 .cf-body { font-size: 13px; line-height: 1.55; color: var(--text-2); }
 .cf-body p { margin: 0 0 10px; }
 .cf-list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
 .cf-list li { display: flex; gap: 10px; align-items: flex-start; }
 .cf-list .ico-wrap, .cf-list .ico { color: var(--muted); margin-top: 1px; }
 .cf-warn { color: var(--warn); font-weight: 600; }
-.cf-buttons { display: flex; gap: 8px; }
+/* unsubscribe dialog: the way (radio cards when there are two) and the clean-up box */
+.unsub-ways { display: grid; gap: 6px; margin: 4px 0 12px; }
+.unsub-way {
+  display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px;
+  border: 1px solid var(--border); border-radius: 10px; background: var(--surface); cursor: pointer;
+}
+.unsub-way input { margin-top: 2px; flex-shrink: 0; }
+.unsub-way > .ico { margin-top: 1px; color: var(--muted); }
+/* .on instead of :has(input:checked) – Thunderbird 115 doesn't know :has() */
+.unsub-ways[role="radiogroup"] .unsub-way.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 7%, var(--surface)); }
+.unsub-ways[role="radiogroup"] .unsub-way.on > .ico { color: var(--accent); }
+.unsub-way:only-child { cursor: default; }
+.uw-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.uw-text b { font-weight: 600; color: var(--text); }
+.uw-sub { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.cf-check { display: flex; align-items: flex-start; gap: 9px; cursor: pointer; color: var(--text); }
+.cf-check input { margin-top: 2px; flex-shrink: 0; }
+.cf-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 
 /* Hilfe */
 .modal-help { width: 480px; }
@@ -699,10 +736,48 @@ dl.keys dd { margin: 0; color: var(--text-2); }
 .ctx button.danger-item .ico { color: var(--danger-text); }
 .ctx .sep { height: 1px; margin: 4px 6px; background: var(--border); }
 
+/* filter popups (spam filter, date) */
+/* fixed widths: date inputs and the slider would otherwise stretch a shrink-to-fit popup */
+.date-pop { width: 340px; max-width: calc(100vw - 16px); }
+.spam-pop { width: 290px; max-width: calc(100vw - 16px); }
+.pop .dp-check { visibility: hidden; color: var(--accent); }
+.pop button.active .dp-check { visibility: visible; }
+.pop button.active { font-weight: 600; }
+.dp-hint { font-size: 11.5px; color: var(--muted); font-weight: 450; }
+.sp-range { height: auto; padding: 2px 10px 8px 36px; gap: 10px; }
+.sp-range .range { flex: 1; width: auto; }
+.dp-count {
+  margin-left: auto; padding-left: 12px;
+  font-size: 11.5px; font-weight: 550; font-variant-numeric: tabular-nums; color: var(--muted);
+}
+.dp-custom { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; padding: 2px 10px 8px; }
+.dp-field { display: flex; flex-direction: column; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--text-2); }
+.dp-field input { width: 100%; min-width: 0; height: 30px; padding: 0 8px; font-size: 12.5px; }
+
+/* scan statistics (status bar) */
+.stats-pop { width: 360px; max-width: calc(100vw - 16px); padding: 10px 12px 12px; }
+.stats-pop:focus { outline: none; }
+.st-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.st-title { font-size: 13px; font-weight: 650; color: var(--text); }
+.st-when { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+.st-grid { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 5px 14px; margin: 0; font-size: 12px; line-height: 1.4; }
+.st-grid dt { color: var(--muted); white-space: nowrap; }
+.st-grid dd { margin: 0; color: var(--text); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.st-verdict {
+  display: flex; gap: 8px; margin-top: 10px; padding: 8px 10px; border-radius: 8px;
+  background: var(--surface-2); font-size: 12px; line-height: 1.45; color: var(--text-2);
+}
+.st-verdict .ico { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+.st-empty { margin: 0; font-size: 12px; line-height: 1.5; color: var(--muted); }
+
 /* ================================================================== */
 /* Schmale Fenster                                                     */
 /* ================================================================== */
-@media (max-width: 1180px) { .filter { display: none; } }
+/* date/newsletter chips: icons only while inactive; an active date range keeps its (shorter) label */
+@media (max-width: 900px) {
+  .scope-filters .chip:not(.active) .chip-text { display: none; }
+  .scope-filters .date-label { max-width: 120px; }
+}
 @media (max-width: 860px) { .search input { width: 170px; } .brand-name { display: none; } .pv-keys { display: none; } }
 
 /* ================================================================== */

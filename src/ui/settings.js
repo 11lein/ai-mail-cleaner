@@ -105,7 +105,7 @@ function defaultProfiles() {
 }
 
 export const DEFAULT_SETTINGS = {
-  schema: 4,
+  schema: 5,
   provider: "decision",
   profiles: defaultProfiles(),
   keys: {},                      // API-Schlüssel je Host (inkl. Port), verschleiert abgelegt
@@ -115,11 +115,12 @@ export const DEFAULT_SETTINGS = {
   aiBaseUrl: PROVIDERS.decision.baseUrl,
   aiApiKey: "",
   aiModel: PROVIDERS.decision.model,
-  aiConcurrency: 3,              // parallele Anfragen
+  aiConcurrency: 0,              // parallele Anfragen (0 = automatisch je nach Modell, siehe ai.js autoConcurrency)
   aiBatchSize: 8,                // Mails pro Anfrage (nur LLM-Anbieter)
   loadLimit: 5000,
   scanBody: true,                // zusätzlich einen Mail-Textausschnitt mitbewerten
   sendContext: true,             // Kontext mitsenden: Adressbuch, Anzahl Mails vom Absender, Öffnungsquote
+  contactsAsked: false,          // optionaler Adressbuch-Zugriff beim ersten Scan mit Kontext schon erfragt?
   bodyChars: 1500,               // max. Zeichen des Ausschnitts pro Mail
   detectNewsletters: true,       // sichtbare Mails auf List-Unsubscribe prüfen (lokal)
   includeSubfolders: false,      // Ordner inkl. Unterordner laden/scannen
@@ -144,6 +145,16 @@ export function isLocalUrl(url) {
   } catch (_) {
     return false;
   }
+}
+
+/** Would this address send data unencrypted over the network? Only https:// is allowed – plain
+ *  http:// only to a server on this computer (loopback, see isLocalUrl), where nothing leaves it.
+ *  ws://, ftp:// etc. are refused too. Not a URL at all: false (reported elsewhere). */
+export function isInsecureUrl(url) {
+  let u;
+  try { u = new URL(String(url || "").trim()); } catch (_) { return false; }
+  if (u.protocol === "https:") return false;
+  return !(u.protocol === "http:" && isLocalUrl(u.href));
 }
 
 /* ------------------------------------------------------------------ */
@@ -255,7 +266,10 @@ function migrate(s, raw) {
 export async function loadSettings() {
   const stored = await messenger.storage.local.get("settings");
   const raw = stored.settings || {};
-  const s = { ...DEFAULT_SETTINGS, ...raw, schema: 4 };
+  const s = { ...DEFAULT_SETTINGS, ...raw, schema: 5 };
+  // up to 2.5.x every saved profile carried the old default of 3 parallel requests – make it
+  // automatic (8 for cloud decision models, otherwise 3); other values were chosen on purpose
+  if ((Number(raw.schema) || 0) < 5 && Number(raw.aiConcurrency) === 3) s.aiConcurrency = 0;
   s.keys = mapKeys(raw.keys, deobfuscate);          // im Speicher immer Klartext
   // up to 2.2.x the key sat in each profile: move it to its server
   if (raw.profiles && typeof raw.profiles === "object") {
