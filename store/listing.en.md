@@ -4,50 +4,57 @@
 AI Mail Cleaner
 
 ## Summary (max. 250 characters)
-Clean out your mailbox with AI: every mail gets a spam probability, newsletters are recognized and unsubscribed with one click. Group by domain, filter, trash thousands at once – with undo. Cloud or fully local (Ollaya, Ollama).
+Helps you clear out a crowded mailbox: every mail gets a spam score from 0 to 100%, newsletters can be unsubscribed right there, and whatever can go is moved to the trash in bulk. Works with cloud models or locally.
 
 ## Description
 
-**AI Mail Cleaner** helps you clean out large mailboxes. Instead of looking at mails one by one,
-every mail gets a **spam probability from 0 to 100 %** and newsletters get a **Newsletter** tag –
-so you can tidy up with confidence.
+I built this add-on to clean up my own mailbox. It helps me, so I'm sharing it here in case it's
+useful to you too.
+
+What bothered me: newsletters I never unsubscribed from, ads, and spam that got past the filter.
+Going through all that one mail at a time takes forever. Now a model does the first pass and I
+only make the decisions.
 
 **How it works**
-1. Choose **Decision model** or **Language model** and a provider – a note below the list says
-   how to set it up.
-2. Pick a folder. Headers load quickly, even for thousands of mails.
-3. Click “Scan”. Decision models and local models start right away; for paid cloud language
-   models you first see the expected duration, the cost and which data is sent.
-4. Filter to “Spam ≥ 80 %” and move everything to the trash. **Undo** is one click away.
-5. Newsletters you no longer read: click the tag to unsubscribe.
 
-**Features**
-- Spam scoring via a **decision model** – calibrated classifiers such as Jev or Span-01 on
-  OpenRouter (free tier available), or **fully local** with **Ollaya**, LM Studio or a jev-style
-  server – or via a **language model** from any OpenAI-compatible provider (OpenAI, Groq,
-  Mistral …) or locally with LM Studio or **Ollama**. Locally, no mail ever leaves your computer.
-- One API key per provider, kept when you switch back and forth
-- **Newsletter detection** (List-Unsubscribe header or a note in the text) with **one-click
-  unsubscribe**: opens the unsubscribe page, or a ready-made unsubscribe email draft. Warns you
-  before unsubscribing from spam.
-- Model picker with price, estimated cost per 1,000 mails, context length and model size
-- **Context-aware**: knows whether the sender is in your address book and how many of their mails you open
-- After unsubscribing: move all mails of that newsletter to the trash in one click
-- Filter the list by sender or domain; clear the cache to scan again
-- Group by **domain** or **sender** with average spam score; select or delete whole groups
-- Filter chips and a spam range slider, search, sortable and reorderable columns
-- 📎 Attachment indicator, safe preview (no trackers, no remote images, phishing hints on links)
-- Trusted senders and domains: never treated as spam, never sent
-- Move to folders, including newly created ones
-- Keyboard control, context menu, light and dark mode
+Pick a folder and the add-on lists all its mails. Click "Scan" and it sends the sender, the
+subject and, if you like, a short excerpt of each mail to a model, which returns a spam score from
+0 to 100%. Then filter on "Spam ≥ 80%", take a quick look and move it all to the trash. If you
+got something wrong, there's Undo.
+
+Newsletters are recognized by their List-Unsubscribe header or the unsubscribe note in the text.
+Clicking the Newsletter tag opens a small dialog: unsubscribe on the website or by email, and, if
+you want, move all older mails from that newsletter to the trash as well. If the mail looks like
+spam, the add-on advises against unsubscribing, since that often just confirms your address
+exists.
+
+**Which model?**
+
+I use Jev via OpenRouter myself: fast, and a fraction of a cent per mail. Span-01-lite is free but
+manages only about 20 mails a minute. If you'd rather not send any mail out, everything can run
+locally with Ollaya, LM Studio or Ollama. Regular language models from OpenAI, Mistral, Groq and
+others work too.
+
+If you want, the model also gets a bit of context: whether the sender is in your address book, how
+many of their mails are in the folder and how many of those you opened. That helps with mails that
+look harmless on their own but come from someone you never read.
+
+**Also**
+- groups by domain or sender; select or trash whole groups
+- filters for date range and newsletters only, plus search
+- senders and domains you trust are never scored and never sent anywhere
+- preview without remote images or trackers
+- model picker with price and estimated cost per 1,000 mails
+- move to folders, keyboard shortcuts, light and dark mode
 - English, German and Spanish
 
 **Privacy**
-No developer server, no telemetry. Sender, subject and an optional short text excerpt are sent
-**only when you scan** and **only to the provider you chose**. Newsletter detection runs locally.
-Your API key stays local. Delete always moves to the trash.
 
-Source code and issue tracker: GitHub (link below).
+There's no server of mine involved, no telemetry and no ads. Data only leaves your computer when
+you scan, and only to the provider you set up yourself. With a local model nothing leaves at all.
+Nothing is ever deleted permanently; everything goes to the trash.
+
+The source code is open (MIT license) and on GitHub. Bug reports and ideas are welcome.
 
 ## Category
 Message and News Reading (alternatively: Privacy and Security)

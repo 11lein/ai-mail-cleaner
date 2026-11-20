@@ -25,15 +25,18 @@ sender of the scanned mail is included.
   `api.groq.com`); their privacy policies apply.
 - **Ollaya / Ollama / LM Studio / Jev-Style server (local):** requests go to `localhost` /
   `127.0.0.1` – **nothing leaves your computer**.
+- **Always encrypted:** requests to a provider use HTTPS. Plain `http://` is accepted only for a
+  server on your own computer (`localhost`, `127.0.0.1`, `::1`); for any other address the add-on
+  refuses it and sends nothing.
 
 Trusted senders (whitelist) are **never** sent or scored. The mail preview loads **no** remote
 content (images, trackers, fonts).
 
 ## Newsletters and unsubscribing
 
-- **Detection** reads the visible mails (headers and text) from **your own mail server** – nothing
-  is sent to anyone.
-- **Unsubscribing** only happens when you click. Depending on the newsletter it either opens the
+- **Detection** reads the visible mails (headers and text) – with the *Newsletters* filter on, all
+  mails in the chosen range – from **your own mail server**. Nothing is sent to anyone.
+- **Unsubscribing** only happens when you click. Depending on the newsletter and your choice it either opens the
   unsubscribe page **in your browser** (your browser then contacts the newsletter sender) or opens
   a **draft** in Thunderbird that you check and send yourself. The add-on never sends mail on its own.
 
@@ -43,6 +46,7 @@ In Thunderbird's `storage.local` (stays on your computer, **not** synced):
 - settings (provider, base URL, model, whitelist, columns)
 - the API key, **obfuscated** (not real encryption, see README)
 - spam scores and newsletter info per Message-ID, so mails are not processed again
+- timings of the last scan for the statistics next to the model (counts and durations, no mail content)
 
 Thunderbird deletes this data when the add-on is removed.
 
@@ -50,7 +54,6 @@ Thunderbird deletes this data when the add-on is removed.
 
 - **Read accounts, folders and messages / move / delete:** to show, score and clean up. Delete
   moves to the trash.
-- **Compose:** only to open unsubscribe drafts when you ask for it.
 - **Address books (read):** only to check whether a sender is a known contact (see above).
 - **`https://openrouter.ai/*`:** default provider.
 - **Optional: access to other websites:** requested only when you use another provider (or
@@ -74,18 +77,19 @@ Telemetrie, keine Analyse, keine Werbung.
 optional ein gekürzter Textausschnitt (Standard 1.500 Zeichen), optional Kontext (Absender im
 Adressbuch ja/nein, Anzahl seiner Mails im Ordner und wie viele geöffnet, Junk-Markierung von
 Thunderbird – das Adressbuch selbst wird nie gesendet) sowie dein API-Schlüssel als
-`Authorization`-Header. Mit Ollaya, Ollama, LM Studio oder einem lokalen Jev-Style-Server bleibt alles lokal. Vertrauenswürdige
+`Authorization`-Header – immer verschlüsselt per HTTPS; unverschlüsseltes `http://` nimmt das Add-on
+nur für einen Server auf deinem eigenen Rechner an (`localhost`). Mit Ollaya, Ollama, LM Studio oder einem lokalen Jev-Style-Server bleibt alles lokal. Vertrauenswürdige
 Absender werden nie gesendet. Die Vorschau lädt keine externen Inhalte.
 
-**Newsletter:** Die Erkennung liest die sichtbaren Mails von deinem eigenen Mailserver – es wird
-nichts gesendet. Abgemeldet wird nur auf Klick: Die Abmeldeseite öffnet sich in deinem Browser,
+**Newsletter:** Die Erkennung liest die sichtbaren Mails – bei aktivem Newsletter-Filter alle Mails
+im gewählten Zeitraum – von deinem eigenen Mailserver. Es wird nichts gesendet. Abgemeldet wird nur auf Klick: Die Abmeldeseite öffnet sich in deinem Browser,
 oder es öffnet sich ein Entwurf, den du selbst prüfst und sendest.
 
 **Lokal gespeichert** (`storage.local`, nicht synchronisiert): Einstellungen, der API-Schlüssel
-(verschleiert, keine echte Verschlüsselung), Spam-Bewertungen und Newsletter-Infos je Message-ID.
+(verschleiert, keine echte Verschlüsselung), Spam-Bewertungen und Newsletter-Infos je Message-ID, die Zeiten des letzten Scans (Anzahlen und Dauer, kein Mailinhalt).
 
 **Berechtigungen:** Konten/Ordner/Nachrichten lesen, verschieben, löschen (= Papierkorb);
-Verfassen nur für Abmelde-Entwürfe; `openrouter.ai`; andere Hosts erst bei Benutzung; nur für
+`openrouter.ai`; andere Hosts erst bei Benutzung; nur für
 Ollaya und Ollama optional `webRequest`, um bei den eigenen Anfragen an sie den `Origin`-Header auf
 die Adresse des Servers zu setzen (sonst lehnen beide Add-ons ab) – sonst wird nichts gelesen oder geändert.
 
@@ -98,17 +102,18 @@ sin telemetría, sin analítica y sin publicidad.
 remitente, asunto, opcionalmente un extracto acortado del texto (1500 caracteres por defecto),
 opcionalmente contexto (si el remitente está en tu libreta sí/no, cuántos correos suyos hay en la
 carpeta y cuántos se abrieron, la marca de correo basura de Thunderbird; la libreta en sí nunca se
-envía) y tu clave de API como cabecera `Authorization`. Con Ollaya, Ollama, LM Studio o un servidor Jev-Style local todo queda en local.
+envía) y tu clave de API como cabecera `Authorization`, siempre cifrado por HTTPS (el complemento solo
+acepta `http://` sin cifrar para un servidor en tu propio ordenador, `localhost`). Con Ollaya, Ollama, LM Studio o un servidor Jev-Style local todo queda en local.
 Los remitentes de confianza nunca se envían. La vista previa no carga contenido externo.
 
-**Boletines:** la detección lee los correos visibles de tu propio servidor de correo; no se envía
-nada. La baja solo ocurre al hacer clic: se abre la página de baja en tu navegador o un borrador que
+**Boletines:** la detección lee los correos visibles (con el filtro de boletines activo, todos los
+del periodo elegido) de tu propio servidor de correo; no se envía nada. La baja solo ocurre al hacer clic: se abre la página de baja en tu navegador o un borrador que
 revisas y envías tú mismo.
 
 **Guardado en local** (`storage.local`, sin sincronizar): ajustes, la clave de API (ofuscada, no es
-cifrado real), puntuaciones de spam e información de boletines por Message-ID.
+cifrado real), puntuaciones de spam e información de boletines por Message-ID, y los tiempos del último análisis (cantidades y duraciones, sin contenido de correos).
 
-**Permisos:** leer cuentas/carpetas/mensajes, mover, eliminar (= papelera); redactar solo para
-borradores de baja; `openrouter.ai`; otros hosts solo al usarlos; solo para Ollaya y Ollama,
+**Permisos:** leer cuentas/carpetas/mensajes, mover, eliminar (= papelera);
+`openrouter.ai`; otros hosts solo al usarlos; solo para Ollaya y Ollama,
 `webRequest` opcional para fijar la cabecera `Origin` de las propias solicitudes a ellos en la
 dirección del servidor (si no, ambos rechazan los complementos); no se lee ni se cambia nada más.

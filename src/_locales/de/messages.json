@@ -44,9 +44,6 @@
   "baseUrl": {
     "message": "API-Basis-URL"
   },
-  "batchHint": {
-    "message": "(KI/Lokal)"
-  },
   "batchSize": {
     "message": "Mails pro Anfrage"
   },
@@ -167,6 +164,12 @@
   "collapse": {
     "message": "Zuklappen"
   },
+  "concAutoPh": {
+    "message": "Auto ($1)"
+  },
+  "concAutoTitle": {
+    "message": "Leer lassen = automatisch: $1 für dieses Modell (8 bei bezahlten Decision-Modellen über OpenRouter, sonst 3). Höchstens 10."
+  },
   "concurrency": {
     "message": "Parallele Anfragen"
   },
@@ -245,8 +248,38 @@
   "customUrl": {
     "message": "Eigene URL …"
   },
-  "dateRange": {
-    "message": "Vom $1 bis $2"
+  "dateAll": {
+    "message": "Alle Zeiten"
+  },
+  "dateCustom": {
+    "message": "Eigener Zeitraum"
+  },
+  "dateFromLbl": {
+    "message": "Von"
+  },
+  "dateLast24h": {
+    "message": "Letzte 24 Stunden"
+  },
+  "dateLastMonth": {
+    "message": "Letzter Monat"
+  },
+  "dateLastWeek": {
+    "message": "Letzte Woche"
+  },
+  "dateLastYear": {
+    "message": "Letztes Jahr"
+  },
+  "dateSince": {
+    "message": "Ab $1"
+  },
+  "dateTitle": {
+    "message": "Nach Zeitraum filtern"
+  },
+  "dateToLbl": {
+    "message": "Bis"
+  },
+  "dateUntil": {
+    "message": "Bis $1"
   },
   "deleteFailed": {
     "message": "Löschen fehlgeschlagen: $1"
@@ -255,7 +288,7 @@
     "message": "Newsletter erkennen"
   },
   "detectNewslettersHint": {
-    "message": "Prüft die sichtbaren Mails auf Abmelde-Informationen (List-Unsubscribe-Header oder Hinweis im Text) und zeigt ein „Newsletter“-Etikett. Liest nur von deinem Mailserver – nichts wird irgendwohin gesendet."
+    "message": "Prüft die sichtbaren Mails auf Abmelde-Informationen (List-Unsubscribe-Header oder Hinweis im Text) und zeigt ein „Newsletter“-Etikett – bei aktivem Newsletter-Filter alle Mails im Zeitraum. Liest nur von deinem Mailserver – nichts wird irgendwohin gesendet."
   },
   "dismiss": {
     "message": "Hinweis schließen"
@@ -272,8 +305,14 @@
   "durHardware": {
     "message": "Dauer: hängt von deiner Hardware ab"
   },
+  "durMS": {
+    "message": "$1 Min. $2 s"
+  },
   "durMin": {
     "message": "$1 Min."
+  },
+  "durSec": {
+    "message": "$1 s"
   },
   "durUnder1": {
     "message": "unter 1 Min."
@@ -288,7 +327,7 @@
     "message": "Ordner ist leer"
   },
   "emptyNoMatchHint": {
-    "message": "Nichts passt zu Suche, Gruppe oder Spam-Filter."
+    "message": "Nichts passt zu Suche und Filtern."
   },
   "emptyNoMatchTitle": {
     "message": "Keine Treffer"
@@ -310,6 +349,9 @@
   },
   "errEmptyReply": {
     "message": "Das Modell hat leer geantwortet (ist es ein Text-Modell?)."
+  },
+  "errInsecureUrl": {
+    "message": "Unverschlüsselt (http://) nur zu diesem Rechner (localhost) – für $1 bitte https:// eintragen."
   },
   "errLocalOrigin": {
     "message": "Der lokale Server unter $1 lehnt Anfragen von Thunderbird ab (neuere jev-style-Versionen tun das standardmäßig). Mit der Option --allow-any-host starten."
@@ -464,6 +506,9 @@
   "helpBrowse": {
     "message": "In der Vorschau blättern"
   },
+  "helpDate": {
+    "message": "Kalender: nur Mails aus einem Zeitraum zeigen"
+  },
   "helpDelete": {
     "message": "In den Papierkorb (mit Rückgängig)"
   },
@@ -479,6 +524,12 @@
   "helpHint": {
     "message": "Rechtsklick auf eine Mail öffnet ein Menü mit allen Aktionen. Gelöschte Mails landen im Papierkorb und lassen sich kurz danach über „Rückgängig“ zurückholen."
   },
+  "helpMove": {
+    "message": "In einen Ordner verschieben (der zuletzt benutzte ist vorausgewählt)"
+  },
+  "helpNlOnly": {
+    "message": "Newsletter: nur als Newsletter erkannte Mails zeigen"
+  },
   "helpNotSpam": {
     "message": "In der Vorschau: kein Spam & weiter"
   },
@@ -490,6 +541,9 @@
   },
   "helpSelect": {
     "message": "Mail wählen (Shift erweitert den Bereich)"
+  },
+  "helpStats": {
+    "message": "Uhr neben dem Modell unten rechts: wie lange der letzte Scan gedauert hat und wo die Zeit hingeht"
   },
   "helpTitle": {
     "message": "Tastenkürzel & Hilfe (?)"
@@ -520,9 +574,6 @@
   },
   "jevHint": {
     "message": "Einmal installieren: `pip install \"jev-style[mlx]\"` (Apple Silicon) oder `pip install \"jev-style[torch]\"`, dann starten: `$2`. Führt das aktuelle Jev-Style 0.8B v3 aus (mit `--release 2b` das 2B v4). Das Add-on erwartet ihn unter $1 – ein anderer Port gehört unter „Erweitert“ (z. B. `http://127.0.0.1:8766`)."
-  },
-  "keepThem": {
-    "message": "Behalten"
   },
   "keyDel": {
     "message": "Entf"
@@ -706,6 +757,30 @@
   },
   "nextTitle": {
     "message": "Nächste (→)"
+  },
+  "nlCheckingHint_one": {
+    "message": "Noch $1 Mail zu prüfen. Gelesen wird nur von deinem Mailserver – nichts wird irgendwohin gesendet."
+  },
+  "nlCheckingHint_other": {
+    "message": "Noch $1 Mails zu prüfen. Gelesen wird nur von deinem Mailserver – nichts wird irgendwohin gesendet."
+  },
+  "nlCheckingTitle": {
+    "message": "Suche Newsletter …"
+  },
+  "nlChecking_one": {
+    "message": "Suche Newsletter – noch $1 Mail"
+  },
+  "nlChecking_other": {
+    "message": "Suche Newsletter – noch $1 Mails"
+  },
+  "nlOnly": {
+    "message": "Newsletter"
+  },
+  "nlOnlyOffTitle": {
+    "message": "Wieder alle Mails anzeigen"
+  },
+  "nlOnlyTitle": {
+    "message": "Nur Newsletter anzeigen"
   },
   "noAccounts": {
     "message": "Keine Konten/Ordner gefunden."
@@ -905,6 +980,9 @@
   "providerLabel": {
     "message": "Anbieter"
   },
+  "pvMoveTitle": {
+    "message": "In einen anderen Ordner verschieben und weiter (M)"
+  },
   "pvTrustTitle": {
     "message": "Absender-Adresse dauerhaft vertrauen (nie Spam)"
   },
@@ -1100,11 +1178,20 @@
   "sortSize": {
     "message": "Kleinste zuerst"
   },
+  "spamCustom": {
+    "message": "Eigener Bereich"
+  },
   "spamFilter": {
     "message": "Spam-Filter"
   },
+  "spamMoreTitle": {
+    "message": "Weitere Spam-Filter: unsicher, unbewertet, eigener Bereich"
+  },
   "spamProbTitle": {
     "message": "Spam-Wahrscheinlichkeit $1"
+  },
+  "spamRangeChip": {
+    "message": "Spam $1–$2 %"
   },
   "srcHintCustom": {
     "message": "Jeder Server mit OpenAI-kompatibler Chat-API (z. B. llama-server, vLLM) – Adresse unter „Erweitert“ eintragen."
@@ -1141,6 +1228,93 @@
   },
   "srcHintTogether": {
     "message": "Viele offene Modelle, abgerechnet pro Token."
+  },
+  "statsAuto": {
+    "message": "(automatisch)"
+  },
+  "statsAvg": {
+    "message": "Ø $1"
+  },
+  "statsBig_one": {
+    "message": "$1 große Mail ohne Text"
+  },
+  "statsBig_other": {
+    "message": "$1 große Mails ohne Text"
+  },
+  "statsBtnTitle": {
+    "message": "Scan-Statistik: Dauer und wo die Zeit hingeht"
+  },
+  "statsEmpty": {
+    "message": "Noch kein Scan. Danach steht hier, wie lange er gedauert hat und wo die Zeit hingeht."
+  },
+  "statsFailed_one": {
+    "message": "$1 fehlgeschlagen"
+  },
+  "statsFailed_other": {
+    "message": "$1 fehlgeschlagen"
+  },
+  "statsMailsLbl": {
+    "message": "Mails"
+  },
+  "statsModelLbl": {
+    "message": "Modell"
+  },
+  "statsNoText": {
+    "message": "aus – nur Absender, Betreff und Kontext"
+  },
+  "statsParallelLbl": {
+    "message": "Parallele Anfragen"
+  },
+  "statsPerMin": {
+    "message": "$1 Mails/Min."
+  },
+  "statsPerReq_one": {
+    "message": "je $1 Mail"
+  },
+  "statsPerReq_other": {
+    "message": "je $1 Mails"
+  },
+  "statsPerSec": {
+    "message": "$1 Mails/s"
+  },
+  "statsReqLbl": {
+    "message": "Antwort des Modells"
+  },
+  "statsRunning": {
+    "message": "läuft …"
+  },
+  "statsScored_one": {
+    "message": "$1 bewertet"
+  },
+  "statsScored_other": {
+    "message": "$1 bewertet"
+  },
+  "statsSlowFree": {
+    "message": "Gebremst hat das Limit für Gratis-Modelle (etwa 19 Mails pro Minute). Bezahlte Modelle haben es nicht."
+  },
+  "statsSlowLocal": {
+    "message": "Gebremst hat die Rechenzeit des Modells auf diesem Rechner."
+  },
+  "statsSlowMail": {
+    "message": "Gebremst hat das Laden der Mails vom Mailserver: $1 der Zeit warteten die Anfragen auf Mailtexte. Liegen die Mails offline vor (Konten-Einstellungen → Synchronisation & Speicherplatz), geht es schneller."
+  },
+  "statsSlowModel": {
+    "message": "Gebremst hat die Antwortzeit des Modells. Mehr parallele Anfragen (Einstellungen → Erweitert) machen den Scan schneller."
+  },
+  "statsSlowModelMax": {
+    "message": "Gebremst hat die Antwortzeit des Modells."
+  },
+  "statsStopped": {
+    "message": "abgebrochen"
+  },
+  "statsTextLbl": {
+    "message": "Mailtext laden"
+  },
+  "statsTimeLbl": {
+    "message": "Dauer"
+  },
+  "statsTitle": {
+    "message": "Letzter Scan"
   },
   "statusMoving_one": {
     "message": "Verschiebe $1 Mail …"
@@ -1263,7 +1437,7 @@
     "message": "In den Papierkorb (Entf)"
   },
   "trashInstead": {
-    "message": "Lieber in den Papierkorb"
+    "message": "In den Papierkorb"
   },
   "trashNextTitle": {
     "message": "In den Papierkorb und weiter (Entf)"
@@ -1322,14 +1496,14 @@
   "unscoredLower": {
     "message": "unbewertet"
   },
+  "unsubAlsoTrash_one": {
+    "message": "Danach die Mail in den Papierkorb legen"
+  },
+  "unsubAlsoTrash_other": {
+    "message": "Danach alle $1 Mails dieses Newsletters in den Papierkorb legen"
+  },
   "unsubAnyway": {
     "message": "Trotzdem abmelden"
-  },
-  "unsubCleanupTitle_one": {
-    "message": "Diese Newsletter-Mail auch in den Papierkorb?"
-  },
-  "unsubCleanupTitle_other": {
-    "message": "Auch die $1 Mails dieses Newsletters in den Papierkorb?"
   },
   "unsubDraftFailed": {
     "message": "Entwurf konnte nicht geöffnet werden: $1"
@@ -1339,6 +1513,18 @@
   },
   "unsubFromBody": {
     "message": "(im Mail-Text gefunden)"
+  },
+  "unsubMailsRange_one": {
+    "message": "$1 Mail von diesem Newsletter ($2)"
+  },
+  "unsubMailsRange_other": {
+    "message": "$1 Mails von diesem Newsletter ($2)"
+  },
+  "unsubMails_one": {
+    "message": "$1 Mail von diesem Newsletter"
+  },
+  "unsubMails_other": {
+    "message": "$1 Mails von diesem Newsletter"
   },
   "unsubOpenedWeb": {
     "message": "Abmeldeseite im Browser geöffnet ($1)"
@@ -1353,7 +1539,7 @@
     "message": "Newsletter – klicken zum Abmelden (Webseite auf $1 oder per Mail)"
   },
   "unsubTipMail": {
-    "message": "Newsletter – klicken öffnet eine Abmelde-Mail an $1"
+    "message": "Newsletter – klicken zum Abmelden per Mail an $1"
   },
   "unsubTipNone": {
     "message": "Newsletter – keine Abmeldemöglichkeit gefunden"
@@ -1361,11 +1547,23 @@
   "unsubTipUrl": {
     "message": "Newsletter – klicken zum Abmelden über $1"
   },
-  "unsubViaMail": {
-    "message": "Abmelde-Mail an $1 schreiben"
+  "unsubTitle": {
+    "message": "Von „$1“ abmelden"
   },
-  "unsubViaWeb": {
-    "message": "Auf der Webseite abmelden ($1)"
+  "unsubWayLabel": {
+    "message": "Abmelden über"
+  },
+  "unsubWayMail": {
+    "message": "Per E-Mail"
+  },
+  "unsubWayMailSub": {
+    "message": "Öffnet einen Entwurf an $1 – du prüfst ihn und schickst ihn ab"
+  },
+  "unsubWayWeb": {
+    "message": "Auf der Webseite"
+  },
+  "unsubWayWebSub": {
+    "message": "Öffnet die Abmeldeseite auf $1 im Browser"
   },
   "unsubscribe": {
     "message": "Abmelden"

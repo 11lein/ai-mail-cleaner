@@ -44,9 +44,6 @@
   "baseUrl": {
     "message": "URL base de la API"
   },
-  "batchHint": {
-    "message": "(IA/local)"
-  },
   "batchSize": {
     "message": "Correos por solicitud"
   },
@@ -167,6 +164,12 @@
   "collapse": {
     "message": "Contraer"
   },
+  "concAutoPh": {
+    "message": "Auto ($1)"
+  },
+  "concAutoTitle": {
+    "message": "Déjalo vacío para automático: $1 para este modelo (8 para modelos de decisión de pago en OpenRouter; si no, 3). Como máximo 10."
+  },
   "concurrency": {
     "message": "Solicitudes en paralelo"
   },
@@ -245,8 +248,38 @@
   "customUrl": {
     "message": "URL propia…"
   },
-  "dateRange": {
-    "message": "Del $1 al $2"
+  "dateAll": {
+    "message": "Cualquier fecha"
+  },
+  "dateCustom": {
+    "message": "Rango personalizado"
+  },
+  "dateFromLbl": {
+    "message": "Desde"
+  },
+  "dateLast24h": {
+    "message": "Últimas 24 horas"
+  },
+  "dateLastMonth": {
+    "message": "Último mes"
+  },
+  "dateLastWeek": {
+    "message": "Última semana"
+  },
+  "dateLastYear": {
+    "message": "Último año"
+  },
+  "dateSince": {
+    "message": "Desde $1"
+  },
+  "dateTitle": {
+    "message": "Filtrar por fecha"
+  },
+  "dateToLbl": {
+    "message": "Hasta"
+  },
+  "dateUntil": {
+    "message": "Hasta $1"
   },
   "deleteFailed": {
     "message": "No se pudo eliminar: $1"
@@ -255,7 +288,7 @@
     "message": "Reconocer boletines"
   },
   "detectNewslettersHint": {
-    "message": "Revisa los correos visibles en busca de información para darse de baja (cabecera List-Unsubscribe o un aviso en el texto) y muestra la etiqueta «Boletín». Solo se lee de tu servidor de correo; no se envía nada."
+    "message": "Revisa los correos visibles en busca de información para darse de baja (cabecera List-Unsubscribe o un aviso en el texto) y muestra la etiqueta «Boletín»; con el filtro de boletines activo, todos los correos del periodo. Solo se lee de tu servidor de correo; no se envía nada."
   },
   "dismiss": {
     "message": "Cerrar aviso"
@@ -272,8 +305,14 @@
   "durHardware": {
     "message": "Duración: depende de tu hardware"
   },
+  "durMS": {
+    "message": "$1 min $2 s"
+  },
   "durMin": {
     "message": "$1 min"
+  },
+  "durSec": {
+    "message": "$1 s"
   },
   "durUnder1": {
     "message": "menos de 1 min"
@@ -288,7 +327,7 @@
     "message": "La carpeta está vacía"
   },
   "emptyNoMatchHint": {
-    "message": "Nada coincide con la búsqueda, el grupo o el filtro de spam."
+    "message": "Nada coincide con la búsqueda y los filtros."
   },
   "emptyNoMatchTitle": {
     "message": "Sin resultados"
@@ -310,6 +349,9 @@
   },
   "errEmptyReply": {
     "message": "El modelo devolvió una respuesta vacía (¿es un modelo de texto?)."
+  },
+  "errInsecureUrl": {
+    "message": "http:// sin cifrar solo funciona en este ordenador (localhost); para $1 usa https://."
   },
   "errLocalOrigin": {
     "message": "El servidor local en $1 rechaza las solicitudes de Thunderbird (las versiones más nuevas de jev-style lo hacen por defecto). Inícialo con la opción --allow-any-host."
@@ -464,6 +506,9 @@
   "helpBrowse": {
     "message": "Pasar de correo en la vista previa"
   },
+  "helpDate": {
+    "message": "Calendario: mostrar solo correos de un periodo"
+  },
   "helpDelete": {
     "message": "Mover a la papelera (con deshacer)"
   },
@@ -479,6 +524,12 @@
   "helpHint": {
     "message": "Haz clic derecho en un correo para ver un menú con todas las acciones. Los correos eliminados van a la papelera y se pueden recuperar justo después con «Deshacer»."
   },
+  "helpMove": {
+    "message": "Mover a una carpeta (la última que usaste ya viene marcada)"
+  },
+  "helpNlOnly": {
+    "message": "Boletines: mostrar solo los correos reconocidos como boletines"
+  },
   "helpNotSpam": {
     "message": "En la vista previa: no es spam y siguiente"
   },
@@ -490,6 +541,9 @@
   },
   "helpSelect": {
     "message": "Elegir correo (Mayús amplía el rango)"
+  },
+  "helpStats": {
+    "message": "Reloj junto al modelo, abajo a la derecha: cuánto tardó el último análisis y en qué se fue el tiempo"
   },
   "helpTitle": {
     "message": "Atajos de teclado y ayuda (?)"
@@ -520,9 +574,6 @@
   },
   "jevHint": {
     "message": "Instálalo una vez: `pip install \"jev-style[mlx]\"` (Apple silicon) o `pip install \"jev-style[torch]\"`, y luego inícialo: `$2`. Ejecuta el Jev-Style 0.8B v3 actual (con `--release 2b`, el 2B v4). El complemento lo espera en $1; otro puerto se indica en «Avanzado» (p. ej. `http://127.0.0.1:8766`)."
-  },
-  "keepThem": {
-    "message": "Conservar"
   },
   "keyDel": {
     "message": "Supr"
@@ -706,6 +757,30 @@
   },
   "nextTitle": {
     "message": "Siguiente (→)"
+  },
+  "nlCheckingHint_one": {
+    "message": "Queda $1 correo por revisar. Solo se lee de tu servidor de correo; no se envía nada."
+  },
+  "nlCheckingHint_other": {
+    "message": "Quedan $1 correos por revisar. Solo se lee de tu servidor de correo; no se envía nada."
+  },
+  "nlCheckingTitle": {
+    "message": "Buscando boletines…"
+  },
+  "nlChecking_one": {
+    "message": "Buscando boletines: queda $1 correo"
+  },
+  "nlChecking_other": {
+    "message": "Buscando boletines: quedan $1 correos"
+  },
+  "nlOnly": {
+    "message": "Boletines"
+  },
+  "nlOnlyOffTitle": {
+    "message": "Volver a mostrar todos los correos"
+  },
+  "nlOnlyTitle": {
+    "message": "Mostrar solo boletines"
   },
   "noAccounts": {
     "message": "No se encontraron cuentas ni carpetas."
@@ -905,6 +980,9 @@
   "providerLabel": {
     "message": "Proveedor"
   },
+  "pvMoveTitle": {
+    "message": "Mover a otra carpeta y seguir (M)"
+  },
   "pvTrustTitle": {
     "message": "Confiar siempre en esta dirección (nunca spam)"
   },
@@ -1100,11 +1178,20 @@
   "sortSize": {
     "message": "Más pequeños primero"
   },
+  "spamCustom": {
+    "message": "Rango propio"
+  },
   "spamFilter": {
     "message": "Filtro de spam"
   },
+  "spamMoreTitle": {
+    "message": "Más filtros de spam: dudosos, sin evaluar, rango propio"
+  },
   "spamProbTitle": {
     "message": "Probabilidad de spam $1"
+  },
+  "spamRangeChip": {
+    "message": "Spam $1–$2 %"
   },
   "srcHintCustom": {
     "message": "Cualquier servidor con una API de chat compatible con OpenAI (p. ej. llama-server, vLLM): indica su dirección en «Avanzado»."
@@ -1141,6 +1228,93 @@
   },
   "srcHintTogether": {
     "message": "Muchos modelos abiertos, facturados por token."
+  },
+  "statsAuto": {
+    "message": "(automático)"
+  },
+  "statsAvg": {
+    "message": "media $1"
+  },
+  "statsBig_one": {
+    "message": "$1 correo grande sin texto"
+  },
+  "statsBig_other": {
+    "message": "$1 correos grandes sin texto"
+  },
+  "statsBtnTitle": {
+    "message": "Estadísticas del análisis: duración y en qué se va el tiempo"
+  },
+  "statsEmpty": {
+    "message": "Aún no hay ningún análisis. Después, aquí verás cuánto tardó y en qué se fue el tiempo."
+  },
+  "statsFailed_one": {
+    "message": "$1 fallido"
+  },
+  "statsFailed_other": {
+    "message": "$1 fallidos"
+  },
+  "statsMailsLbl": {
+    "message": "Correos"
+  },
+  "statsModelLbl": {
+    "message": "Modelo"
+  },
+  "statsNoText": {
+    "message": "desactivado: solo remitente, asunto y contexto"
+  },
+  "statsParallelLbl": {
+    "message": "Solicitudes paralelas"
+  },
+  "statsPerMin": {
+    "message": "$1 correos/min"
+  },
+  "statsPerReq_one": {
+    "message": "$1 correo por solicitud"
+  },
+  "statsPerReq_other": {
+    "message": "$1 correos por solicitud"
+  },
+  "statsPerSec": {
+    "message": "$1 correos/s"
+  },
+  "statsReqLbl": {
+    "message": "Respuesta del modelo"
+  },
+  "statsRunning": {
+    "message": "en curso…"
+  },
+  "statsScored_one": {
+    "message": "$1 evaluado"
+  },
+  "statsScored_other": {
+    "message": "$1 evaluados"
+  },
+  "statsSlowFree": {
+    "message": "Lo que marcó el ritmo fue el límite de los modelos gratuitos (unos 19 correos por minuto). Los modelos de pago no lo tienen."
+  },
+  "statsSlowLocal": {
+    "message": "Lo que marcó el ritmo fue el tiempo de cálculo del modelo en este ordenador."
+  },
+  "statsSlowMail": {
+    "message": "Lo que marcó el ritmo fue la carga de los correos desde el servidor: las solicitudes esperaron el texto $1 del tiempo. Con los correos sin conexión (Configuración de cuentas → Sincronización y almacenamiento) va más rápido."
+  },
+  "statsSlowModel": {
+    "message": "Lo que marcó el ritmo fue el tiempo de respuesta del modelo. Más solicitudes paralelas (Ajustes → Avanzado) aceleran el análisis."
+  },
+  "statsSlowModelMax": {
+    "message": "Lo que marcó el ritmo fue el tiempo de respuesta del modelo."
+  },
+  "statsStopped": {
+    "message": "detenido"
+  },
+  "statsTextLbl": {
+    "message": "Cargar el texto"
+  },
+  "statsTimeLbl": {
+    "message": "Duración"
+  },
+  "statsTitle": {
+    "message": "Último análisis"
   },
   "statusMoving_one": {
     "message": "Moviendo $1 correo …"
@@ -1263,7 +1437,7 @@
     "message": "Mover a la papelera (Supr)"
   },
   "trashInstead": {
-    "message": "Mejor a la papelera"
+    "message": "A la papelera"
   },
   "trashNextTitle": {
     "message": "Mover a la papelera y seguir (Supr)"
@@ -1322,14 +1496,14 @@
   "unscoredLower": {
     "message": "sin evaluar"
   },
+  "unsubAlsoTrash_one": {
+    "message": "Después, mover el correo a la papelera"
+  },
+  "unsubAlsoTrash_other": {
+    "message": "Después, mover los $1 correos de este boletín a la papelera"
+  },
   "unsubAnyway": {
     "message": "Darse de baja igualmente"
-  },
-  "unsubCleanupTitle_one": {
-    "message": "¿Mover también este correo del boletín a la papelera?"
-  },
-  "unsubCleanupTitle_other": {
-    "message": "¿Mover también los $1 correos de este boletín a la papelera?"
   },
   "unsubDraftFailed": {
     "message": "No se pudo abrir el borrador: $1"
@@ -1339,6 +1513,18 @@
   },
   "unsubFromBody": {
     "message": "(encontrado en el texto del correo)"
+  },
+  "unsubMailsRange_one": {
+    "message": "$1 correo de este boletín ($2)"
+  },
+  "unsubMailsRange_other": {
+    "message": "$1 correos de este boletín ($2)"
+  },
+  "unsubMails_one": {
+    "message": "$1 correo de este boletín"
+  },
+  "unsubMails_other": {
+    "message": "$1 correos de este boletín"
   },
   "unsubOpenedWeb": {
     "message": "Página de baja abierta en el navegador ($1)"
@@ -1353,7 +1539,7 @@
     "message": "Boletín: haz clic para darte de baja (página web en $1 o por correo)"
   },
   "unsubTipMail": {
-    "message": "Boletín: haz clic para abrir un correo de baja a $1"
+    "message": "Boletín: haz clic para darte de baja por correo a $1"
   },
   "unsubTipNone": {
     "message": "Boletín: no se encontró forma de darse de baja"
@@ -1361,11 +1547,23 @@
   "unsubTipUrl": {
     "message": "Boletín: haz clic para darte de baja en $1"
   },
-  "unsubViaMail": {
-    "message": "Escribir un correo de baja a $1"
+  "unsubTitle": {
+    "message": "Darse de baja de «$1»"
   },
-  "unsubViaWeb": {
-    "message": "Darse de baja en la página web ($1)"
+  "unsubWayLabel": {
+    "message": "Darse de baja mediante"
+  },
+  "unsubWayMail": {
+    "message": "Por correo"
+  },
+  "unsubWayMailSub": {
+    "message": "Abre un borrador para $1; tú lo revisas y lo envías"
+  },
+  "unsubWayWeb": {
+    "message": "En la página web"
+  },
+  "unsubWayWebSub": {
+    "message": "Abre la página de baja en $1 en el navegador"
   },
   "unsubscribe": {
     "message": "Darse de baja"

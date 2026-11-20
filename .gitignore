@@ -15,5 +15,8 @@ Thumbs.db
 # Node (falls addons-linter lokal installiert wird)
 node_modules/
 
+# Thunderbird-Linter (scripts/tb-lint.sh): Klon, Download-Cache, Berichte
+.cache/
+
 # Lokale Claude-Code-Einstellungen
 .claude/settings.local.json

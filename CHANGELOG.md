@@ -1,5 +1,68 @@
 # Changelog
 
+## 2.6.0 – 2026-11-20
+
+### Added
+- **Date filter** next to the spam filter: *Last 24 hours*, *Last week*, *Last month*, *Last year*
+  or a custom range with two date fields (each side may stay open). The menu shows how many mails
+  each range holds; a custom range starts from the preset you had chosen.
+- **Newsletters only:** a toggle next to the date filter, with the number of newsletters found.
+  While it is on, every mail in range is checked for newsletters in the background (not only the
+  visible ones) and appears as soon as it is recognised – read from your mail server only, nothing
+  is sent anywhere. The results are remembered like before.
+- Both filters combine with search, groups and the spam filter. *Scan* then scores only the
+  filtered mails, and *Select all N* appears for them.
+- **Scan statistics:** the clock next to the model in the status bar shows how long the last scan
+  took, mails per second, the average model answer and mail-text load time – and what slowed it
+  down (the mail server, the model, or the limit for free models), live while a scan runs.
+- **Move from the preview:** *Move…* next to *Trash*, or the key **M**; afterwards the preview
+  shows the next mail. **M** also works in the list (selection or the focused mail). The folder you
+  moved to last is preselected; Enter on it or a double-click on a folder moves right away.
+
+### Changed
+- **Faster scans:** mail texts are loaded ahead in their own queue, so requests no longer wait for
+  the mail server one by one. *Parallel requests* is automatic now (empty field): 8 for paid decision
+  models on OpenRouter such as Jev, otherwise 3 as before; a number you set yourself stays.
+- *Mails per request* only shows for language models – decision models always score one mail per
+  request, so the field had no effect there.
+- Mails over 3 MB are scored by sender, subject and context only – a scan no longer downloads
+  their attachments (the newsletter check already skipped them).
+- **Unsubscribing in one dialog:** sender, how many mails of the newsletter are here, the way
+  (web page or email – a choice when both exist), a warning for likely spam, and a box to move the
+  newsletter's mails to the trash afterwards. Before, it took a menu and up to two dialogs.
+- Newsletter filter left of the spam filter, date filter at the right end (default: any time).
+- **Spam filter redesigned:** only *All* and *Spam ≥ 80 %* are on the bar. *Unsure*, *Unscored* and
+  your own range (the slider, now in the menu) sit behind the arrow next to it; the chip then shows
+  what you chose, e.g. *Unsure 3* or *Spam 10–100 %*. That leaves room for the new filters in one row.
+- The group list counts only the mails in the search, date and newsletter filter, and its
+  *select all* / *trash all* act on exactly those mails (before, with an active search, they took
+  every mail of the sender or domain).
+- Narrow windows: the account part of the folder path shrinks first, so the current folder stays
+  readable; below ~900 px the inactive date and newsletter filters show as icons only.
+
+### Security
+- **Encrypted connections only:** the add-on sends requests to `https://` addresses only. Plain
+  `http://` is accepted just for a server on this computer (`localhost`, `127.0.0.1`, `::1`). The
+  settings refuse any other `http://` address, and an older saved one is refused before anything
+  is sent, with a message saying why. A server elsewhere in your network now needs HTTPS.
+- The `compose` permission is gone – opening an unsubscribe draft does not need it.
+- The package no longer contains the icon source `icons/icon.svg`.
+
+### Fixed
+- *Reload* now reloads the folder list too, so folders created, renamed or deleted in Thunderbird
+  show up; the open folder stays selected (if it was deleted, the inbox opens).
+- Switching folders or toggling *Subfolders* during a scan left the scan running unseen: its
+  progress disappeared and *Stop* could hang while the mail server was busy reloading. Reloading
+  now stops the scan (scores so far are kept), and *Stop* no longer waits for mail texts.
+
+### Development
+- `npm run lint:tb` and CI run Thunderbird's review linter
+  ([webext-linter](https://github.com/thunderbird/webext-linter), pinned commit) on the package –
+  the automated review the ATN reviewers use. It fails on whatever would reject a review; on 2.5.0
+  it reports exactly the three rejection reasons. `npm run lint` runs both linters, CI shows the
+  summary on the run's page and keeps the full report as an artifact.
+- Code cleanups its ESLint checks pointed out (empty `catch` blocks, shadowed names).
+
 ## 2.5.0 – 2026-11-10
 
 ### Changed

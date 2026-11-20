@@ -17,13 +17,25 @@ Two complementary channels: **GitHub** (source code and releases) and
    ```bash
    npm run build                # → dist/ai-mail-cleaner-<version>.xpi
    ```
-5. Mozilla's validator (the same one ATN uses) – CI runs it on every push, too:
+5. Both linters – CI runs them on every push, too:
    ```bash
-   npm run lint
+   npm run lint                 # = lint:moz + lint:tb
    ```
-   Errors must be fixed. Expected warnings: the Thunderbird-only permissions (`accountsRead`,
-   `messagesRead`, `compose` …) are reported as “Invalid permissions” by the Firefox-oriented
-   linter, and `data_collection_permissions` as unsupported by the minimum version – both harmless.
+   - **`lint:moz`** – Mozilla's addons-linter (ATN validates the upload with it). Errors must be
+     fixed. Expected warnings: the Thunderbird-only permissions (`accountsRead`, `messagesRead` …)
+     are reported as “Invalid permissions” by the Firefox-oriented linter, and
+     `data_collection_permissions` as unsupported by the minimum version – both harmless.
+   - **`lint:tb`** – Thunderbird's [webext-linter](https://github.com/thunderbird/webext-linter),
+     the review the ATN reviewers run and recommend. It fails on whatever would reject the review
+     (2.5.0 was rejected for an unused permission, an unused file and `http://` – all three show
+     up here). Its *Extended Code Review* lists what a reviewer checks by hand; explain those in
+     the notes for the reviewer when uploading. Currently expected:
+     - `webRequestBlocking` “possibly unused” – it is used: the Ollama/Ollaya `Origin` fix is a
+       blocking `webRequest.onBeforeSendHeaders` listener.
+     - `fetch() url` – the provider the user configured; only `https://`, plain `http://` only to
+       `localhost` (`request()` in `ui/ai.js`).
+     - Hint `srcdoc` (preview) – the only replacement, `Element.setHTML()`, needs Thunderbird 148.
+   - To update webext-linter: new commit in `WEBEXT_LINTER_REF` in `scripts/tb-lint.sh`.
 6. Test in Thunderbird: *Add-ons Manager → gear icon → Install Add-on From File…* – ideally once
    with Thunderbird in English and once in German or Spanish.
 
@@ -40,7 +52,7 @@ gh repo create ai-mail-cleaner --public --source . --push
 One release per version, with the `.xpi` as download (wait for the green CI run of the commit):
 
 ```bash
-V=2.5.0
+V=2.6.0
 git tag -a v$V -m "AI Mail Cleaner $V" && git push origin v$V
 gh release create v$V dist/ai-mail-cleaner-$V.xpi --title "AI Mail Cleaner $V" --notes-file notes.md
 ```

@@ -55,7 +55,7 @@
         </div>
       </div>
       <div class="sb-right">
-        <!-- buttons that come and go sit LEFT of chips/slider, so the slider never moves under the mouse -->
+        <!-- buttons that come and go sit LEFT of the filters, so the filters never move under the mouse -->
         <button id="selectFilteredBtn" class="sm hidden"><span data-icon="check-square" data-size="15"></span><span id="selectFilteredLabel"></span></button>
         <button id="trashFilteredBtn" class="danger-solid sm hidden"><span data-icon="trash" data-size="15"></span><span id="trashFilteredLabel"></span></button>
         <div id="progress" class="progress hidden" aria-live="polite">
@@ -63,19 +63,21 @@
           <div class="bar"><div id="progressFill"></div></div>
           <span id="progressText"></span>
         </div>
+        <!-- filters, left to right: newsletters only · spam filter · date range (default: any time) -->
+        <div class="chips scope-filters">
+          <button id="nlBtn" class="chip" aria-pressed="false" data-i18n-title="nlOnlyTitle"><span data-icon="newspaper" data-size="14"></span><span class="chip-text" data-i18n="nlOnly"></span><b id="cntNl">0</b></button>
+        </div>
+        <!-- spam filter: "All" and one chip for the chosen filter (default spam ≥ 80 %); unsure, unscored and
+             the custom range sit in its dropdown -->
         <div class="chips" role="group" data-i18n-aria="spamFilter">
           <button class="chip active" data-preset="all"><span data-i18n="chipAll"></span></button>
-          <button class="chip" data-preset="spam"><span class="dot d-high"></span><span data-i18n="chipSpam"></span><b id="cntSpam">0</b></button>
-          <button class="chip" data-preset="unsure"><span class="dot d-mid"></span><span data-i18n="chipUnsure"></span><b id="cntUnsure">0</b></button>
-          <button class="chip" data-preset="unscored"><span class="dot d-none"></span><span data-i18n="chipUnscored"></span><b id="cntUnscored">0</b></button>
-        </div>
-        <div class="filter" data-i18n-title="rangeTitle">
-          <div id="spamRange" class="range">
-            <div class="range-track"><div id="rangeFill" class="range-fill"></div></div>
-            <input type="range" id="spamMin" min="0" max="100" step="1" value="0" data-i18n-aria="rangeFrom" />
-            <input type="range" id="spamMax" min="0" max="100" step="1" value="100" data-i18n-aria="rangeTo" />
+          <div id="spamSplit" class="chip-split">
+            <button id="spamChip" class="chip" aria-pressed="false"><span id="spamChipDot" class="dot d-high"></span><span id="spamChipLabel" class="chip-text"></span><b id="spamChipCount">0</b></button>
+            <button id="spamMenuBtn" class="chip chip-caret" aria-haspopup="dialog" aria-expanded="false" aria-controls="spamPop" data-i18n-title="spamMoreTitle" data-i18n-aria="spamMoreTitle"><span data-icon="chevron-down" data-size="12"></span></button>
           </div>
-          <span id="rangeLabel" class="rlabel"></span>
+        </div>
+        <div class="chips scope-filters">
+          <button id="dateBtn" class="chip" aria-haspopup="dialog" aria-expanded="false" aria-controls="datePop" data-i18n-title="dateTitle"><span data-icon="calendar" data-size="14"></span><span id="dateLabel" class="chip-text date-label"></span><span class="chev" data-icon="chevron-down" data-size="12"></span></button>
         </div>
       </div>
     </div>
@@ -134,7 +136,10 @@
     <!-- Status bar -->
     <footer class="statusbar">
       <span id="statusText" data-i18n="ready"></span>
-      <button id="modelChip" class="model-chip" data-i18n-title="modelChipTitle"><span id="modelChipIcon" class="ico-wrap"></span><span id="modelChipText"></span></button>
+      <div id="modelSplit" class="model-split">
+        <button id="modelChip" class="model-chip" data-i18n-title="modelChipTitle"><span id="modelChipIcon" class="ico-wrap"></span><span id="modelChipText"></span></button>
+        <button id="statsBtn" class="model-chip model-stats" aria-haspopup="dialog" aria-expanded="false" aria-controls="statsPop" data-i18n-title="statsBtnTitle" data-i18n-aria="statsBtnTitle"><span data-icon="clock" data-size="13"></span></button>
+      </div>
     </footer>
   </div>
 
@@ -234,7 +239,8 @@
           </div>
           <div class="adv-grid">
             <div class="mfield"><label for="mConc" data-i18n="concurrency"></label><input type="number" id="mConc" min="1" max="10" /></div>
-            <div class="mfield"><label for="mBatch"><span data-i18n="batchSize"></span> <span class="lbl-hint" data-i18n="batchHint"></span></label><input type="number" id="mBatch" min="1" max="25" /></div>
+            <!-- language models only: a decision API takes one mail per request (hidden for those) -->
+            <div class="mfield" id="batchField"><label for="mBatch" data-i18n="batchSize"></label><input type="number" id="mBatch" min="1" max="25" /></div>
             <div class="mfield"><label for="mLimit" data-i18n="loadLimit"></label><input type="number" id="mLimit" min="100" max="100000" step="100" /></div>
             <div class="mfield"><label for="mChars" data-i18n="excerptChars"></label><input type="number" id="mChars" min="0" max="20000" step="100" /></div>
           </div>
@@ -330,6 +336,7 @@
             <button id="pvNotSpam" class="ghost sm" data-i18n-title="notSpamTitle"><span data-icon="check-circle" data-size="15"></span><span data-i18n="notSpam"></span></button>
             <button id="pvTrust" class="ghost sm"><span data-icon="shield-check" data-size="15"></span><span data-i18n="trust"></span></button>
             <button id="pvOpen" class="ghost sm" data-i18n-title="openInTb"><span data-icon="external" data-size="15"></span><span data-i18n="open"></span></button>
+            <button id="pvMove" class="ghost sm" data-i18n-title="pvMoveTitle"><span data-icon="folder-move" data-size="15"></span><span data-i18n="moveEllipsis"></span></button>
             <button id="pvDelete" class="danger sm" data-i18n-title="trashNextTitle"><span data-icon="trash" data-size="15"></span><span data-i18n="trash"></span></button>
             <span class="pv-divider"></span>
             <button id="pvClose" class="btn-icon" data-i18n-title="closeEsc" data-i18n-aria="close"><span data-icon="x" data-size="18"></span></button>
@@ -395,10 +402,14 @@
           <dt><kbd>←</kbd><kbd>→</kbd></dt><dd data-i18n="helpBrowse"></dd>
           <dt><kbd>N</kbd></dt><dd data-i18n="helpNotSpam"></dd>
           <dt><kbd>U</kbd></dt><dd data-i18n="helpUnsub"></dd>
+          <dt><kbd>M</kbd></dt><dd data-i18n="helpMove"></dd>
           <dt><kbd data-i18n="keyDel"></kbd></dt><dd data-i18n="helpDelete"></dd>
           <dt><kbd>/</kbd></dt><dd data-i18n="helpSearch"></dd>
           <dt><kbd>Esc</kbd></dt><dd data-i18n="helpEsc"></dd>
           <dt><span data-icon="funnel" data-size="15"></span></dt><dd data-i18n="helpFilter"></dd>
+          <dt><span data-icon="calendar" data-size="15"></span></dt><dd data-i18n="helpDate"></dd>
+          <dt><span data-icon="newspaper" data-size="15"></span></dt><dd data-i18n="helpNlOnly"></dd>
+          <dt><span data-icon="clock" data-size="15"></span></dt><dd data-i18n="helpStats"></dd>
           <dt><kbd>?</kbd></dt><dd data-i18n="helpHelp"></dd>
         </dl>
         <p class="hint" data-i18n="helpHint"></p>
@@ -408,6 +419,43 @@
 
   <div id="toasts" class="toasts" aria-live="polite"></div>
   <div id="ctxMenu" class="ctx hidden" role="menu"></div>
+  <div id="spamPop" class="ctx pop spam-pop hidden" role="dialog" data-i18n-aria="spamFilter">
+    <div class="dp-list" role="radiogroup" data-i18n-aria="spamFilter">
+      <button role="radio" data-preset="spam"><span class="dp-check" data-icon="check" data-size="14"></span><span class="dot d-high"></span><span data-i18n="chipSpam"></span><b id="cntSpam" class="dp-count"></b></button>
+      <button role="radio" data-preset="unsure"><span class="dp-check" data-icon="check" data-size="14"></span><span class="dot d-mid"></span><span data-i18n="chipUnsure"></span><span id="unsureHint" class="dp-hint"></span><b id="cntUnsure" class="dp-count"></b></button>
+      <button role="radio" data-preset="unscored"><span class="dp-check" data-icon="check" data-size="14"></span><span class="dot d-none"></span><span data-i18n="chipUnscored"></span><b id="cntUnscored" class="dp-count"></b></button>
+      <div class="sep"></div>
+      <button role="radio" data-preset="custom"><span class="dp-check" data-icon="check" data-size="14"></span><span class="dot d-range"></span><span data-i18n="spamCustom"></span><b id="cntRange" class="dp-count"></b></button>
+    </div>
+    <div class="filter sp-range" data-i18n-title="rangeTitle">
+      <div id="spamRange" class="range">
+        <div class="range-track"><div id="rangeFill" class="range-fill"></div></div>
+        <input type="range" id="spamMin" min="0" max="100" step="1" value="0" data-i18n-aria="rangeFrom" />
+        <input type="range" id="spamMax" min="0" max="100" step="1" value="100" data-i18n-aria="rangeTo" />
+      </div>
+      <span id="rangeLabel" class="rlabel"></span>
+    </div>
+  </div>
+  <div id="datePop" class="ctx pop date-pop hidden" role="dialog" data-i18n-aria="dateTitle">
+    <div class="dp-list" role="radiogroup" data-i18n-aria="dateTitle">
+      <button role="radio" data-range="all"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateAll"></span><b class="dp-count"></b></button>
+      <button role="radio" data-range="24h"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateLast24h"></span><b class="dp-count"></b></button>
+      <button role="radio" data-range="7d"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateLastWeek"></span><b class="dp-count"></b></button>
+      <button role="radio" data-range="1m"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateLastMonth"></span><b class="dp-count"></b></button>
+      <button role="radio" data-range="1y"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateLastYear"></span><b class="dp-count"></b></button>
+      <div class="sep"></div>
+      <button role="radio" data-range="custom"><span class="dp-check" data-icon="check" data-size="14"></span><span data-i18n="dateCustom"></span><b class="dp-count"></b></button>
+    </div>
+    <div class="dp-custom">
+      <label class="dp-field"><span data-i18n="dateFromLbl"></span><input type="date" id="dateFrom" /></label>
+      <label class="dp-field"><span data-i18n="dateToLbl"></span><input type="date" id="dateTo" /></label>
+    </div>
+  </div>
+  <!-- scan statistics: opened from the clock next to the model in the status bar -->
+  <div id="statsPop" class="ctx pop stats-pop hidden" role="dialog" tabindex="-1" data-i18n-aria="statsTitle">
+    <div class="st-head"><span class="st-title" data-i18n="statsTitle"></span><span id="stWhen" class="st-when"></span></div>
+    <div id="stBody"></div>
+  </div>
 
   <script type="module" src="cleaner.js"></script>
 </body>
